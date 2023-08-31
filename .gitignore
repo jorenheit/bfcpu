@@ -1,0 +1,10 @@
+# macOS system file
+.DS_Store
+
+# generated files and executables
+*.o
+
+# temporaries
+*~
+bfemu/src/build/*
+
