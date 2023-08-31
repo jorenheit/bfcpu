@@ -7,3 +7,8 @@
 # temporaries
 *~
 
+# pdflatex generated stuff
+*.aux
+*.pdf
+*.log
+
