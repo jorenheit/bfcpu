@@ -1,5 +1,0 @@
-if(EXISTS "/home/joren/Documents/brainfix/src/bfemu/build/testing[1]_tests.cmake")
-  include("/home/joren/Documents/brainfix/src/bfemu/build/testing[1]_tests.cmake")
-else()
-  add_test(testing_NOT_BUILT testing_NOT_BUILT)
-endif()

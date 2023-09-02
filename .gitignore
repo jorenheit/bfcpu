@@ -12,3 +12,5 @@
 *.pdf
 *.log
 
+# build folder for cmake (google test)
+bfemu/src/build

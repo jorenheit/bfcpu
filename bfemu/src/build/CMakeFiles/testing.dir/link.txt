@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/testing.dir/testing.cc.o CMakeFiles/testing.dir/module.cc.o CMakeFiles/testing.dir/register.cc.o CMakeFiles/testing.dir/binarycounter.cc.o CMakeFiles/testing.dir/computer.cc.o -o testing  lib/libgtest_main.a lib/libgtest.a 
