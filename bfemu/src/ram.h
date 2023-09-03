@@ -61,6 +61,12 @@ public:
       d_memory[i] = data[i];
   }
 
+  unsigned char at(size_t idx) const
+  {
+    assert(idx < CAPACITY && "index out of bounds");
+    return d_memory[idx];
+  }
+  
   DEFINE_CONTROL_PIN(WE, setWriteEnabled, writeEnabled);
 };
 

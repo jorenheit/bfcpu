@@ -36,14 +36,11 @@ bool Module::outputByIndex(int const index, bool const update, bool const peek)
   if (update)
     this->update();
 
-  return (peek || this->outputEnabled()) ? d_outputPins[index] : LOW;
+  return (peek || d_peek[index] || this->outputEnabled()) ? d_outputPins[index] : LOW;
 }
   
 unsigned long Module::output(unsigned long mask, bool const peek)
 {
-  if (!peek && !this->outputEnabled())
-    return 0;
-
   this->update();
   unsigned long result = 0;
   for (int i = 0; i != this->numberOfOutputs(); ++i) {

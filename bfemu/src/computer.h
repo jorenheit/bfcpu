@@ -1,9 +1,13 @@
 #ifndef COMPUTER_H
 #define COMPUTER_H
-#include <gtest/gtest.h>
 #include "allmodules.h"
 
+#if 0
+#include <gtest/gtest.h>
 class Computer: public ::testing::Test
+#else
+class Computer
+#endif
 {
 protected:
   struct ModuleInitializer {
@@ -21,14 +25,16 @@ protected:
   BinaryCounter instructionPointerRegister;
   BinaryCounter stackPointerRegister; 
   BinaryCounter dataRegister;
+  BinaryCounter loopRegister;
+  Register instructionRegister;
   Register flagRegister;
+  
   Decoder decoder;
   Screen scr;
 
   static constexpr size_t STACK_SIZE = 4;
   
   void connectModules();
-  void test();
 
 public:
   Computer():
@@ -36,6 +42,7 @@ public:
   {
     connectModules();
   }
+  void doIt();
 
 };
 

@@ -306,7 +306,7 @@ TEST(ScreenTest, OutputCharactersToStream) {
   EXPECT_EQ(oss.str(), "ab");
 }
 
-TEST_F(Computer, IncrementWithoutAFlag)
+TEST_F(Computer, Increment)
 {
   unsigned char memory1[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 'a', 'b', 'c', 'd'};
   unsigned char memory2[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 0, 0, 0, 0};
@@ -314,24 +314,23 @@ TEST_F(Computer, IncrementWithoutAFlag)
   ram1.load(memory1);
   ram2.load(memory2);
 
-  dataRegister.setData(0);
-  instructionPointerRegister.setData(0);
-  flagRegister.setData(0);
-
-  
   // Run
-  unsigned char program[] = {Decoder::PLUS, Decoder::PLUS, Decoder::PLUS, Decoder::PLUS, Decoder::PLUS, Decoder::PLUS};
+  unsigned char program[] = {
+    Decoder::PROG_START,
+    Decoder::PLUS,
+    Decoder::PLUS,
+    Decoder::PLUS,
+    Decoder::HLT};
+  
   rom.load(program);
 
-  for (int i = 0; i != sizeof(program); ++i){
+  while (!clc.haltEnabled())
     clc.pulse();
-  }
 
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 6);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::V), true);
+  EXPECT_EQ(dataRegister.peek(BinaryCounter::DATA_OUT), 'a' + 3);
 }
 
-TEST_F(Computer, IncrementWithAFlag)
+TEST_F(Computer, Decrement)
 {
   unsigned char memory1[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 'a', 'b', 'c', 'd'};
   unsigned char memory2[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 0, 0, 0, 0};
@@ -339,25 +338,22 @@ TEST_F(Computer, IncrementWithAFlag)
   ram1.load(memory1);
   ram2.load(memory2);
 
-  dataRegister.setData(0);
-  instructionPointerRegister.setData(0);
-  flagRegister.setData(Decoder::A);
-
-  
   // Run
-  unsigned char program[] = {Decoder::PLUS, Decoder::PLUS, Decoder::PLUS, Decoder::PLUS, Decoder::PLUS, Decoder::PLUS};
+  unsigned char program[] = {
+    Decoder::PROG_START,
+    Decoder::MINUS,
+    Decoder::MINUS,
+    Decoder::MINUS,
+    Decoder::HLT};
   rom.load(program);
 
-  for (int i = 0; i != 1 + sizeof(program); ++i){
+  while (!clc.haltEnabled())
     clc.pulse();
-  }
 
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 'a' + 6);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::V), true);
+  EXPECT_EQ(dataRegister.peek(BinaryCounter::DATA_OUT), 'a' - 3);
 }
 
-
-TEST_F(Computer, DecrementWithoutAFlag)
+TEST_F(Computer, MovePointerRightWithoutChangedValue)
 {
   unsigned char memory1[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 'a', 'b', 'c', 'd'};
   unsigned char memory2[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 0, 0, 0, 0};
@@ -365,111 +361,21 @@ TEST_F(Computer, DecrementWithoutAFlag)
   ram1.load(memory1);
   ram2.load(memory2);
 
-  dataRegister.setData(10);
-  instructionPointerRegister.setData(0);
-  flagRegister.setData(0);
-
-  
   // Run
-  unsigned char program[] = {Decoder::MINUS, Decoder::MINUS, Decoder::MINUS, Decoder::MINUS, Decoder::MINUS, Decoder::MINUS};
+  unsigned char program[] = {
+    Decoder::PROG_START,
+    Decoder::RIGHT,
+    Decoder::HLT
+  };
   rom.load(program);
 
-  for (int i = 0; i != sizeof(program); ++i){
+  while (!clc.haltEnabled())
     clc.pulse();
-  }
 
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 4);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::V), true);
-}
-
-TEST_F(Computer, DecrementWithAFlag)
-{
-  unsigned char memory1[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 'a', 'b', 'c', 'd'};
-  unsigned char memory2[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 0, 0, 0, 0};
-  
-  ram1.load(memory1);
-  ram2.load(memory2);
-
-  dataRegister.setData(0);
-  instructionPointerRegister.setData(0);
-  flagRegister.setData(Decoder::A);
-
-  
-  // Run
-  unsigned char program[] = {Decoder::MINUS, Decoder::MINUS, Decoder::MINUS, Decoder::MINUS, Decoder::MINUS, Decoder::MINUS};
-  rom.load(program);
-
-  for (int i = 0; i != 1 + sizeof(program); ++i){
-    clc.pulse();
-  }
-
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 'a' - 6);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::V), true);
-  
-}
-
-TEST_F(Computer, ZFlagSetByDRegister)
-{
-  dataRegister.setData(0);
-  instructionPointerRegister.setData(0);
-  flagRegister.setData(Decoder::Z);
-
-  
-  // Run
-  unsigned char program[] = {Decoder::PLUS, Decoder::MINUS, Decoder::PLUS, Decoder::MINUS};
-  rom.load(program);
-
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 0);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::Z), true);
-  
-  clc.pulse();
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 1);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::Z), false);
-  
-  clc.pulse();
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 0);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::Z), true);
-  
-  clc.pulse();
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 1);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::Z), false);
-  
-  clc.pulse();
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 0);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::Z), true);
-}
-
-TEST_F(Computer, MovePointerRightAndIncrement)
-{
-  unsigned char memory1[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 'a', 'b', 'c', 'd'};
-  unsigned char memory2[] = {/* stack: */ 0, 0, 0, 0, /* tape:  */ 0, 0, 0, 0};
-  
-  ram1.load(memory1);
-  ram2.load(memory2);
-
-  dataRegister.setData(0);
-  instructionPointerRegister.setData(0);
-  flagRegister.setData(Decoder::A);
-
-  
-  // Run
-  unsigned char program[] = {Decoder::RIGHT, Decoder::RIGHT, Decoder::RIGHT, Decoder::PLUS}; // move from 'a' to 'd' and increment
-  rom.load(program);
-
-  for (int i = 0; i != sizeof(program); ++i){
-    clc.pulse();
-  }
-
-  EXPECT_EQ(dataPointerRegister.peek(Register::DATA_OUT), STACK_SIZE + 3);
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 'd');
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::A), true);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::V), false);
-
-  clc.pulse();
-  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 'd' + 1);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::A), false);
-  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & Decoder::V), true);
-
+  EXPECT_EQ(dataPointerRegister.peek(Register::DATA_OUT), STACK_SIZE + 1);
+  EXPECT_EQ(dataRegister.peek(Register::DATA_OUT), 'b');
+  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & 1), true); // A flag
+  EXPECT_EQ(!!(flagRegister.peek(Register::DATA_OUT) & 2), false); // V flag
 }
 
 TEST_F(Computer, MovePointerLeftAndDecrement)

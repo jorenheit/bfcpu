@@ -17,6 +17,7 @@ class Module
 
   static constexpr size_t N_PINS = 8 * sizeof(unsigned long);
   bool d_outputPins[N_PINS];
+  bool d_peek[N_PINS];
   std::vector<Connection> d_inputPins[N_PINS];
   static Module *power;
   int const d_outputEnablePin;
@@ -32,7 +33,23 @@ protected:
 public:
   Module(int const enPin = -1):
     d_outputEnablePin(enPin)
-  {}
+  {
+    for (int i = 0; i != N_PINS; ++i) {
+      d_outputPins[i] = false;
+      d_peek[i] = false;
+    }
+  }
+
+  template <typename ... Rest>
+  Module(int const enPin, int const peekPin1, Rest const ... rest):
+    Module(enPin)
+  {
+    int const peekPins[] = {peekPin1, rest ...};
+    for (int i = 0; i != 1 + sizeof ... (rest); ++i) {
+      assert(peekPins[i] < (int)N_PINS && "peekpin index out of bounds");
+      d_peek[peekPins[i]] = true;
+    }
+  }
   
   template <typename ... Indices>
   static constexpr unsigned long const mask(Indices ... indices) {

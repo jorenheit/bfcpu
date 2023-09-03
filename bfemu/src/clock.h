@@ -7,6 +7,8 @@ class Clock: public Module
 {
   std::vector<Module*> d_connectedModules;
 
+public:
+  
   enum Input {
     HLT,
     N_INPUT
@@ -15,7 +17,6 @@ class Clock: public Module
   // output is handled differently from other modules,
   // by calling the virtual functions in order. See pulse()
   
-public:
 
   template <typename ... Rest>
   void connectModule(Module &first, Rest& ... rest)

@@ -2,12 +2,10 @@
 #include "binarycounter.h"
 
 BinaryCounter::BinaryCounter(uint16_t const resetValue):
-  Module(EN),
-  d_value(resetValue),
+  Module(EN, Z, CA),
   d_resetValue(resetValue)
 {
-  setLoadEnabled(false);
-  setOutputEnabled(false);
+  setData(resetValue);
 }
 
 void BinaryCounter::setData(unsigned long data) // for testing
@@ -25,6 +23,8 @@ void BinaryCounter::onClockFalling()
   
   if (loadEnabled()) {
     d_value = input(DATA_IN);
+    d_zero = (d_value == 0);
+    d_carry = 0;
     return;
   }
 
