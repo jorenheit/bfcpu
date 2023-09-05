@@ -1,6 +1,7 @@
 #ifndef RAM_H
 #define RAM_H
-
+#include <cstring>
+#include "module.h"
 class RAM: public Module
 {
   static constexpr size_t CAPACITY = (1 << 16) - 1; // 16-bit addressable
@@ -32,7 +33,10 @@ public:
 
   RAM():
     Module(EN)
-  {}
+  {
+    memset(&d_memory[0], 0, CAPACITY * sizeof(int));
+  }
+  
   
   virtual int numberOfInputs() const override {
     return N_INPUT;

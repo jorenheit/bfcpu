@@ -213,7 +213,6 @@ public:
   {
     int index = cycle | (command << 3) | (flags << 7);
     unsigned long result = d_lookupTable[index];
-    assert(result != (unsigned long)-1 && "Whoops");
     return result;
   }
     
@@ -221,19 +220,9 @@ public:
   virtual void onClockRising() override
   {
     static int cycle = 0;
-    unsigned char const cmd = input(INS_IN);
-    unsigned char const flg = input(FLAGS_IN);
-
-#define PRINT 1    
-#if PRINT
-    std::cerr << "Cycle: "  << cycle << '\n'
-	      << "Command: " << std::bitset<4>(cmd) << '\n'
-	      << "Flags: " << std::bitset<4>(flg) << '\n';
-#endif
-    unsigned long const config = decode(cmd, flg, cycle);
-#if PRINT    
-    std::cerr << "Config: " << std::bitset<N_OUTPUT>(config) <<'\n';
-#endif    
+    unsigned char const instruction = input(DATA_IN);
+    unsigned long const config = d_lookupTable[(instruction << 3) | cycle];
+    assert(result != (unsigned long)-1 && "Invalid index to the lookup table -> no instruction found");
     setOutput(config);
     cycle = (config & mask(IP_CNT)) ? 0 : cycle + 1;
   }

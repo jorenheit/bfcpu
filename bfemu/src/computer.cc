@@ -119,10 +119,8 @@ void Computer::doIt()
   
   // Run
   unsigned char program[] = {
-    // Decoder::PLUS,
-    // Decoder::PLUS,
-    // Decoder::MINUS,
-    // Decoder::MINUS,
+    Decoder::PLUS,
+    Decoder::PLUS,
     Decoder::LOOP_START,
     Decoder::MINUS,
     Decoder::LOOP_END,

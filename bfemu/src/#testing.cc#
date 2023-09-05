@@ -316,7 +316,6 @@ TEST_F(Computer, Increment)
 
   // Run
   unsigned char program[] = {
-    Decoder::PROG_START,
     Decoder::PLUS,
     Decoder::PLUS,
     Decoder::PLUS,
