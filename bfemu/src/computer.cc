@@ -66,10 +66,10 @@ void Computer::build()
   connectModulesByIndex( decoder, Decoder::D_LD, dataRegister, Register<8>::LD );
   connectModulesByIndex( decoder, Decoder::D_DEC, dataRegister, Register<8>::DEC );
 
-  connectModulesByIndex( decoder, Decoder::DP_EN, dataPointerRegister, Register<8>::EN );
-  connectModulesByIndex( decoder, Decoder::DP_CNT, dataPointerRegister, Register<8>::CNT );
-  connectModulesByIndex( decoder, Decoder::DP_LD, dataPointerRegister, Register<8>::LD );
-  connectModulesByIndex( decoder, Decoder::DP_DEC, dataPointerRegister, Register<8>::DEC );
+  connectModulesByIndex( decoder, Decoder::DP_EN, dataPointerRegister, Register<16>::EN );
+  connectModulesByIndex( decoder, Decoder::DP_CNT, dataPointerRegister, Register<16>::CNT );
+  connectModulesByIndex( decoder, Decoder::DP_LD, dataPointerRegister, Register<16>::LD );
+  connectModulesByIndex( decoder, Decoder::DP_DEC, dataPointerRegister, Register<16>::DEC );
 
   connectModulesByIndex( decoder, Decoder::IP_EN, instructionPointerRegister, Register<16>::EN);
   connectModulesByIndex( decoder, Decoder::IP_CNT, instructionPointerRegister, Register<16>::CNT);
