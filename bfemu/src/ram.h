@@ -17,18 +17,18 @@ public:
     EN, WE,                                  // output/write enable
 
     N_INPUT,
-    ADDRESS_IN_LOW  = Module::mask(A0, A1, A2, A3, A4, A5, A6, A7),
-    ADDRESS_IN_HIGH = Module::mask(A8, A9, A10, A11, A12, A13, A14, A15),
+    ADDRESS_IN_LOW  = mask(A0, A1, A2, A3, A4, A5, A6, A7),
+    ADDRESS_IN_HIGH = mask(A8, A9, A10, A11, A12, A13, A14, A15),
     ADDRESS_IN = ADDRESS_IN_LOW | ADDRESS_IN_HIGH,
     
-    DATA_IN = Module::mask(D0, D1, D2, D3, D4, D5, D6, D7),
+    DATA_IN = mask(D0, D1, D2, D3, D4, D5, D6, D7),
   };
 
   enum Output {
     Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, // output data
     N_OUTPUT,
 
-    DATA_OUT = Module::mask(Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7)
+    DATA_OUT = mask(Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7)
   };
 
   RAM():

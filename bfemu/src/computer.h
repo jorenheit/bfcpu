@@ -21,26 +21,26 @@ protected:
   RAM ram2;
   ROM rom;
 
-  BinaryCounter dataPointerRegister;
-  BinaryCounter instructionPointerRegister;
-  BinaryCounter stackPointerRegister; 
-  BinaryCounter dataRegister;
-  BinaryCounter loopRegister;
-  Register instructionRegister;
-  Register flagRegister;
+  Register<16> dataPointerRegister;
+  Register<16> instructionPointerRegister;
+  Register<16> loopRegister;
+  Register<16>  stackPointerRegister; 
+  Register<8>  dataRegister;
+  Register<8>  instructionRegister;
+  Register<4>  flagRegister;
   
   Decoder decoder;
   Screen scr;
 
   static constexpr size_t STACK_SIZE = 4;
   
-  void connectModules();
+  void build();
 
 public:
   Computer():
     dataPointerRegister(STACK_SIZE)
   {
-    connectModules();
+    build();
   }
   void doIt();
 

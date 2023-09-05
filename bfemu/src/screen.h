@@ -14,7 +14,7 @@ public:
   enum Input {
     D0, D1, D2, D3, D4, D5, D6, D7,
     N_INPUT,
-    DATA_IN = Module::mask(D0, D1, D2, D3, D4, D5, D6, D7),
+    DATA_IN = mask(D0, D1, D2, D3, D4, D5, D6, D7),
   };
 
   virtual int numberOfInputs() const override {

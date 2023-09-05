@@ -1,8 +1,35 @@
 #include <iostream>
 #include "module.h"
-#include "power.h"
 
-Module *Module::power = nullptr;
+class Power: public Module
+{
+public:
+
+  enum OutputPins {
+    GND, VCC,
+
+    LOW = mask(GND),
+    HIGH = mask(VCC)
+  };
+  
+  Power(){
+    Module::setOutput(0b10);
+  }
+
+  virtual int numberOfInputs() const override {
+    return 0;
+  }
+
+  virtual int numberOfOutputs() const override {
+    return 2;
+  }
+
+  virtual bool canBeClocked() const override {
+    return false;
+  }
+};
+
+Power *Module::power = nullptr;
 
 void Module::init()
 {
@@ -16,7 +43,7 @@ void Module::init()
 
 void Module::set(int const pin, bool const en)
 {
-  connectInputTo(*power, (en ? Power::HIGH : Power::LOW), mask(pin), true);
+  connectModules(*power, (en ? Power::HIGH : Power::LOW), *this, mask(pin), true);
 }
 
 void Module::setOutputEnabled(bool const en)
@@ -84,14 +111,14 @@ unsigned long Module::input(unsigned long mask)
   return result;
 }
 
-void Module::connectInputToIndex(Module &other, int const outputIndex, int const inputIndex, bool const disconnectOtherConnections)
+void connectModulesByIndex(Module &outputModule, int const outputIndex, Module &inputModule, const int inputIndex, bool const disconnectOtherConnections)
 {
   if (disconnectOtherConnections)
-    d_inputPins[inputIndex].clear();
-  d_inputPins[inputIndex].emplace_back(Connection{&other, outputIndex});
+    inputModule.d_inputPins[inputIndex].clear();
+  inputModule.d_inputPins[inputIndex].emplace_back(Module::Connection{&outputModule, outputIndex});
 }
 
-void Module::connectInputTo(Module &other, unsigned long const outputMask, unsigned long const inputMask, bool const disconnectOtherConnections)
+void connectModules(Module &outputModule, unsigned long const outputMask, Module &inputModule, unsigned long const inputMask, bool const disconnectOtherConnections)
 {
   auto const countOnes = [](unsigned long mask) {
     size_t count = mask & 1;
@@ -121,20 +148,20 @@ void Module::connectInputTo(Module &other, unsigned long const outputMask, unsig
     for (size_t i = 0; i != n; ++i) {
       currentOutputPin = nextPin(outputMask, currentOutputPin);
       currentInputPin = nextPin(inputMask, currentInputPin);
-      assert(currentInputPin < this->numberOfInputs() && "mask contains invalid input pin");
-      assert(currentOutputPin < other.numberOfOutputs() && "mask contains invalid output pin");
-      connectInputToIndex(other, currentOutputPin, currentInputPin, disconnectOtherConnections);
+      assert(currentInputPin < inputModule.numberOfInputs() && "mask contains invalid input pin");
+      assert(currentOutputPin < outputModule.numberOfOutputs() && "mask contains invalid output pin");
+      connectModulesByIndex(outputModule, currentOutputPin, inputModule, currentInputPin, disconnectOtherConnections);
     }
   }
   else if (n == 1) {
     // Case 2: multiple inputs connected to the same output.
     int const outputPin = nextPin(outputMask);
-    assert(outputPin < other.numberOfOutputs() && "mask contains invalid output pin");
+    assert(outputPin < outputModule.numberOfOutputs() && "mask contains invalid output pin");
     int currentInputPin = -1;
     for (size_t i = 0; i != m; ++i) {
       currentInputPin = nextPin(inputMask, currentInputPin);
-      assert(currentInputPin < this->numberOfInputs() && "mask contains invalid input pin");
-      connectInputToIndex(other, outputPin, currentInputPin, disconnectOtherConnections);
+      assert(currentInputPin < inputModule.numberOfInputs() && "mask contains invalid input pin");
+      connectModulesByIndex(outputModule, outputPin, inputModule, currentInputPin, disconnectOtherConnections);
     }
   } else {
     assert(false && "Unreachable");

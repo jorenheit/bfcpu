@@ -1,103 +1,100 @@
 #include "computer.h"
 
-void Computer::connectModules()
+void Computer::build()
 {
-  clc.connectModule(ram1,
-		    ram2,
-		    dataRegister,
-		    instructionRegister,
-		    flagRegister,
-		    loopRegister,
-		    stackPointerRegister,
-		    dataPointerRegister,
-		    instructionPointerRegister,
-		    decoder);
+  clc.connect(ram1,
+	      ram2,
+	      dataRegister,
+	      instructionRegister,
+	      flagRegister,
+	      loopRegister,
+	      stackPointerRegister,
+	      dataPointerRegister,
+	      instructionPointerRegister,
+	      decoder);
 
-   // RAM
-  ram1.connectInputTo(dataPointerRegister			, BinaryCounter::DATA_OUT, RAM::ADDRESS_IN);
-  ram1.connectInputTo(stackPointerRegister			, BinaryCounter::DATA_OUT, RAM::ADDRESS_IN);
-  ram1.connectInputTo(dataRegister				, BinaryCounter::DATA_OUT_LOW, RAM::DATA_IN); 
-  ram1.connectInputTo(instructionPointerRegister		, BinaryCounter::DATA_OUT_LOW, RAM::DATA_IN);
- 
-  ram2.connectInputTo(dataPointerRegister			, BinaryCounter::DATA_OUT, RAM::ADDRESS_IN);
-  ram2.connectInputTo(stackPointerRegister			, BinaryCounter::DATA_OUT, RAM::ADDRESS_IN);
-  ram2.connectInputTo(dataRegister				, BinaryCounter::DATA_OUT_HIGH, RAM::DATA_IN); 
-  ram2.connectInputTo(instructionPointerRegister		, BinaryCounter::DATA_OUT_HIGH, RAM::DATA_IN);
+   // Connections to RAM
+  connectModules( dataPointerRegister, Register<16>::DATA_OUT, ram1, RAM::ADDRESS_IN );
+  connectModules( stackPointerRegister, Register<16>::DATA_OUT, ram1, RAM::ADDRESS_IN );
+  connectModules( dataRegister, Register<8>::DATA_OUT, ram1, RAM::DATA_IN );
+  connectModules( instructionPointerRegister, Register<16>::DATA_OUT_LOW, ram1, RAM::DATA_IN );
 
-  // ROM (PROGMEM)
-  rom.connectInputTo(instructionPointerRegister			, BinaryCounter::DATA_OUT, ROM::ADDRESS_IN);
+  connectModules( stackPointerRegister, Register<16>::DATA_OUT, ram2, RAM::ADDRESS_IN );
+  connectModules( instructionPointerRegister, Register<16>::DATA_OUT_HIGH, ram2, RAM::DATA_IN );
+
+  // Connections to ROM (PROGMEM)
+  connectModules( instructionPointerRegister, Register<16>::DATA_OUT, rom, ROM::ADDRESS_IN);
   
-  // D-REG
-  dataRegister.connectInputTo(ram1				, RAM::DATA_OUT, BinaryCounter::DATA_IN_LOW);
-  dataRegister.connectInputTo(ram2				, RAM::DATA_OUT, BinaryCounter::DATA_IN_HIGH);
+  // Connections to D-REG
+  connectModules( ram1, RAM::DATA_OUT, dataRegister, Register<8>::DATA_IN );
 
-  // F-REG
-  flagRegister.connectInputToIndex(decoder		, Decoder::AF_OUT, Register::D0);
-  flagRegister.connectInputToIndex(decoder		, Decoder::VF_OUT, Register::D1);
+  // Connections to F-REG
+  connectModulesByIndex( decoder, Decoder::AF_OUT, flagRegister, Register<4>::D0 );
+  connectModulesByIndex( decoder, Decoder::VF_OUT, flagRegister, Register<4>::D1 );
   
-  // I-REG
+  // Connections to I-REG
   // command-bits
-  instructionRegister.connectInputToIndex(rom                   , ROM::Q0, Register::D0);
-  instructionRegister.connectInputToIndex(rom                   , ROM::Q1, Register::D1);
-  instructionRegister.connectInputToIndex(rom                   , ROM::Q2, Register::D2);
-  instructionRegister.connectInputToIndex(rom                   , ROM::Q3, Register::D3);
+  connectModulesByIndex( rom, ROM::Q0, instructionRegister, Register<8>::D0 ); 
+  connectModulesByIndex( rom, ROM::Q1, instructionRegister, Register<8>::D1 ); 
+  connectModulesByIndex( rom, ROM::Q2, instructionRegister, Register<8>::D2 ); 
+  connectModulesByIndex( rom, ROM::Q3, instructionRegister, Register<8>::D3 ); 
+  
   // state-bits (flags)
-  instructionRegister.connectInputToIndex(dataRegister		, BinaryCounter::Z, Register::D4);
-  instructionRegister.connectInputToIndex(loopRegister		, BinaryCounter::Z, Register::D5);
-  instructionRegister.connectInputToIndex(flagRegister		, Register::Q0, Register::D6);
-  instructionRegister.connectInputToIndex(flagRegister		, Register::Q1, Register::D7);
+  connectModulesByIndex( dataRegister, Register<8>::Z, instructionRegister, Register<8>::D4 ); 
+  connectModulesByIndex( loopRegister, Register<16>::Z, instructionRegister, Register<8>::D5 ); 
+  connectModulesByIndex( flagRegister, Register<4>::Q0, instructionRegister, Register<8>::D6 ); 
+  connectModulesByIndex( flagRegister, Register<4>::Q1, instructionRegister, Register<8>::D7 ); 
 
-  // IP-REG
-  instructionPointerRegister.connectInputTo(ram1		, RAM::DATA_OUT, BinaryCounter::DATA_IN_LOW);
-  instructionPointerRegister.connectInputTo(ram2		, RAM::DATA_OUT, BinaryCounter::DATA_IN_HIGH);
+  // Connections to IP-REG
+  connectModules( ram1, RAM::DATA_OUT, instructionPointerRegister, Register<16>::DATA_IN_LOW );
+  connectModules( ram2, RAM::DATA_OUT, instructionPointerRegister, Register<16>::DATA_IN_HIGH );
   
   // L-REG
-  // no inputs
+  // No incoming connections into loop register
   
   // DECODER
-  decoder.connectInputTo(instructionRegister                    , Register::DATA_OUT_LOW, Decoder::DATA_IN);
+  connectModules( instructionRegister, Register<8>::DATA_OUT, decoder, Decoder::DATA_IN );
   
   // SCREEN
-  scr.connectInputTo(dataRegister				, BinaryCounter::DATA_OUT_LOW, Screen::DATA_IN);
+  connectModules( dataRegister, Register<8>::DATA_OUT, scr, Screen::DATA_IN);
 
   // CONTROL SIGNALS
-  clc.connectInputToIndex(decoder, Decoder::HLT_EN, Clock::HLT);
-  
-  dataRegister.connectInputToIndex(decoder			, Decoder::D_EN, BinaryCounter::EN);
-  dataRegister.connectInputToIndex(decoder			, Decoder::D_CNT, BinaryCounter::CNT);
-  dataRegister.connectInputToIndex(decoder			, Decoder::D_LD, BinaryCounter::LD);
-  dataRegister.connectInputToIndex(decoder			, Decoder::D_DEC, BinaryCounter::DEC);
+  connectModulesByIndex( decoder, Decoder::HLT_EN, clc, Clock::HLT );
 
-  dataPointerRegister.connectInputToIndex(decoder		, Decoder::DP_EN, BinaryCounter::EN);
-  dataPointerRegister.connectInputToIndex(decoder		, Decoder::DP_CNT, BinaryCounter::CNT);
-  dataPointerRegister.connectInputToIndex(decoder		, Decoder::DP_LD, BinaryCounter::LD);
-  dataPointerRegister.connectInputToIndex(decoder		, Decoder::DP_DEC, BinaryCounter::DEC);
+  connectModulesByIndex( decoder, Decoder::D_EN, dataRegister, Register<8>::EN );
+  connectModulesByIndex( decoder, Decoder::D_CNT, dataRegister, Register<8>::CNT );
+  connectModulesByIndex( decoder, Decoder::D_LD, dataRegister, Register<8>::LD );
+  connectModulesByIndex( decoder, Decoder::D_DEC, dataRegister, Register<8>::DEC );
 
-  instructionPointerRegister.connectInputToIndex(decoder	, Decoder::IP_EN, BinaryCounter::EN);
-  instructionPointerRegister.connectInputToIndex(decoder	, Decoder::IP_CNT, BinaryCounter::CNT);
-  instructionPointerRegister.connectInputToIndex(decoder	, Decoder::IP_LD, BinaryCounter::LD);
-  instructionPointerRegister.connectInputToIndex(decoder	, Decoder::IP_DEC, BinaryCounter::DEC);
+  connectModulesByIndex( decoder, Decoder::DP_EN, dataPointerRegister, Register<8>::EN );
+  connectModulesByIndex( decoder, Decoder::DP_CNT, dataPointerRegister, Register<8>::CNT );
+  connectModulesByIndex( decoder, Decoder::DP_LD, dataPointerRegister, Register<8>::LD );
+  connectModulesByIndex( decoder, Decoder::DP_DEC, dataPointerRegister, Register<8>::DEC );
 
-  stackPointerRegister.connectInputToIndex(decoder		, Decoder::SP_EN, BinaryCounter::EN);
-  stackPointerRegister.connectInputToIndex(decoder		, Decoder::SP_CNT, BinaryCounter::CNT);
-  stackPointerRegister.connectInputToIndex(decoder		, Decoder::SP_LD, BinaryCounter::LD);
-  stackPointerRegister.connectInputToIndex(decoder		, Decoder::SP_DEC, BinaryCounter::DEC);
+  connectModulesByIndex( decoder, Decoder::IP_EN, instructionPointerRegister, Register<16>::EN);
+  connectModulesByIndex( decoder, Decoder::IP_CNT, instructionPointerRegister, Register<16>::CNT);
+  connectModulesByIndex( decoder, Decoder::IP_LD, instructionPointerRegister, Register<16>::LD);
+  connectModulesByIndex( decoder, Decoder::IP_DEC, instructionPointerRegister, Register<16>::DEC);
 
-  flagRegister.connectInputToIndex(decoder		, Decoder::F_EN, Register::EN);
-  flagRegister.connectInputToIndex(decoder		, Decoder::F_LD, Register::LD);
+  connectModulesByIndex( decoder, Decoder::SP_EN, stackPointerRegister, Register<16>::EN);
+  connectModulesByIndex( decoder, Decoder::SP_CNT, stackPointerRegister, Register<16>::CNT);
+  connectModulesByIndex( decoder, Decoder::SP_LD, stackPointerRegister, Register<16>::LD);
+  connectModulesByIndex( decoder, Decoder::SP_DEC, stackPointerRegister, Register<16>::DEC);
 
-  instructionRegister.connectInputToIndex(decoder		, Decoder::I_EN, Register::EN);
-  instructionRegister.connectInputToIndex(decoder		, Decoder::I_LD, Register::LD);
+  connectModulesByIndex( decoder, Decoder::F_EN, flagRegister, Register<4>::EN);
+  connectModulesByIndex( decoder, Decoder::F_LD, flagRegister, Register<4>::LD);
 
-  loopRegister.connectInputToIndex(decoder                      , Decoder::L_EN, BinaryCounter::EN);
-  loopRegister.connectInputToIndex(decoder                      , Decoder::L_CNT, BinaryCounter::CNT);
-  loopRegister.connectInputToIndex(decoder                      , Decoder::L_DEC, BinaryCounter::DEC); 
+  connectModulesByIndex( decoder, Decoder::I_EN, instructionRegister, Register<8>::EN);
+  connectModulesByIndex( decoder, Decoder::I_LD, instructionRegister, Register<8>::LD);
 
-  
-  ram1.connectInputToIndex(decoder				, Decoder::RAM_EN, RAM::EN);
-  ram2.connectInputToIndex(decoder				, Decoder::RAM_EN, RAM::EN);
-  ram1.connectInputToIndex(decoder				, Decoder::RAM_WE, RAM::WE);
-  ram2.connectInputToIndex(decoder				, Decoder::RAM_WE, RAM::WE);
+  connectModulesByIndex( decoder, Decoder::L_EN, loopRegister, Register<16>::EN);
+  connectModulesByIndex( decoder, Decoder::L_CNT, loopRegister, Register<16>::CNT);
+  connectModulesByIndex( decoder, Decoder::L_DEC, loopRegister, Register<16>::DEC);
+
+  connectModulesByIndex( decoder, Decoder::RAM_EN, ram1, RAM::EN);
+  connectModulesByIndex( decoder, Decoder::RAM_EN, ram2, RAM::EN);
+  connectModulesByIndex( decoder, Decoder::RAM_WE, ram1, RAM::WE);
+  connectModulesByIndex( decoder, Decoder::RAM_WE, ram2, RAM::WE);
 
   // PERMANENT CONNECTIONS
   decoder.setOutputEnabled(true);
@@ -114,8 +111,8 @@ void Computer::doIt()
   ram1.load(memory1);
   ram2.load(memory2);
 
-  dataRegister.setData(0);
-  instructionPointerRegister.setData(0);
+  dataRegister.setInternalState(0);
+  instructionPointerRegister.setInternalState(0);
   
   // Run
   unsigned char program[] = {
@@ -132,8 +129,8 @@ void Computer::doIt()
   while (!clc.haltEnabled()) {
     std::cin.get();
     clc.pulse();
-    std::cout << dataRegister.peek(BinaryCounter::DATA_OUT) << '\n';
-    std::cout << loopRegister.peek(BinaryCounter::DATA_OUT) << '\n';
+    std::cout << dataRegister.peek(Register<8>::DATA_OUT) << '\n';
+    std::cout << loopRegister.peek(Register<8>::DATA_OUT) << '\n';
     std::cout << (int)ram1.at(4) << ' ' << (int)ram1.at(5) << ' ' << (int)ram1.at(6) << '\n';
   }
 

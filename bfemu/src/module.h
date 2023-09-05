@@ -4,9 +4,27 @@
 #include <cassert>
 #include <bitset>
 
+template <typename ... Indices>
+static constexpr unsigned long const mask(Indices ... indices) {
+  return ((1 << indices) | ...);
+};
+
+class Power;
+class Module;
+
+void connectModules(Module &outModule, unsigned long const outputMask,
+		    Module &inModule, unsigned long const inputMask,
+		    bool const disconnectOtherConnections = false);
+
+void connectModulesByIndex(Module &outputModule, int const outputIndex,
+			   Module &inputModule, const int inputIndex,
+			   bool const disconnectOtherConnections = false);
 
 class Module
 {
+  friend void connectModulesByIndex(Module &, int const, Module &, const int, bool const);
+  friend void connectModules(Module &, unsigned long const, Module &, unsigned long const, bool const);
+  
   enum PinState { LOW, HIGH };
   
   struct Connection
@@ -19,7 +37,7 @@ class Module
   bool d_outputPins[N_PINS];
   bool d_peek[N_PINS];
   std::vector<Connection> d_inputPins[N_PINS];
-  static Module *power;
+  static Power *power;
   int const d_outputEnablePin;
 
 protected:
@@ -51,11 +69,6 @@ public:
     }
   }
   
-  template <typename ... Indices>
-  static constexpr unsigned long const mask(Indices ... indices) {
-    assert((((int)indices < (int)N_PINS) && ...) && "invalid index");
-    return ((1 << indices) | ...);
-  };
 
   static void init();
   virtual int numberOfInputs() const = 0;
@@ -78,8 +91,6 @@ public:
   unsigned long peek(unsigned long mask = -1);
   bool inputByIndex(int const index);
   bool outputByIndex(int const index, bool const update = true, bool const peek = false);  
-  void connectInputTo(Module &other, unsigned long const outputMask, unsigned long const inputMask, bool const disconnectOtherConnections = false);
-  void connectInputToIndex(Module &other, int const outputIndex, int const inputIndex, bool const disconnectOtherConnections = false);
 
 protected:
   void set(int const pin, bool const en);

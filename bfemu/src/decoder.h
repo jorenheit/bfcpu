@@ -37,8 +37,8 @@ public:
     EN,
     N_INPUT,
 
-    INS_IN = Module::mask(I0, I1, I2, I3),
-    FLAGS_IN = Module::mask(Z_IN, L_IN, A_IN, V_IN),
+    INS_IN = mask(I0, I1, I2, I3),
+    FLAGS_IN = mask(Z_IN, L_IN, A_IN, V_IN),
     DATA_IN = INS_IN | FLAGS_IN,
   };
 
@@ -222,7 +222,7 @@ public:
     static int cycle = 0;
     unsigned char const instruction = input(DATA_IN);
     unsigned long const config = d_lookupTable[(instruction << 3) | cycle];
-    assert(result != (unsigned long)-1 && "Invalid index to the lookup table -> no instruction found");
+    assert(config != (unsigned long)-1 && "Invalid index to the lookup table -> no instruction found");
     setOutput(config);
     cycle = (config & mask(IP_CNT)) ? 0 : cycle + 1;
   }

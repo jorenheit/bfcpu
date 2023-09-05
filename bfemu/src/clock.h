@@ -6,8 +6,20 @@
 class Clock: public Module
 {
   std::vector<Module*> d_connectedModules;
-
+  
 public:
+
+  template <typename ... Rest>
+  void connect(Module &first, Rest& ... rest)
+  {
+    assert(first.canBeClocked() && "Module cannot be clocked");
+    d_connectedModules.push_back(&first);
+
+    if constexpr (sizeof ... (rest) > 0) {
+      connect(rest ...);
+    }
+  }
+
   
   enum Input {
     HLT,
@@ -17,18 +29,6 @@ public:
   // output is handled differently from other modules,
   // by calling the virtual functions in order. See pulse()
   
-
-  template <typename ... Rest>
-  void connectModule(Module &first, Rest& ... rest)
-  {
-    assert(first.canBeClocked() && "Module cannot be clocked");
-    d_connectedModules.push_back(&first);
-
-    if constexpr (sizeof ... (rest) > 0) {
-      connectModule(rest ...);
-    }
-  }
-
   void pulse()
   {
     if (haltEnabled())
