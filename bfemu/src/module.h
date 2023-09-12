@@ -4,6 +4,17 @@
 #include <cassert>
 #include <bitset>
 
+template <typename ... Args>
+void ASSERT(bool const condition, Args ... args)
+{
+  if (condition) return;
+
+  std::cerr << "Assertion failed: ";
+  (std::cerr << ... << args) << '\n';
+  std::exit(1);
+}
+
+
 template <typename ... Indices>
 static constexpr unsigned long const mask(Indices ... indices) {
   return ((1 << indices) | ...);

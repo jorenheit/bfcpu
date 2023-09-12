@@ -51,6 +51,19 @@ public:
     for (size_t i = 0; i != N; ++i)
       d_memory[i] = data[i];
   }
+
+  void load(unsigned char const *data, size_t N)
+  {
+    for (size_t i = 0; i != N; ++i)
+      d_memory[i] = data[i];
+  }
+
+  unsigned char at(size_t idx) const
+  {
+    assert(idx < CAPACITY && "index out of bounds");
+    return d_memory[idx];
+  }
+  
 };
 
 

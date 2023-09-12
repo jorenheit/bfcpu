@@ -70,6 +70,11 @@ public:
     assert(idx < CAPACITY && "index out of bounds");
     return d_memory[idx];
   }
+
+  size_t size() const
+  {
+    return CAPACITY;
+  }
   
   DEFINE_CONTROL_PIN(WE, setWriteEnabled, writeEnabled);
 };

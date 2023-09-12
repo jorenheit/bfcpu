@@ -1,4 +1,6 @@
+#include <iomanip>
 #include "computer.h"
+
 
 void Computer::build()
 {
@@ -11,7 +13,8 @@ void Computer::build()
 	      stackPointerRegister,
 	      dataPointerRegister,
 	      instructionPointerRegister,
-	      decoder);
+	      decoder,
+	      scr);
 
    // Connections to RAM
   connectModules( dataPointerRegister, Register<16>::DATA_OUT, ram1, RAM::ADDRESS_IN );
@@ -96,9 +99,97 @@ void Computer::build()
   connectModulesByIndex( decoder, Decoder::RAM_WE, ram1, RAM::WE);
   connectModulesByIndex( decoder, Decoder::RAM_WE, ram2, RAM::WE);
 
+  connectModulesByIndex( decoder, Decoder::SCR_LD, scr, Screen::LD);
+  
   // PERMANENT CONNECTIONS
   decoder.setOutputEnabled(true);
   instructionRegister.setOutputEnabled(true);
+}
+
+
+void Computer::show(std::ostream &out)
+{
+  int const pointerPosition = dataPointerRegister.peek();
+  int const window = 5;
+  int const first = (pointerPosition > window) ? (pointerPosition - window) : 0;
+  int const last = first + 2 * window + 1;
+
+  out << "\n=========================================================\n";
+  // Memory (around datapointer):
+  out << "Memory: |";
+  for (int i = first; i != last; ++i) {
+    out << ' ' << std::setw(2) << std::setfill('0') << std::hex << (int)ram1.at(i) << " |";
+  }
+  out << "\n        |";
+  for (int i = first; i != last; ++i) {
+    out << ' ' << std::setw(2) << std::setfill('0') << std::hex << (int)ram2.at(i) << " |";
+  }
+  out << '\n' << std::string(11 + (pointerPosition - first) * 5, ' ') << "^\n";
+
+  // Instruction Pointer:
+  int const ip = instructionPointerRegister.peek(Register<16>::DATA_OUT);
+  int const cmd = (ip < (1 << 16)) ? rom.at(ip) : 0;
+  //  int const cmd = rom.at(ip);
+  out << "IP   : " << std::dec << ip << " (" << ("0+-<>.,[]SH"[cmd]) << ")\n";
+  // Data Pointer
+  out << "DP   : " << std::dec << pointerPosition << '\n';
+  // D-Reg
+  out << "D-REG: " << std::setw(2) << std::setfill('0') << std::hex << (int)dataRegister.peek(Register<8>::DATA_OUT) << '\n';
+  // L-Reg
+  out << "L-REG: " << std::setw(4) << std::setfill('0') << std::hex << (int)loopRegister.peek(Register<16>::DATA_OUT) << '\n';
+  // SP
+  int const sp = stackPointerRegister.peek(Register<8>::DATA_OUT);
+  int const addr = ram1.at(sp) + (ram2.at(sp) << 8);
+  out << "SP   : " << std::setw(4) << std::setfill('0') << std::hex << sp  << " (" << std::dec << addr << ")\n"; 
+
+  // I-Reg
+  int const instr = instructionRegister.peek(Register<8>::DATA_OUT);
+  out << "I-REG: " << std::bitset<4>(instr) << " | " << std::bitset<4>(instr >> 4);
+  out << "\n=========================================================\n";
+  
+  
+}
+
+void Computer::load(std::string const &prog)
+{
+  std::vector<unsigned char> program;
+  for (char c: prog) {
+    switch (c) {
+    case '+': program.push_back(Decoder::PLUS); break;
+    case '-': program.push_back(Decoder::MINUS); break;
+    case '<': program.push_back(Decoder::LEFT); break;
+    case '>': program.push_back(Decoder::RIGHT); break;
+    case '[': program.push_back(Decoder::LOOP_START); break;
+    case ']': program.push_back(Decoder::LOOP_END); break;
+    case '.': program.push_back(Decoder::OUT); break;
+      //case ',': program.push_back(Decoder::LOOP_END); break;
+    default: continue;
+    }
+  }
+  
+  program.push_back(Decoder::HLT);
+  rom.load(program.data(), program.size());
+}
+
+void Computer::run()
+{
+  while (!clc.haltEnabled()) {
+    //    std::cin.get();
+    clc.pulse();
+    //    show();
+  }
+}
+
+void Computer::reset()
+{
+  dataPointerRegister.reset();
+  dataRegister.reset();
+  instructionRegister.reset();
+  instructionPointerRegister.reset();
+  loopRegister.reset();
+  flagRegister.reset();
+  stackPointerRegister.reset();
+  decoder.reset();
 }
 
 
@@ -121,6 +212,7 @@ void Computer::doIt()
     Decoder::LOOP_START,
     Decoder::MINUS,
     Decoder::LOOP_END,
+    Decoder::RIGHT,
     Decoder::HLT
   };
   rom.load(program);
@@ -129,9 +221,7 @@ void Computer::doIt()
   while (!clc.haltEnabled()) {
     std::cin.get();
     clc.pulse();
-    std::cout << dataRegister.peek(Register<8>::DATA_OUT) << '\n';
-    std::cout << loopRegister.peek(Register<8>::DATA_OUT) << '\n';
-    std::cout << (int)ram1.at(4) << ' ' << (int)ram1.at(5) << ' ' << (int)ram1.at(6) << '\n';
+    show();
   }
 
 }

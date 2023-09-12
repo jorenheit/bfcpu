@@ -21,8 +21,6 @@ add_executable(
   testing
   testing.cc
   module.cc
-  register.cc
-  binarycounter.cc
   computer.cc
 )
 target_link_libraries(

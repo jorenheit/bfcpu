@@ -11,6 +11,8 @@ namespace Impl_ {
   template <>
   struct RegisterPins<4>
   {
+    using ValueType = uint8_t;
+    
     enum Input {
       D0, D1, D2, D3, 
       EN, LD, CNT, DEC,
@@ -30,6 +32,8 @@ namespace Impl_ {
   template <>
   struct RegisterPins<8>
   {
+    using ValueType = uint8_t;
+    
     enum Input {
       D0, D1, D2, D3, D4, D5, D6, D7, 
       EN, LD, CNT, DEC,
@@ -49,6 +53,8 @@ namespace Impl_ {
   template <>
   struct RegisterPins<16>
   {
+    using ValueType = uint16_t;
+    
     enum Input {
       D0, D1, D2, D3, D4, D5, D6, D7, 
       D8, D9, D10, D11, D12, D13, D14, D15,
@@ -78,6 +84,7 @@ template <size_t N>
 class Register: public Module, public Impl_::RegisterPins<N>
 {
   using Pin = Impl_::RegisterPins<N>;
+  using ValueType = typename Impl_::RegisterPins<N>::ValueType;
   
   uint16_t d_value = 0;
   uint16_t const d_resetValue;
@@ -111,7 +118,9 @@ public:
 
   virtual void reset() override
   {
-    setOutput(d_resetValue);
+    d_value = d_resetValue;
+    d_zero = (d_value == 0);
+    d_carry = false;
   }
   
   virtual void onClockFalling() override
@@ -153,6 +162,26 @@ public:
     setOutput(static_cast<unsigned long>(d_value) | (d_carry << Pin::CA) | (d_zero << Pin::Z));
   }
 
+  ValueType value() const
+  {
+    return d_value;
+  }
+
+  int relativeValue() const
+  {
+    return (int)d_value - (int)d_resetValue;
+  }
+  
+  bool zero() const
+  {
+    return d_zero;
+  }
+
+  bool carry() const
+  {
+    return d_carry;
+  }
+  
   DEFINE_CONTROL_PIN(Pin::LD, setLoadEnabled, loadEnabled);
   DEFINE_CONTROL_PIN(Pin::CNT, setCountEnabled, countEnabled);
   DEFINE_CONTROL_PIN(Pin::DEC, setDecEnabled, decEnabled);

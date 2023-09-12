@@ -1,5 +1,7 @@
 #ifndef COMPUTER_H
 #define COMPUTER_H
+#include <iostream>
+#include <vector>
 #include "allmodules.h"
 
 #if 0
@@ -24,7 +26,7 @@ protected:
   Register<16> dataPointerRegister;
   Register<16> instructionPointerRegister;
   Register<16> loopRegister;
-  Register<16>  stackPointerRegister; 
+  Register<16> stackPointerRegister; 
   Register<8>  dataRegister;
   Register<8>  instructionRegister;
   Register<4>  flagRegister;
@@ -32,16 +34,21 @@ protected:
   Decoder decoder;
   Screen scr;
 
-  static constexpr size_t STACK_SIZE = 4;
+  static constexpr size_t STACK_SIZE = 256;
   
   void build();
-
+  
 public:
   Computer():
     dataPointerRegister(STACK_SIZE)
   {
     build();
   }
+
+  void show(std::ostream &out = std::cout);
+  void load(std::string const &);
+  void reset();
+  void run();
   void doIt();
 
 };
