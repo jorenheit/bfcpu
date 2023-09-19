@@ -1,0 +1,167 @@
+\section{Algorithms}
+The BFX compiler implements a series of algorithms to perform basic operations on the data stored in the data-array, which map to common operators and statements in most programming languages. This section will document each of these algorithms, starting with the most fundamental ones, which we can then use to implement the more complex operations. In the process, we will develop a pseudo language that maps directly to BF-code. The statements of the pseudo language will always be written within a set of curly braces, in order to seperate them from the BF operators.
+
+\subsection{Moving the Pointer: \texttt{\{x\}}}
+Whenever we need to operate on a cell, we first need to move the datapointer to this cell. It is assumed that the compiler is aware of the current pointer position and will therefore be able to move the pointer to any other cell, as long as the address of this cell is also known at compile-time. From now on, the operation of moving to a cell designated by some variable \texttt{x} will be written in as \texttt{\{x\}}. In future expressions enclosed by curly braces, the pointer is always left implicitly at the address of the left-hand-side operand.
+
+\subsection{Setting a Fixed Value: \texttt{\{x <- n\}}}
+The next elementary operation is setting some cell to a specific (known) value. We will not assume any prior knowledge of the current contents of this cell, which means the first step is to clear it completely, which we can do by iteratively decrementing the cell until it becomes zero: \texttt{[-]}. We then follow it up by the desired amount of increments. For example, setting cell \texttt{x} to \texttt{5} can be done with:
+\begin{lstlisting}
+  {x} [-] +++++
+\end{lstlisting}
+From now on, we will use the following shorthand for setting a cell (\texttt{x}) to a fixed value (n): \texttt{\{x <- n\}}.
+\subsubsection{Using \texttt{+} Instead: \texttt{\{x <- n+\}}}
+Instead of decrementing the cell until it becomes zero, we could also choose to increment it using \texttt{[+]}. The cell will eventually overflow and wrap back to zero, achieving the same result. This might seem unnecessary and dangerous, especially for 16-bit or larger values, because it can take a lot of time before the cell overflows. However, for some algorithms, where a cell is intentionally being \emph{underflown}, this is a helpfull tool to have at hand. When we need it, we will use a slightly different shorthand: \texttt{\{x <- n+\}}.
+
+\subsection{Moving Data: \texttt{\{x <- y\}}}
+It turns out that moving data is a lot easier than copying data. When moving data from one cell to another, the source-cell will be left empty. Below is a listing for the algorithm that moves the contents of cell x into cell y, leaving cell x empty after the move:
+\begin{lstlisting}
+  {y <- 0} 
+  {x} [ {y} + {x} - ]
+\end{lstlisting}
+After clearing \texttt{y}, we move the pointer to \texttt{x} and decrement it until it becomes zero, while at the same time incrementing cell \texttt{y}. This algorithm can be extended to move the data into arbitrarily cells, simply by adding variables to the loop and incrementing those as well. Moving data from \texttt{x} to \texttt{y, z, ...} will from now on be written as \texttt{\{(y, z, ...) <- x\}}, analogous to moving a fixed value into a cell.
+
+\subsection{Assignment/Copy: \texttt{\{x = y\}}}
+An assignment of the form \texttt{x = y} will assign the contents of cell \texttt{y} to cell \texttt{x}, overwriting the previously present value of \texttt{x}. This can be achieved by moving the contents of \texttt{y} into both \texttt{x} and a temporary value \texttt{tmp}. This will leave \texttt{y} empty, but we can restore it by moving the contents of \texttt{tmp} back into \texttt{y}.
+\begin{lstlisting}
+  {(x, tmp) <- y}
+  {y <- tmp}
+\end{lstlisting}
+The shorthand for this operation will from now on be: \texttt{\{x = y\}}
+
+\subsection{Addition}
+\subsubsection{In-Place Addition: \texttt{\{x += y\}}}
+It turns out that adding some value to a cell looks just like a copy, but without resetting the target cell first. Below is the pseudocode for adding the contents of \texttt{y} to \texttt{x}, leaving \texttt{y} intact.
+\begin{lstlisting}
+  {tmp <- 0}
+  {y} [ {x} + {tmp} + {y} - ]
+  {y <- tmp}
+\end{lstlisting}
+This operation will be denoted as \texttt{\{x += y\}}.
+
+\subsubsection{Return Variable: \texttt{\{z = x + y\}}}
+Rather than adding the contents of a cell to another one and changing the value of the cell on the receiving end, we should also have an algorithm that stores the sum in a new cell, leaving both operands untouched (or at least unchanged). This can be achieved simply by copying the contents of one of the cells to a third cell and applying the addition algorithm:
+\begin{lstlisting}
+  {z = x}
+  {z += y}
+\end{lstlisting}
+
+\subsubsection{Subtraction}
+Subtraction works exactly analogously to addition: we just replace the + with a -. This leads to the following shorthands:
+\begin{itemize}
+\item \texttt{\{x -= y\}} for subtracting a cell in-place and
+\item \texttt{\{z = x - y\}} for storing the difference in a return-variable.
+\end{itemize}
+
+\subsection{Multiplication}
+Multiplication can be implemented as repeated addition, for which we already have the tools. The same strategy will be used as before, where we first develop an algorithm aimed at multiplying a cell in-place.
+\subsubsection{In-Place Multiplication: \texttt{x *= y}}
+To multiply \texttt{x} by the value stored in \texttt{y}, we need to add \texttt{x} to itself, \texttt{y} times. To achieve this, we copy the value of \texttt{y} to a temporary cell, which we can decrement while adding a copy of the original value of \texttt{x} to itself:
+\begin{lstlisting}
+  {xCopy = x}
+  {yCopy = y}
+  {yCopy}
+  [
+    {x += xCopy}
+    {yCopy} -
+  ]
+\end{lstlisting}
+
+\subsubsection{Return Variable: \texttt{\{z = x * y\}}}
+Like before, we can copy the value of one of the operands into the return address and apply the in-place multiplication algorithm:
+\begin{lstlisting}
+  {z = x}
+  {z *= y}
+\end{lstlisting}
+
+
+\subsection{Division and Modulo}
+Division and modulo are done in a single algorithm. Division is implemented as a series of subtractions, counting how many times the numerator fits in the denominator. Two special cases are handled:
+\begin{enumerate}
+\item When the numerator is zero, the division algorithm is skipped and zero is returned.
+\item When the denominator is zero, the algorithm is skipped and the maximum cell value is returned (which is as close to infinity as we can get).
+\end{enumerate}
+To indicate whether either of these special cases was handled, we set a flag (the loop-flag) which is reset while handling these cases. Only when this flag is still set will the division algorithm be executed. Below is the pseudocode for the expression \texttt{\{(div, mod) = x / y\}}, where \texttt{div} is the result of the division and \texttt{mod} is the remainder after the division.
+
+\begin{lstlisting}
+  # Prepare copies, return values and flags
+  {div <- 0}
+  {mod <- 0}
+  {zeroFlag <- 1}  
+  {loopFlag <- 1}
+  {xCopy = x}
+  {yCopy = y}
+
+  # Special case 1: the denominator is 0
+  # --> return 255 and skip the rest
+  {yCopy}
+  [
+    {zeroFlag <- 0}
+    {yCopy <- 0}
+  ]
+  {zeroFlag}
+  [
+    {div <- 255}
+    {mod <- 255}
+    {loopFlag <- 0}
+    {zeroFlag <- 0}
+  ]
+
+  # Special case 2: the numerator is 0
+  # --> return 0 and skip the rest
+  {zeroFlag <- 1}
+  {xCopy}
+  [
+    {zeroFlag <- 0}
+    {xCopy <- 0}
+  ]
+  {zeroFlag}
+  [
+    {div <- 0}
+    {mod <- 0}
+    {loopFlag <- 0}
+    {zeroFlag <- 0}
+  ]
+
+  # Division algorithm: repeated subtraction
+  {loopFlag}
+  [
+    {xCopy} -
+    {yCopy} -
+    {mod}   +
+
+    {zeroFlag <- 1}
+    {yCopy}
+    [
+      {zeroFlag <- 0}
+      {yCopy <- 0}
+    ]
+
+    # If yCopy became 0
+    # --> increase result by one and reset yCopy
+    {zeroFlag}
+    [
+      {div} +
+      {mod <- 0}
+      {yCopy = y}
+      {zeroFlag <- 0}
+    ]
+
+    {zeroFlag <- 1}
+    {xCopy}
+    [
+      {zeroFlag <- 0}
+      {xCopy <- 0}
+    ]
+
+    # If xCopy became 0 -> we're done
+    {zeroFlag}
+    [
+      {loopFlag <- 0}
+      {zeroFlag <- 0}
+    ]
+    {loopFlag}
+  ]    
+\end{lstlisting}
+
+    

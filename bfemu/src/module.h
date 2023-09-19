@@ -2,7 +2,7 @@
 #define MODULE_H
 #include <vector>
 #include <cassert>
-#include <bitset>
+#include <iostream>
 
 template <typename ... Args>
 void ASSERT(bool const condition, Args ... args)
@@ -86,14 +86,13 @@ public:
   virtual int numberOfOutputs() const = 0;
 
   virtual void update() {}
-  virtual void reset() { setOutput(0); };
   virtual void onClockRising() {}
   virtual void onClockFalling() {}
   virtual void onClockHigh() {}
   virtual void onClockLow() {}
-
   virtual bool canBeClocked() const { return true; }
-
+  virtual void reset() { setOutput(0); };
+  
   void setOutputEnabled(bool const en);
   bool outputEnabled();
 

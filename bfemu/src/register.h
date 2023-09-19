@@ -1,90 +1,13 @@
 #ifndef REGISTER_H
 #define REGISTER_H
 #include "module.h"
-
-
-namespace Impl_ {
-
-  template <size_t N>
-  struct RegisterPins;
-
-  template <>
-  struct RegisterPins<4>
-  {
-    using ValueType = uint8_t;
-    
-    enum Input {
-      D0, D1, D2, D3, 
-      EN, LD, CNT, DEC,
-      N_INPUT,
-      DATA_IN = mask(D0, D1, D2, D3),
-    };
-
-    enum Output {
-      Q0, Q1, Q2, Q3, 
-      CA,
-      Z, 
-      N_OUTPUT,
-      DATA_OUT = mask(Q0, Q1, Q2, Q3),
-    };
-  };
-
-  template <>
-  struct RegisterPins<8>
-  {
-    using ValueType = uint8_t;
-    
-    enum Input {
-      D0, D1, D2, D3, D4, D5, D6, D7, 
-      EN, LD, CNT, DEC,
-      N_INPUT,
-      DATA_IN = mask(D0, D1, D2, D3, D4, D5, D6, D7),
-    };
-
-    enum Output {
-      Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, 
-      CA,
-      Z, 
-      N_OUTPUT,
-      DATA_OUT = mask(Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7),
-    };
-  };
-
-  template <>
-  struct RegisterPins<16>
-  {
-    using ValueType = uint16_t;
-    
-    enum Input {
-      D0, D1, D2, D3, D4, D5, D6, D7, 
-      D8, D9, D10, D11, D12, D13, D14, D15,
-    
-      EN, LD, CNT, DEC,
-      N_INPUT,
-      DATA_IN_LOW = mask(D0, D1, D2, D3, D4, D5, D6, D7),
-      DATA_IN_HIGH = mask(D8, D9, D10, D11, D12, D13, D14, D15),
-      DATA_IN = DATA_IN_HIGH | DATA_IN_LOW
-    };
-
-    enum Output {
-      Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, 
-      Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15,
-      CA,
-      Z, 
-
-      N_OUTPUT,
-      DATA_OUT_LOW = mask(Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7),
-      DATA_OUT_HIGH = mask(Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15),
-      DATA_OUT = DATA_OUT_HIGH | DATA_OUT_LOW
-    };
-  };  
-}
+#include "registerpins.h"
 
 template <size_t N>
-class Register: public Module, public Impl_::RegisterPins<N>
+class Register: public Module, public RegisterPins<N>
 {
-  using Pin = Impl_::RegisterPins<N>;
-  using ValueType = typename Impl_::RegisterPins<N>::ValueType;
+  using Pins = RegisterPins<N>;
+  using ValueType = typename RegisterPins<N>::ValueType;
   
   uint16_t d_value = 0;
   uint16_t const d_resetValue;
@@ -93,7 +16,7 @@ class Register: public Module, public Impl_::RegisterPins<N>
   
 public:
   Register(uint16_t const resetValue = 0):
-    Module(Pin::EN, Pin::Z, Pin::CA),
+    Module(Pins::EN, Pins::Z, Pins::CA),
     d_resetValue(resetValue)
   {
     setInternalState(resetValue);
@@ -108,12 +31,12 @@ public:
   
   virtual int numberOfInputs() const override
   {
-    return Pin::N_INPUT;
+    return Pins::N_INPUT;
   }
 
   virtual int numberOfOutputs() const override
   {
-    return Pin::N_OUTPUT;
+    return Pins::N_OUTPUT;
   }
 
   virtual void reset() override
@@ -125,12 +48,8 @@ public:
   
   virtual void onClockFalling() override
   {
-    // Datasheet for SN74F163A says that when load is enabled,
-    // it will not increment/decrement. The value stored should agree
-    // with the input data after the clock.
-  
     if (loadEnabled()) {
-      d_value = input(Pin::DATA_IN);
+      d_value = input(Pins::DATA_IN);
       d_zero = (d_value == 0);
       d_carry = 0;
       return;
@@ -159,7 +78,7 @@ public:
 
   virtual void update() override
   {
-    setOutput(static_cast<unsigned long>(d_value) | (d_carry << Pin::CA) | (d_zero << Pin::Z));
+    setOutput(static_cast<unsigned long>(d_value) | (d_carry << Pins::CA) | (d_zero << Pins::Z));
   }
 
   ValueType value() const
@@ -182,9 +101,9 @@ public:
     return d_carry;
   }
   
-  DEFINE_CONTROL_PIN(Pin::LD, setLoadEnabled, loadEnabled);
-  DEFINE_CONTROL_PIN(Pin::CNT, setCountEnabled, countEnabled);
-  DEFINE_CONTROL_PIN(Pin::DEC, setDecEnabled, decEnabled);
+  DEFINE_CONTROL_PIN(Pins::LD, setLoadEnabled, loadEnabled);
+  DEFINE_CONTROL_PIN(Pins::CNT, setCountEnabled, countEnabled);
+  DEFINE_CONTROL_PIN(Pins::DEC, setDecEnabled, decEnabled);
 };
 
 
