@@ -2,7 +2,9 @@
 The BFX compiler implements a series of algorithms to perform basic operations on the data stored in the data-array, which map to common operators and statements in most programming languages. This section will document each of these algorithms, starting with the most fundamental ones, which we can then use to implement the more complex operations. In the process, we will develop a pseudo language that maps directly to BF-code. The statements of the pseudo language will always be written within a set of curly braces, in order to seperate them from the BF operators.
 
 \subsection{Moving the Pointer: \texttt{\{x\}}}
-Whenever we need to operate on a cell, we first need to move the datapointer to this cell. It is assumed that the compiler is aware of the current pointer position and will therefore be able to move the pointer to any other cell, as long as the address of this cell is also known at compile-time. From now on, the operation of moving to a cell designated by some variable \texttt{x} will be written in as \texttt{\{x\}}. In future expressions enclosed by curly braces, the pointer is always left implicitly at the address of the left-hand-side operand.
+Whenever we need to operate on a cell, we first need to move the datapointer to this cell. It is assumed that the compiler is aware of the current pointer position and will therefore be able to move the pointer to any other cell, as long as the address of this cell is also known at compile-time. From now on, the operation of moving to a cell designated by some variable \texttt{x} will be written in as \texttt{\{x\}}.
+
+\textbf{In future expressions enclosed by curly braces, the pointer is always left implicitly at the address of the left-hand-side operand.}
 
 \subsection{Setting a Fixed Value: \texttt{\{x <- n\}}}
 The next elementary operation is setting some cell to a specific (known) value. We will not assume any prior knowledge of the current contents of this cell, which means the first step is to clear it completely, which we can do by iteratively decrementing the cell until it becomes zero: \texttt{[-]}. We then follow it up by the desired amount of increments. For example, setting cell \texttt{x} to \texttt{5} can be done with:
@@ -39,7 +41,7 @@ It turns out that adding some value to a cell looks just like a copy, but withou
 \end{lstlisting}
 This operation will be denoted as \texttt{\{x += y\}}.
 
-\subsubsection{Return Variable: \texttt{\{z = x + y\}}}
+\subsubsection{Return Variable: \texttt{\{z <- x + y\}}}
 Rather than adding the contents of a cell to another one and changing the value of the cell on the receiving end, we should also have an algorithm that stores the sum in a new cell, leaving both operands untouched (or at least unchanged). This can be achieved simply by copying the contents of one of the cells to a third cell and applying the addition algorithm:
 \begin{lstlisting}
   {z = x}
@@ -67,15 +69,87 @@ To multiply \texttt{x} by the value stored in \texttt{y}, we need to add \texttt
   ]
 \end{lstlisting}
 
-\subsubsection{Return Variable: \texttt{\{z = x * y\}}}
+\subsubsection{Return Variable: \texttt{\{z <- x * y\}}}
 Like before, we can copy the value of one of the operands into the return address and apply the in-place multiplication algorithm:
 \begin{lstlisting}
   {z = x}
   {z *= y}
 \end{lstlisting}
 
+\subsection{Logical Operators}
+\subsubsection{NOT: \texttt{\{x <- NOT y\}}}
+The NOT operator basically checks whether the argument is 0, in which case it returns 1. In all other cases, it should return a zero. This can be implemented using the loop-operators, which are the only conditional instructions available to us in BF.
+\begin{lstlisting}
+  {x <- 1}
+  {yCopy = y}
+  [
+    {x     <- 0}
+    {yCopy <- 0}
+  ]
+\end{lstlisting}
 
-\subsection{Division and Modulo}
+\subsubsection{AND: \texttt{\{z <- x AND y\}}}
+The AND operator will only return 1 when both arguments (x and y) are nonzero:
+\begin{lstlisting}
+  {z <- 0}
+  {yCopy = y}
+  {xCopy = x}
+  [
+    {yCopy}
+    [
+      {z     <- 1}
+      {yCopy <- 0}
+    ]
+    {xCopy <- 0}
+  ]
+\end{lstlisting}
+
+\subsubsection{OR: \texttt{\{z <- x OR y\}}}
+The OR operator returns a 1 when either of its arguments are nonzero:
+\begin{lstlisting}
+  {z <- 0}
+  {xCopy = x}
+  [
+    {z     <- 1}
+    {xCopy <- 0}
+  ]
+  {yCopy = y}
+  [
+    {z     <- 1}
+    {yCopy <- 0}
+  ]
+\end{lstlisting}
+
+\subsubsection{Greater Than: \texttt{\{z <- x > y\}}}
+To check whether x has a higher value than y, we simply decrement x until it becomes 0. At each step, we also decrement y and check whether it is being decremented beyond zero (check for underflow). If that happens, this means that x is indeed the biggest.
+\begin{lstlisting}
+  {z <- 0}
+  {underflow <- 0}
+  {yCopy = y}
+  {xCopy = x}
+  [
+    {underflow <- NOT yCopy}
+    {yCopy} -
+    {z <- z OR underflow}
+    {underflow}
+    [
+      {yCopy <- 0+}
+      {underflow <- 0}
+    ]
+    {xCopy} -
+  ]
+\end{lstlisting}
+
+\subsubsection{Less Than: \texttt{\{z <- x < y\}}}
+The less than algorithm can just be expressed as a greater than algorithm, for which the arguments have been swapped around. It will therefore not be repeated below.
+
+\subsubsection{Equals: \texttt{\{z <- x == y\}}}
+Once the `greater than` and `less than` operators have been properly defined, the `equals` operator can be defined in terms of these:
+\begin{lstlisting}
+  {z <- {NOT x < y} AND {NOT (x > y)}}
+\end{lstlisting}
+
+\subsection{Division and Modulo: \texttt{\{(div, mod) <- x / y\}}}
 Division and modulo are done in a single algorithm. Division is implemented as a series of subtractions, counting how many times the numerator fits in the denominator. Two special cases are handled:
 \begin{enumerate}
 \item When the numerator is zero, the division algorithm is skipped and zero is returned.
@@ -84,22 +158,14 @@ Division and modulo are done in a single algorithm. Division is implemented as a
 To indicate whether either of these special cases was handled, we set a flag (the loop-flag) which is reset while handling these cases. Only when this flag is still set will the division algorithm be executed. Below is the pseudocode for the expression \texttt{\{(div, mod) = x / y\}}, where \texttt{div} is the result of the division and \texttt{mod} is the remainder after the division.
 
 \begin{lstlisting}
-  # Prepare copies, return values and flags
   {div <- 0}
   {mod <- 0}
   {zeroFlag <- 1}  
   {loopFlag <- 1}
-  {xCopy = x}
-  {yCopy = y}
 
-  # Special case 1: the denominator is 0
-  # --> return 255 and skip the rest
-  {yCopy}
-  [
-    {zeroFlag <- 0}
-    {yCopy <- 0}
-  ]
-  {zeroFlag}
+  # Special case 1: denominator is 0
+  # ==> return max value (255 on 8-bit arch)
+  {zeroFlag <- NOT y}
   [
     {div <- 255}
     {mod <- 255}
@@ -108,14 +174,8 @@ To indicate whether either of these special cases was handled, we set a flag (th
   ]
 
   # Special case 2: the numerator is 0
-  # --> return 0 and skip the rest
-  {zeroFlag <- 1}
-  {xCopy}
-  [
-    {zeroFlag <- 0}
-    {xCopy <- 0}
-  ]
-  {zeroFlag}
+  # ==> return 0 (even in 0/0 case)
+  {zeroFlag <- NOT x}
   [
     {div <- 0}
     {mod <- 0}
@@ -124,22 +184,18 @@ To indicate whether either of these special cases was handled, we set a flag (th
   ]
 
   # Division algorithm: repeated subtraction
+  {xCopy = x}
+  {yCopy = y}
+
   {loopFlag}
   [
     {xCopy} -
     {yCopy} -
     {mod}   +
 
-    {zeroFlag <- 1}
-    {yCopy}
-    [
-      {zeroFlag <- 0}
-      {yCopy <- 0}
-    ]
-
-    # If yCopy became 0
-    # --> increase result by one and reset yCopy
-    {zeroFlag}
+    # yCopy became 0?
+    # ==> increase result by one and reset yCopy
+    {zeroFlag <- NOT yCopy}
     [
       {div} +
       {mod <- 0}
@@ -147,15 +203,9 @@ To indicate whether either of these special cases was handled, we set a flag (th
       {zeroFlag <- 0}
     ]
 
-    {zeroFlag <- 1}
-    {xCopy}
-    [
-      {zeroFlag <- 0}
-      {xCopy <- 0}
-    ]
-
-    # If xCopy became 0 -> we're done
-    {zeroFlag}
+    # xCopy became 0?
+    # ==> done
+    {zeroFlag <- NOT xCopy}
     [
       {loopFlag <- 0}
       {zeroFlag <- 0}
