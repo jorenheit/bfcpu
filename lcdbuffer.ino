@@ -3,13 +3,10 @@
 LCDBuffer::LCDBuffer():
   lcd(SH_CP, DS, ST_CP)
 {
-  lcd.begin(CHARS, LINES);
+  lcd.begin(CHARS, VISIBLE_LINES);
   lcd.cursor();
   lcd.blink();
-  buf[0].reserve(CHARS);
-  buf[1].reserve(CHARS);
-  clear(buf[0]);
-  clear(buf[1]);
+  clearAll();
 }
 
 void LCDBuffer::push(byte const c) {
@@ -26,10 +23,17 @@ void LCDBuffer::send() {
     return;
     
   lcd.setCursor(0, 0);
-  lcd.print(buf[0]);
+  lcd.print(buf[topVisibleLine]);
   lcd.setCursor(0, 1);
-  lcd.print(buf[1]);
-  lcd.setCursor(pos, line);
+  lcd.print(buf[topVisibleLine + 1]);
+ 
+  if (line - topVisibleLine > 1 || line < topVisibleLine) {
+    lcd.noCursor();
+  }
+  else {
+    lcd.cursor();
+    lcd.setCursor(pos, line - topVisibleLine);
+  }
   changed = false;
 }
 
@@ -44,7 +48,8 @@ DisplayMode LCDBuffer::getMode() const {
 void LCDBuffer::pushAscii(byte const c) {
   switch (c) {
     case '\n': {
-      pos += CHARS;
+      ++line;
+      pos = 0;
       break;
     }
     case '\t': {
@@ -53,20 +58,41 @@ void LCDBuffer::pushAscii(byte const c) {
     }
     default: {
       buf[line][pos] = c;
-      pos += 1;
+      ++pos;
       break;
     }
   }
 
   if (pos >= CHARS) {
-    line += 1;
+    ++line;
     pos = 0;
   }
-  if (line > 1) {
-    line = 1;
-    buf[0] = buf[1];
-    clear(buf[1]);
+  
+  while (line >= TOTAL_LINES) {
+    for (int i = 0; i != TOTAL_LINES - 1; ++i) {
+      memcpy(&buf[i][0], &buf[i + 1][0], CHARS);
+    }
+    clearLine(TOTAL_LINES - 1);
+    --line;
   }
+
+  while (line > topVisibleLine + 1) scrollDown();
+  while (line < topVisibleLine)     scrollUp();
+}
+
+void LCDBuffer::scroll(int amount) {
+  topVisibleLine += amount;
+  topVisibleLine = min(topVisibleLine, TOTAL_LINES - 2);
+  topVisibleLine = max(topVisibleLine, 0);
+  changed = true;
+}
+
+void LCDBuffer::scrollDown() {
+  scroll(1);
+}
+
+void LCDBuffer::scrollUp() {
+  scroll(-1);
 }
 
 void LCDBuffer::pushNumber(byte const c, char const separator) {
@@ -76,10 +102,15 @@ void LCDBuffer::pushNumber(byte const c, char const separator) {
   pushAscii(separator);
 }
 
-void LCDBuffer::clear(String &buf, char const fill) {
-  buf = "";
+void LCDBuffer::clearLine(int const idx, char const fill) {
   for (int i = 0; i != CHARS; ++i) {
-    buf += fill;
+    buf[idx][i] = fill;
   }
+  buf[idx][CHARS] = 0;
 }
 
+void LCDBuffer::clearAll(char const fill) {
+  for (int i = 0; i != TOTAL_LINES; ++i) {
+    clearLine(i, fill);
+  }
+}
