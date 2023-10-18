@@ -26,10 +26,11 @@ inline constexpr int DATA_PINS[] = {
 };
 
 enum LCDParams {
-  LINES = 2,
+  VISIBLE_LINES = 2,
+  TOTAL_LINES = 20,
   CHARS = 16,
   TAB = 4,
-  REFRESH_DELAY = 100
+  REFRESH_DELAY = 100,
 };
 
 enum DisplayMode {

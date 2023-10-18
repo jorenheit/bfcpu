@@ -15,7 +15,7 @@ void setup() {
   */
 
   Serial.begin(9600);
-  lcdBuffer.setMode(ASCII); // TODO: set with HW switch/wire
+  lcdBuffer.setMode(HEXADECIMAL); // TODO: set with HW switch/wire
 }
 
 void loop() {
@@ -35,6 +35,14 @@ void update() {
 void getInput() {
   if (Serial.available()) {
     char c = Serial.read();
+    if (c == '<') {
+      lcdBuffer.scrollUp();
+      return;
+    }
+    if (c == '>') {
+      lcdBuffer.scrollDown();
+      return;
+    }
     if (c == '\n')
       return;
 
