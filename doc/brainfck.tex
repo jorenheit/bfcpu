@@ -1,0 +1,30 @@
+\section{Brainf*ck}\label{section:brainfck}
+\subsection{Brainf*ck as a Language}
+Brainf*ck (BF from hereon) is often introduced as a programming language, which it is. Just like any other programming language, it allows the programmer to write programs consisting of commands that are executed in order. There is a total of 8 commands available to the programmer, written as single characters: ``\texttt{+-<>[].,}''. Each of these commands corresponds to an operation on an array of memory or a pointer, pointing to some location within this memory. At the start of the program, every cell in memory is initialized to 0 and the pointer is pointing to the very first element (index 0). The commands then modify the contents of memory and the pointer as follows:
+\begin{itemize}
+\item \texttt{+} : add 1 to the current cell;
+\item \texttt{-} : subtract 1 from the current cell;
+\item \texttt{<} : move the pointer 1 cell to its left;
+\item \texttt{>} : move the pointer 1 cell to its right;
+\item \texttt{[} : if the current cell is nonzero, continue. Otherwise, skip to the matching \texttt{]};
+\item \texttt{]} : if the current cell is zero, continue. Otherwise, loop back to its matching \texttt{[};
+  \item \texttt{.} : send the value in the current cell to the output;
+  \item \texttt{,} : read a value from the input and store it into the current cell.
+\end{itemize}
+Although this might seem like a very limited set of instructions, it has been proven to be sufficient for performing any possible computation or program, also known as Turing-completeness \cite{esolang}. The catch is that this requires an unbounded (or infinite) amount of memory, which is obviously impossible. However, the same caveat holds for traditional (von Neumann architecture) systems, so we should be safe to assume that BF is Turing complete anyway.
+
+\subsection{Architectures}
+\subsubsection{Von Neumann}
+Modern computers are built according to the von Neumann architecture \cite{vonneumann-wiki}, which specifies a CPU (containing registers and an ALU), memory and input/output devices. The registers of the CPU can be loaded with data from the memory unit and operated on by the ALU (Arithmetic and Logic Unit). Typical about this kind of architecture is the fact that not only data, but also the instructions (the program) is stored in memory. The program is therefore just as much part of the data as the data itself and can even be modified by itself. This type of architecture is also know as a Stored Program Computer \cite{vonneumann-geeks}.
+% TODO: image of von Neumann arch. Wikipedia has it, but might as well create our own
+
+\subsubsection{Harvard}
+Unlike within the Von Neumann architecture, the Harvard architecture specifies two kinds of memory: program memory and data memory. The program memory contains only the instructions to be carried out and cannot be modified at runtime. Other than that, the architecture is similar to Von Neumann, in that it consists of a CPU (again containing registers and an ALU), memory (program and data) and input/output devices.
+% TODO: image of Harvard arch. Wikipedia has it, but might as well create our own
+
+\subsubsection{BF Architecture}
+The architecture assumed by the BF language is similar to the Harvard architecture, in that the memory does not contain the program itself. This implies that the program is stored somewhere else and cannot be addressed by the pointer. The ALU is very limited and can only perform increment, decrement and comparison to zero.
+% TODO: image
+
+\subsection{Brainf*ck as an Instruction Set}
+Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above. This will be the main goal of this project
