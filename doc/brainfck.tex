@@ -1,6 +1,6 @@
 \section{Brainf*ck}\label{section:brainfck}
 \subsection{Brainf*ck as a Language}
-Brainf*ck (BF from hereon) is often introduced as a programming language, which it is. Just like any other programming language, it allows the programmer to write programs consisting of commands that are executed in order. There is a total of 8 commands available to the programmer, written as single characters: ``\texttt{+-<>[].,}''. Each of these commands corresponds to an operation on an array of memory or a pointer, pointing to some location within this memory. At the start of the program, every cell in memory is initialized to 0 and the pointer is pointing to the very first element (index 0). The commands then modify the contents of memory and the pointer as follows:
+Brainf*ck is often introduced as a programming language, which it is. Just like any other programming language, it allows the programmer to write programs consisting of commands that are executed in order. There is a total of 8 commands available to the programmer, written as single characters: ``\texttt{+-<>[].,}''. Each of these commands corresponds to an operation on an array of memory or a pointer, pointing to some location within this memory. At the start of the program, every cell in memory is initialized to 0 and the pointer is pointing to the very first element (index 0). The commands then modify the contents of memory and the pointer as follows:
 \begin{itemize}
 \item \texttt{+} : add 1 to the current cell;
 \item \texttt{-} : subtract 1 from the current cell;
@@ -26,5 +26,8 @@ Unlike within the Von Neumann architecture, the Harvard architecture specifies t
 The architecture assumed by the BF language is similar to the Harvard architecture, in that the memory does not contain the program itself. This implies that the program is stored somewhere else and cannot be addressed by the pointer. The ALU is very limited and can only perform increment, decrement and comparison to zero.
 % TODO: image
 
-\subsection{Brainf*ck as an Instruction Set}
+\subsubsection{Brainf*ck as an Instruction Set}
 Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above. This will be the main goal of this project
+
+\subsection{Brainfix}
+In 2013, one of the authors wrote a compiler, Brainfix, that takes a human-readable programming language (also called Brainfix) and compiles this into BF. This project was then abandoned and rebooted in late 2021 with a complete rewrite of the compiler. While working on this project, the idea to build an actual computer to go along with the compiler arose. The project page holds an extensive manual to the Brainfix language and compiler; see \cite{brainfix}. Chapter \ref{section:algorithms} explains some of the BF algorithms implemented by the compiler.
