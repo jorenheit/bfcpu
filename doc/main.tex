@@ -1,18 +1,27 @@
 \documentclass{article}
 \usepackage{listings}
-
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption}
+  
 \lstset{
   basicstyle=\ttfamily,
   frame=single
 }
 
+\captionsetup{font=footnotesize,format=hang}
+
+\newcommand{\nocontentsline}[3]{}
+\newcommand{\tocless}[2]{\bgroup\let\addcontentsline=\nocontentsline#1{#2}\egroup}
 
 \title{BFCPU}
 \begin{document}
 \maketitle
+\tableofcontents
 
 \include{introduction}
 \include{brainfck}
+\include{architecture}
 \include{algorithms}
 \include{references}
 
