@@ -5,7 +5,12 @@
 \contentsline {subsubsection}{\numberline {2.2.1}Von Neumann}{3}{}%
 \contentsline {subsubsection}{\numberline {2.2.2}Harvard}{4}{}%
 \contentsline {subsubsection}{\numberline {2.2.3}BF Architecture}{4}{}%
-\contentsline {subsubsection}{\numberline {2.2.4}BF as an Instruction Set}{4}{}%
-\contentsline {subsection}{\numberline {2.3}Brainfix}{5}{}%
+\contentsline {subsection}{\numberline {2.3}BF as an Instruction Set}{4}{}%
+\contentsline {subsection}{\numberline {2.4}Brainfix}{5}{}%
 \contentsline {section}{\numberline {3}Architecture}{6}{}%
-\contentsline {section}{\numberline {4}Algorithms}{7}{}%
+\contentsline {subsection}{\numberline {3.1}Overview}{6}{}%
+\contentsline {subsection}{\numberline {3.2}Instruction Pointer Register (IP)}{6}{}%
+\contentsline {subsection}{\numberline {3.3}Stack}{7}{}%
+\contentsline {subsection}{\numberline {3.4}Instruction Register}{7}{}%
+\contentsline {subsection}{\numberline {3.5}Data Register (D) and Data Pointer Register (DP)}{7}{}%
+\contentsline {section}{\numberline {4}Algorithms}{9}{}%
