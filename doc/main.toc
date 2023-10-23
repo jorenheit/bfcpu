@@ -10,7 +10,11 @@
 \contentsline {section}{\numberline {3}Architecture}{6}{}%
 \contentsline {subsection}{\numberline {3.1}Overview}{6}{}%
 \contentsline {subsection}{\numberline {3.2}Instruction Pointer Register (IP)}{6}{}%
-\contentsline {subsection}{\numberline {3.3}Stack}{7}{}%
-\contentsline {subsection}{\numberline {3.4}Instruction Register}{7}{}%
-\contentsline {subsection}{\numberline {3.5}Data Register (D) and Data Pointer Register (DP)}{7}{}%
+\contentsline {subsection}{\numberline {3.3}Stack Pointer (SP)}{7}{}%
+\contentsline {subsection}{\numberline {3.4}Instruction Register (I)}{7}{}%
+\contentsline {subsection}{\numberline {3.5}Data Register (D), Data Pointer Register (DP)}{7}{}%
+\contentsline {subsection}{\numberline {3.6}Flags and the Flag Register (F)}{8}{}%
+\contentsline {subsubsection}{\numberline {3.6.1}A and V}{8}{}%
+\contentsline {subsubsection}{\numberline {3.6.2}Z(D) and Z(LS)}{8}{}%
+\contentsline {subsection}{\numberline {3.7}Loop Skip Register (LS)}{8}{}%
 \contentsline {section}{\numberline {4}Algorithms}{9}{}%
