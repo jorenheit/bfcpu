@@ -2,7 +2,7 @@
 This chapter will describe the architecture of the BF processor in a little more detail, but providing very few implementation details for each of the modules.
 
 \subsection{Overview}
-The processor consists of three basic building blocks: registers, memory and a control unit. The ALU is missing from this list because the only operations that it needs to perform is addition and subtraction of the value 1, which can be done directly at the register-level when using up/down binary counters like the 74LS193 integrated circuit. The program (a sequence of BF instructions) is stored into Read Only Memory (ROM), whereas the data is stored in Random Access Memory (RAM). Instructions (4-bits) are loaded from ROM into the instruction register (I), together with some flags that encode the state of the machine. Depending on the state and current instruction, the Control Unit sets the appropriate control signals for each of the modules in order for the system to perform the next computation. Figure \ref{fig:architecture} shows how each of the modules is communicating with other modules. In the sections below, each of these connections will be clarified further.
+The processor consists of three basic building blocks: registers, memory and a control unit. The ALU is missing from this list because the only operations that it needs to perform are addition and subtraction of the value 1, which can be done directly at the register-level when using up/down binary counters like the 74LS193 integrated circuit. The program (a sequence of BF instructions) is stored into Read Only Memory (ROM), whereas the data is stored in Random Access Memory (RAM). Instructions (4-bits) are loaded from ROM into the instruction register (I), together with some flags that encode the state of the machine. Depending on the state and current instruction, the Control Unit sets the appropriate control signals for each of the modules in order for the system to perform the next computation. Figure \ref{fig:architecture} shows how each of the modules is communicating with other modules. In the sections below, each of these connections will be clarified further.
 
 \begin{figure}[H]
   \centering
@@ -12,21 +12,40 @@ The processor consists of three basic building blocks: registers, memory and a c
 \end{figure}
 
 \subsection{Instruction Pointer Register (IP)}
-The instruction pointer is a 16-bit value, kept in the IP register, which keeps track of the current instruction that is being executed. It points to a certain address in ROM (which stores the program) and is usually incremented after each instruction has finished executing, in order to move to the next instruction. However, when the processor encounters the \texttt{[}-instruction, it needs to store the current value of the IP somewhere: the stack. When the matching \texttt{]}-instruction is encountered, this value is loaded back into the IP instead of simply incrementing the previous value. This has the effect of jumping back in the program, which is how loops are implemented in BF.
+The instruction pointer is a 16-bit value, kept in the IP register, which keeps track of the current instruction that is being executed. It points to a certain address in ROM (which stores the program) and is usually incremented after each instruction has finished executing, in order to move to the next instruction. However, when the processor encounters the \texttt{[}-instruction, it needs to store the current value of the IP somewhere: on the stack. When the matching \texttt{]}-instruction is encountered, this value is loaded back into the IP instead of simply incrementing the previous value. This has the effect of jumping back in the program, which is how loops are implemented in BF.
 
-\subsection{Stack}
-The stack is the first part of RAM (addresses 0x0000 - 0x00ff) which is reserved to keep track of addresses that might need to be jumped to. The stack-pointer (SP) is incremented whenever a new value is stored on the stack and decremented whenever a value is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it starts leaking into data-memory (stack overflow). This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs. Although possible, it is very unlikely to happen for the simple programs we intend to run.
+\subsection{Stack Pointer (SP)}
+The stack is the first part of RAM (addresses 0x0000 - 0x00ff) which is reserved to keep track of addresses that might need to be jumped to. The stack-pointer (SP) is incremented whenever a new value is stored on the stack and decremented whenever a value is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it the SP overflows (wraps around back to 0) and starts overwriting previous values. This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs. Although possible, it is very unlikely to happen for the simple programs we intend to run.
 
-\subsection{Instruction Register}
+\subsection{Instruction Register (I)}
 The instruction register is an 8-bit register that stores the current instruction, which was loaded from ROM according to the IP value. The BF-instruction itself is only 4 bits wide, which leaves another 4 bits for encoding the state of the machine, using flags. There are 4 flags that determine the state of the machine:
 \begin{itemize}
 \item Z(D): the zero-flag set by the D-register, indicating that there is currently a 0 stored in this register;
-\item Z(LS): the zero-flag set by the LS-register (see below);
+\item Z(LS): the zero-flag set by the LS-register (see \ref{sec:architecture:loopskip});
 \item A: the address-changed-flag, set by the control-unit, indicating that the previous instruction has changed the value of the data-pointer. When this flag is set, the value in the D-register does no longer correspond to the cell pointed to by the data-pointer;
 \item V: the value-changed-flag, set by the control-unit, indicating that the previous instruction has altered the value in the D-register. When this flag is set, the value in RAM is outdated and needs to be updated before moving the pointer to a different cell.
 \end{itemize}
 
-\subsection{Data Register (D) and Data Pointer Register (DP)}
-The data-pointer corresponds to the pointer as specified in the BF-language. It points to some value in memory and can be either incremented (\texttt{>}) or decremented (\texttt{<}). Whenever a value is modified by \texttt{+} or \texttt{-}, this value has to be loaded into the D-register, where it can be modified before being stored back into RAM.
+\subsection{Data Register (D), Data Pointer Register (DP)}
+The data-pointer corresponds to the pointer as specified in the BF-language. It points to some value in memory and can be either incremented (\texttt{>}) or decremented (\texttt{<}). Whenever the value pointed to by DP is modified by \texttt{+} or \texttt{-}, this value has to be loaded into the D-register, where it can be modified before being stored back into RAM. This happens in conjunction with the flag-register, which dictates whether or not synchronization has to take place between RAM and D (see also section \ref{sec:architecture:flags}).
+
+\subsection{Flags and the Flag Register (F)} \label{sec:architecture:flags}
+\subsubsection{A and V}
+A naive and fail-safe way of synchronizing the contents of RAM with the contents of the D-register, is to perform the following sequence on each instruction:
+\begin{enumerate}
+\item Load the current value (pointed to by DP) into D;
+\item Modify the value (on a \texttt{+} or \texttt{-} instruction);
+\item Write the value back into RAM.
+\end{enumerate}
+However, it is very common to have sequences of many repeating \texttt{+}'s or \texttt{-}'s and it would be a waste to keep writing them back to RAM, only to read them back into D during the very next instruction. This is why the Control Unit sets a flag whenever either the value of the DP has changed (A, the address-changed-flag) or the value in the D-register has changed (V, the value-changed-flag). Depending on the state of these flags, the Control Unit can determine whether it has to synchronize the RAM with the D-register, or not (yet). The Control Unit buffers these flags in the flag-register (F), which is loaded into the instruction register (I) together with the next instruction from ROM.
+
+\subsubsection{Z(D) and Z(LS)}
+In addition to the A and V flags, there are two flags which are not buffered in F, but can be directly loaded into I: the zero-flags (Z) from the data-register and loop-skip-register (see section \ref{sec:architecture:loopskip}). These flags are both used in the context of conditional jumps:
+\begin{itemize}
+\item Z(D) : When encountering either an opening \texttt{[}, the flag indicates whether or not to enter or skip the loop. On a closing \texttt{]}, the flag indicates whether to loop back or exit from the loop.
+\item Z(LS) : The zero-flag from the loop-skip register indicates whether or not we are currently in the process of skipping an entire piece of code. This happens when the current value is 0 when encountering an opening \texttt{[}. In this case, execution must resume after the matching closing \texttt{]}. Only when the LS has its zero-flag set, should the current instruction actually be executed.
+\end{itemize}
+
+\subsection{Loop Skip Register (LS)} \label{sec:architecture:loopskip}
 
 
