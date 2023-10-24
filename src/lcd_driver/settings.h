@@ -1,15 +1,17 @@
 #pragma once
 
 enum LCDDriverPins {
-  SH_CP = 4, // 5
-  DS = 3,    // 4
-  ST_CP = 2  // 3  --> need pin 2 for interrupt handling
+  SH_CP = 5, // 5
+  DS = 4,    // 4
+  ST_CP = 3  // 3  --> need pin 2 for interrupt handling
 };
 
 enum ModuleDriverPins {
   CLOCK_INTERRUPT_PIN = 2,
   WRITE_ENABLE_PIN = A0,  // should be able to do digitalRead on analog pin, right?
   DISPLAY_MODE_PIN = A1,
+  SCROLL_UP_PIN = A2,
+  SCROLL_DOWN_PIN = A3,
 
   D0 = 6,
   D1 = 7,
@@ -31,6 +33,8 @@ enum LCDParams {
   CHARS = 16,
   TAB = 4,
   REFRESH_DELAY = 100,
+  CLEAR_HOLD_TIME = 3000,
+  BUTTON_DEBOUNCE_DELAY = 50
 };
 
 enum DisplayMode {

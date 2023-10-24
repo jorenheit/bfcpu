@@ -19,7 +19,8 @@ public:
   void scrollDown();
   void scrollUp();
   void scroll(int amount);
-
+  void clear(char const fill = ' ');
+  
   void setMode(DisplayMode m);
   DisplayMode getMode() const;
 
@@ -27,5 +28,5 @@ private:
   void pushAscii(byte const c);
   void pushNumber(byte const c, char const separator = '|');
   void clearLine(int const idx, char const fill = ' ');
-  void clearAll(char const fill = ' ');
+  
 };
