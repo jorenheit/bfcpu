@@ -114,50 +114,96 @@ Table \ref{tab:microcode} shows the control sequences that are executed per BF i
     \centering
     \begin{tabular} {c|cccc|c|llllll}
       Instr      & V & A & Z(LS) & Z(D) & Cycle & \multicolumn{6}{c}{Control Signals}                   \\ \hline
-                 &   &   &       &      & 0     & EN(IP) & LD(I)   &         &        &                 \\ \hline
-      \texttt{+} &   & 0 & 0     &      & 1     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU)          \\
-      
-                 &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &                 \\ 
-                 &   & 1 & 0     &      & 2     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU)          \\
-      
-                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &                 \\ \hline
+      \rowcolor{White}
+       Any       &   &   &       &      & 0     & EN(IP) & LD(I)   &         &        &       &         \\ \hline
+      \rowcolor{Gray}
+      \texttt{+} &   & 0 & 0     &      & 1     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
 
+      \rowcolor{White}
+                 &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
+      \rowcolor{White}
+                 &   & 1 & 0     &      & 2     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
+
+      \rowcolor{Gray}
+                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
+
+      \rowcolor{White}
       \texttt{-} &   & 0 & 0     &      & 1     & CE(D)  & DEC(D)  & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-      
-                 &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &                 \\ 
+
+      \rowcolor{Gray}
+                 &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
+      \rowcolor{Gray}
                  &   & 1 & 0     &      & 2     & CE(D)  & DEC(D)  & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-       
-                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &                 \\ \hline
-
-      \texttt{>} & 0 &   & 0     &      & 1     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU)          \\
-      
-                 & 1 &   & 0     &      & 1     & EN(D)  & EN(DP)  & WE(RAM) &        &                 \\
-                 & 1 &   & 0     &      & 2     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU)          \\
-      
-                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &                 \\ \hline
-
+      \rowcolor{White}
+                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
+      \rowcolor{Gray}
+      \texttt{>} & 0 &   & 0     &      & 1     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
+      \rowcolor{White}
+                 & 1 &   & 0     &      & 1     & EN(D)  & EN(DP)  & WE(RAM) &        &        &        \\
+      \rowcolor{White}
+                 & 1 &   & 0     &      & 2     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
+      \rowcolor{Gray}
+                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &         \\ \hline
+      \rowcolor{White}
       \texttt{<} & 0 &   & 0     &      & 1     & CE(DP)  & DEC(DP) & AE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-      
-                 & 1 &   & 0     &      & 1     & EN(D)   & EN(DP)  & WE(RAM) &        &                 \\
+      \rowcolor{Gray}
+                 & 1 &   & 0     &      & 1     & EN(D)   & EN(DP)  & WE(RAM) &        &       &         \\
+      \rowcolor{Gray}
                  & 1 &   & 0     &      & 2     & CE(DP)  & DEC(DP) & AE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
+                 &   &   & 1     &      & 1     & CE(IP)  & CR(CU)  &         &        &       &          \\ \hline
+      \rowcolor{Gray}
+      \texttt{[} &   & 0 & 0     & 1    & 1     & CE(LS)  & CE(IP)  & CR(CU)  &        &       &          \\
+      \rowcolor{White}  
+                 &   & 0 & 0     & 0    & 1     & CE(SP)  &         &         &        &       &          \\
+      \rowcolor{White}
+                 &   & 0 & 0     & 0    & 2     & WE(RAM) & EN(SP) & EN(IP)   &        &       &          \\
+      \rowcolor{White}
+                 &   & 0 & 0     & 0    & 3     & CE(IP)  & CR(CU) &          &        &       &          \\
+      \rowcolor{Gray}
+                 &   & 1 & 0     &      & 1     & EN(DP)  & LD(D) & OE(RAM)   &        &       &          \\
+      \rowcolor{Gray}
+                 &   & 1 & 0     &      & 2     & EN(IP)  & LD(I) &           &        &       &          \\
+      \rowcolor{Gray}
+                 &   & 1 & 0     & 1    & 3     & CE(LS)  & CE(IP) & CR(CU)   &        &       &          \\
+      \rowcolor{White}
+                 &   & 1 & 0     & 0    & 3     & CE(SP)  &        &          &        &       &          \\
+      \rowcolor{White}
+                 &   & 1 & 0     & 0    & 4     & WE(RAM) & EN(SP) & EN(IP)   &        &       &          \\
+      \rowcolor{White}
+                 &   & 1 & 0     & 0    & 5     & LD(F)   & CE(IP) & CR(CU)   &        &       &          \\ 
+      \rowcolor{Gray}
+                &   &   & 1     &      & 1      & CE(LS)  & CE(IP) & CR(CU)   &        &       &          \\ \hline
+      \rowcolor{White}
+      \texttt{]} &   & 0 & 0     & 1    & 1     & CE(SP)  & DEC(SP) & CE(IP)  & CR(CU) &       &          \\
+      \rowcolor{Gray}
+                 &   & 0 & 0     & 0    & 1     & EN(SP)  & EN(RAM) & LD(IP)  &        &       &          \\
+      \rowcolor{Gray}
+                 &   & 0 & 0     & 0    & 2     & CE(IP)  & CR(CU)  &         &        &       &          \\
+      \rowcolor{White}
+                 &   & 1 & 0     &      & 1     & EN(DP)  & EN(RAM) & LD(D)   &        &       &          \\
+      \rowcolor{White}
+                 &   & 1 & 0     &      & 2     & EN(IP)  & EN(F)   & LD(I)   &        &       &          \\
+      \rowcolor{White}
+                 &   & 1 & 0     & 1    & 3     & CE(SP)  & DEC(SP) & CE(IP)  & CR(CU) &       &          \\
+      \rowcolor{Gray}
+                 &   & 1 & 0     & 0    & 3     & EN(SP)  & EN(RAM) & LD(IP)  &        &       &          \\
+      \rowcolor{Gray}
+                 &   & 1 & 0     & 0    & 4     & CE(IP)  & CR(CU)  &         &        &       &          \\
+      \rowcolor{White}
+                 &   &   & 1     &      & 1     & CE(LS)  & DEC(LS) & CE(IP)  & CR(CU) &       &          \\ \hline
+      \rowcolor{Gray}
+      \texttt{.} &   & 0 & 0     &      & 1     & PRE(SCR)& EN(D)   & CE(IP)  & CR(CU) &       &          \\
+      \rowcolor{White}
+                 &   & 1 & 0     &      & 1     & EN(DP)  & EN(RAM) & LD(D)   &        &       &          \\
+      \rowcolor{White}
+                 &   & 1 & 0     &      & 2     & PRE(SCR)& EN(D)   & CE(IP)  & CR(CU) &       &          \\ \hline
+      \rowcolor{Gray}
+      \texttt{,} & TBD & & &       &      &       &                   &         &        &       &          \\ \hline
       
-                 &   &   & 1     &      & 1     & CE(IP)  & CR(CU)  &         &        &                 \\ \hline
-
-      \texttt{[} &   & 0 & 0     & 1    & 1     & CE(LS)  & CE(IP) & CR(CU)                              \\
-        
-                 &   & 0 & 0     & 0    & 1     & CE(SP)                                                \\
-                 &   & 0 & 0     & 0    & 2     & WE(RAM) & EN(SP) & EN(IP) \\
-                 &   & 0 & 0     & 0    & 3     & CE(IP)  & CR(CU) \\
-        
-                 &   & 1 & 0     &      & 1     & EN(DP)  & LD(D) & OE(RAM)  \\
-                 &   & 1 & 0     &      & 2     & EN(IP)  & LD(I) \\
-                 &   & 1 & 0     & 1    & 3     & CE(LS)  & CE(IP) & CR(CU) \\
-                 &   & 1 & 0     & 0    & 3     & CE(SP) \\
-                 &   & 1 & 0     & 0    & 4     & WE(RAM) & EN(SP) & EN(IP) \\
-                 &   & 1 & 0     & 0    & 5     & LD(F) & CE(IP) & CR(CU) \\
+      
       
     \end{tabular}
   }
-  \caption{Control signals for each of the BF instructions}
+  \caption{Control signals for each of the BF instructions in different scenario's, depending on the state flags.}
   \label{tab:microcode}
 \end{table}
