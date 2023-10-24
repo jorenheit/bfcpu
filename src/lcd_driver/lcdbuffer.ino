@@ -6,7 +6,7 @@ LCDBuffer::LCDBuffer():
   lcd.begin(CHARS, VISIBLE_LINES);
   lcd.cursor();
   lcd.blink();
-  clearAll();
+  clear();
 }
 
 void LCDBuffer::push(byte const c) {
@@ -109,8 +109,12 @@ void LCDBuffer::clearLine(int const idx, char const fill) {
   buf[idx][CHARS] = 0;
 }
 
-void LCDBuffer::clearAll(char const fill) {
+void LCDBuffer::clear(char const fill) {
   for (int i = 0; i != TOTAL_LINES; ++i) {
     clearLine(i, fill);
   }
+  line = 0;
+  pos = 0;
+  topVisibleLine = 0;
+  changed = true;
 }
