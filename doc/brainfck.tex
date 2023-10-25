@@ -1,6 +1,15 @@
 \section{Brainf*ck}\label{section:brainfck}                                                       
 \subsection{BF as a Language}
-Brainf*ck is often introduced as a programming language, which it is. Just like any other programming language, it allows the programmer to write programs consisting of commands that are executed in order. There is a total of 8 commands available to the programmer, written as single characters: ``\texttt{+-<>[].,}''. Each of these commands corresponds to an operation on an array of memory or a pointer, pointing to some location within this memory. At the start of the program, every cell in memory is initialized to 0 and the pointer is pointing to the very first element (index 0). The commands then modify the contents of memory and the pointer as follows:
+Brainf*ck is often introduced as a programming language, which it is. However as we will soon see, it can also be viewed as an instruction set to a yet non-existent CPU. Just like any other programming language, it allows the programmer to write programs consisting of commands that are executed in order. There is a total of 8 commands available to the programmer, written as single characters: ``\texttt{+-<>[].,}''. Each of these commands corresponds to an operation on an array of memory or a pointer, pointing to some location within this memory. At the start of the program, every cell in memory is initialized to 0 and the pointer is pointing to the very first element (index 0, see Figure \ref{fig:bfmachine_initial}).
+%
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{img/bfmachine_initial}
+  \caption{Initial state of the BF machine.}
+  \label{fig:bfmachine_initial}
+\end{figure}
+%
+The commands then modify the contents of memory and the pointer as follows:
 \begin{itemize}
 \item \texttt{+} : add 1 to the current cell;
 \item \texttt{-} : subtract 1 from the current cell;
