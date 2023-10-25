@@ -23,16 +23,16 @@
 \contentsline {subsubsection}{\numberline {3.8.3}Control Unit}{12}{}%
 \contentsline {subsubsection}{\numberline {3.8.4}Screen (Output)}{12}{}%
 \contentsline {subsubsection}{\numberline {3.8.5}Keyboard (Input)}{12}{}%
-\contentsline {subsection}{\numberline {3.9}Control Sequences}{12}{}%
-\contentsline {section}{\numberline {4}Implementation}{14}{}%
-\contentsline {subsection}{\numberline {4.1}Registers}{14}{}%
-\contentsline {subsection}{\numberline {4.2}Memory}{14}{}%
-\contentsline {subsection}{\numberline {4.3}Control Unit}{14}{}%
-\contentsline {subsection}{\numberline {4.4}Input}{14}{}%
-\contentsline {subsection}{\numberline {4.5}Output}{14}{}%
-\contentsline {section}{\numberline {5}Registers}{15}{}%
-\contentsline {subsection}{\numberline {5.1}Introduction}{15}{}%
-\contentsline {subsection}{\numberline {5.2}Register Architecture}{15}{}%
-\contentsline {subsection}{\numberline {5.3}Driver Module}{15}{}%
-\contentsline {subsection}{\numberline {5.4}Additional Functionality of Registers}{16}{}%
-\contentsline {section}{\numberline {6}Algorithms}{17}{}%
+\contentsline {subsection}{\numberline {3.9}Control Sequences}{13}{}%
+\contentsline {section}{\numberline {4}Implementation}{16}{}%
+\contentsline {subsection}{\numberline {4.1}Registers}{16}{}%
+\contentsline {subsection}{\numberline {4.2}Memory}{16}{}%
+\contentsline {subsection}{\numberline {4.3}Control Unit}{16}{}%
+\contentsline {subsection}{\numberline {4.4}Input}{16}{}%
+\contentsline {subsection}{\numberline {4.5}Output}{16}{}%
+\contentsline {section}{\numberline {5}Registers}{17}{}%
+\contentsline {subsection}{\numberline {5.1}Introduction}{17}{}%
+\contentsline {subsection}{\numberline {5.2}Register Architecture}{17}{}%
+\contentsline {subsection}{\numberline {5.3}Driver Module}{17}{}%
+\contentsline {subsection}{\numberline {5.4}Additional Functionality of Registers}{18}{}%
+\contentsline {section}{\numberline {6}Algorithms}{19}{}%
