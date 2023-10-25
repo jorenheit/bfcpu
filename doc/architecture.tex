@@ -78,7 +78,7 @@ Not all registers (green modules in Figure \ref{fig:architecture}) have the exac
     I        & 8     & No  & Yes & No  & No  \\
     DP       & 16    & Yes & No  & Yes & Yes \\ 
     SP       & 8     & Yes & No  & Yes & Yes \\ 
-    IP       & 16    & No  & Yes & Yes & No  \\ 
+    IP       & 16    & Yes & Yes & Yes & No  \\ 
     F        & 4     & No  & Yes & No  & No  \\ 
     LS       & 8     & No  & No  & Yes & Yes \\ 
   \end{tabular}
@@ -102,108 +102,138 @@ Even though the control unit is setting the control signals for all other module
 \end{itemize}
 
 \subsubsection{Screen (Output)}
-The output module (which is assumed to be a screen) will be directly attached to the data-register and will display whatever is in there, as long as it is told to by a single control signal on the next clock cycle: PRE (print enable).
+The output module (which is assumed to be a screen) will be directly attached to the data-register and will display whatever is in there (on every clock pulse), when the PRE signal (print enable) is active.
+\begin{itemize}
+\item PRE: Print Enable - Display the contents of D on the next clock pulse.
+\end{itemize}
 
-\subsubsection{Keyboard (Input)}
-TBD
+
+\subsubsection{Keyboard (Input)} \label{sec:architecture:input}
+The input device to the computer is assumed to be a keyboard of some sort, which contains a buffer from which some 8-bit value can be read. Immediately, a design choice has to be made: what happens if the buffer is empty? Either the program continues to run (immediate mode) or the program waits for something to appear in the buffer (buffered mode). The former is convenient for instance when playing games, while the latter is convenient for programs that require user input in order to continue meaningfully. Rather than deciding on either of these modes, we can just implement both. In the microcode table (Table \ref{tab:microcode}, Section \ref{sec:architecture:sequences}) there are two variants of the \texttt{,} command listed (the other one denoted by \texttt{'}), each of which has a different binary representation. When assembling a BF program, we simply pick one or the other and the program should run in the appropriate mode: \texttt{,} for buffered and \texttt{'} for immediate mode.
+
+The buffer of the module contains all zero's when nothing is present. When running in immediate mode, the programmer should programmatically determine if a value was read and how to act accordingly. In buffered-mode however, after reading from the buffer, the control unit will use the Z-flag from the D-register to determine whether or not to continue. As long as the value in D is zero, control flow will loop around, trying to get a value from the input buffer.
+
+The only control signal going in to the input-module should therefore be the enable-signal, which makes the contents of the buffer available to the input of the D-register.
+\begin{itemize}
+\item EN: Output Enable - enables the contents of the input buffer to be loaded into D.
+\end{itemize}
 
 \subsection{Control Sequences} \label{sec:architecture:sequences}
 Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction. The Control Unit implements this as a lookup table in ROM, where the instruction, flags and cycle counter act as an address into this table and the control signal configuration is stored at this address in ROM. The final microcode instruction of each sequence automatically resets the cycle counter, as a result of which the next instruction will be loaded and executed.
 
-\begin{table}[H] \centerline{
-    \centering
-    \begin{tabular} {c|cccc|c|llllll}
-      Instr      & V & A & Z(LS) & Z(D) & Cycle & \multicolumn{6}{c}{Control Signals}                   \\ \hline
-      \rowcolor{White}
-       Any       &   &   &       &      & 0     & EN(IP) & LD(I)   &         &        &       &         \\ \hline
-      \rowcolor{Gray}
-      \texttt{+} &   & 0 & 0     &      & 1     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
+\begin{landscape}
+  \begin{longtable}[c] {c|cccc|c|llllll}
+    Instr      & V & A & Z(LS) & Z(D) & Cycle & \multicolumn{6}{c}{Control Signals}                   \\ \hline
+    \rowcolor{White}
+    Any        &   &   &       &      & 0     & EN(IP) & LD(I)   &         &        &       &         \\ \hline
+    \rowcolor{Gray}
+    \texttt{+} &   & 0 & 0     &      & 1     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
+    \rowcolor{White}
+               &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     &      & 2     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
+    \rowcolor{Gray}
+               &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
+    \rowcolor{White}
+    \texttt{-} &   & 0 & 0     &      & 1     & CE(D)  & DEC(D)  & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
+    \rowcolor{Gray}
+               &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
+    \rowcolor{Gray}
+               &   & 1 & 0     &      & 2     & CE(D)  & DEC(D)  & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
+    \rowcolor{White}
+               &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
+    \rowcolor{Gray}
+    \texttt{>} & 0 &   & 0     &      & 1     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
+    \rowcolor{White}
+               & 1 &   & 0     &      & 1     & EN(D)  & EN(DP)  & WE(RAM) &        &        &        \\
+    \rowcolor{White}
+               & 1 &   & 0     &      & 2     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
+    \rowcolor{Gray}
+               &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
+    \rowcolor{White}
+    \texttt{<} & 0 &   & 0     &      & 1     & CE(DP) & DEC(DP) & AE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
+    \rowcolor{Gray}
+               & 1 &   & 0     &      & 1     & EN(D)  & EN(DP)  & WE(RAM) &        &                 \\
+    \rowcolor{Gray}
+               & 1 &   & 0     &      & 2     & CE(DP) & DEC(DP) & AE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
+    \rowcolor{White}
+               &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
+    \rowcolor{Gray}
+    \texttt{[} &   & 0 & 0     & 1    & 1     & CE(LS) & CE(IP)  & CR(CU)  &        &        &        \\
+    \rowcolor{White}  
+               &   & 0 & 0     & 0    & 1     & CE(SP) &         &         &        &        &        \\
+    \rowcolor{White}
+               &   & 0 & 0     & 0    & 2     & WE(RAM)& EN(SP)  & EN(IP)  &        &        &        \\
+    \rowcolor{White}
+               &   & 0 & 0     & 0    & 3     & CE(IP) & CR(CU)  &         &        &        &        \\
+    \rowcolor{Gray}
+               &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
+    \rowcolor{Gray}
+               &   & 1 & 0     &      & 2     & EN(IP) & LD(I)   &         &        &        &        \\
+    \rowcolor{Gray}
+               &   & 1 & 0     & 1    & 3     & CE(LS)  & CE(IP) & CR(CU)  &        &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     & 0    & 3     & CE(SP)  &        &         &        &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     & 0    & 4     & WE(RAM) & EN(SP) & EN(IP)  &        &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     & 0    & 5     & LD(F)   & CE(IP) & CR(CU)  &        &        &        \\ 
+    \rowcolor{Gray}
+               &   &   & 1     &      & 1     & CE(LS)  & CE(IP) & CR(CU)  &        &        &        \\ \hline
+    \rowcolor{White}
+    \texttt{]} &   & 0 & 0     & 1    & 1     & CE(SP)  & DEC(SP)& CE(IP)  & CR(CU) &        &        \\
+    \rowcolor{Gray}
+               &   & 0 & 0     & 0    & 1     & EN(SP)  & EN(RAM)& LD(IP)  &        &        &        \\
+    \rowcolor{Gray}
+               &   & 0 & 0     & 0    & 2     & CE(IP)  & CR(CU) &         &        &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     &      & 1     & EN(DP)  & EN(RAM) & LD(D)  &        &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     &      & 2     & EN(IP)  & EN(F)   & LD(I)  &        &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     & 1    & 3     & CE(SP)  & DEC(SP) & CE(IP) & CR(CU) &        &        \\
+    \rowcolor{Gray}
+               &   & 1 & 0     & 0    & 3     & EN(SP)  & EN(RAM) & LD(IP) &        &        &        \\
+    \rowcolor{Gray}
+               &   & 1 & 0     & 0    & 4     & CE(IP)  & CR(CU)  &        &        &        &        \\
+    \rowcolor{White}
+               &   &   & 1     &      & 1     & CE(LS)  & DEC(LS) & CE(IP) & CR(CU) &        &        \\ \hline
+    \rowcolor{Gray}
+    \texttt{.} &   & 0 & 0     &      & 1     & PRE(SCR)& EN(D)   & CE(IP) & CR(CU) &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     &      & 1     & EN(DP)  & EN(RAM) & LD(D)  &        &        &        \\
+    \rowcolor{White}
+               &   & 1 & 0     &      & 2     & PRE(SCR)& EN(D)   & CE(IP) & CR(CU) &        &        \\ \hline
+    \rowcolor{Gray}
+    \texttt{,} & 0 &   &       &      & 1     & EN(KB)  & LD(D)   &        &        &        &        \\
+    \rowcolor{Gray}
+               & 0 &   &       &      & 2     & EN(IP)  & LD(I)   &        &        &        &        \\
+    \rowcolor{Gray}
+               & 0 &   &       & 0    & 3     & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        &        \\
+    \rowcolor{White}
+               & 0 &   &       & 1    & 3     & CR(CU)  &         &        &        &        &        \\   
+    \rowcolor{Gray}
+               & 1 &   &       &      & 1     & EN(D)   & EN(DP)  & WE(RAM)&        &        &        \\       
+    \rowcolor{Gray}
+               & 1 &   &       &      & 2     & EN(KB)  & LD(D)   &        &        &        &        \\
+    \rowcolor{Gray}
+               & 1 &   &       &      & 3     & EN(IP)  & LD(I)   &        &        &        &        \\
+    \rowcolor{Gray}
+               & 1 &   &       & 0    & 4     & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        &        \\
+    \rowcolor{White}
+               & 1 &   &       & 1    & 4     & LD(F)   & CR(CU)  &        &        &        &        \\ \hline
+    \rowcolor{Gray}
+    \texttt{'} & 0 &   &       &      & 1     & EN(KB)  & LD(D)   & VE(CU) & LD(F)  & CE(IP) & CR(CU) \\
+    \rowcolor{White}
+               & 1 &   &       &      & 1     & EN(D)   & EN(DP)  & WE(RAM)&        &        &        \\
+    \rowcolor{White}
+               & 1 &   &       &      & 2     & EN(KB)  & LD(D)   & VE(CU) & LD(F)  & CE(IP) & CR(CU) \\ \hline
 
-      \rowcolor{White}
-                 &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
-      \rowcolor{White}
-                 &   & 1 & 0     &      & 2     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
 
-      \rowcolor{Gray}
-                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
-
-      \rowcolor{White}
-      \texttt{-} &   & 0 & 0     &      & 1     & CE(D)  & DEC(D)  & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-
-      \rowcolor{Gray}
-                 &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
-      \rowcolor{Gray}
-                 &   & 1 & 0     &      & 2     & CE(D)  & DEC(D)  & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-      \rowcolor{White}
-                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
-      \rowcolor{Gray}
-      \texttt{>} & 0 &   & 0     &      & 1     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
-      \rowcolor{White}
-                 & 1 &   & 0     &      & 1     & EN(D)  & EN(DP)  & WE(RAM) &        &        &        \\
-      \rowcolor{White}
-                 & 1 &   & 0     &      & 2     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
-      \rowcolor{Gray}
-                 &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &         \\ \hline
-      \rowcolor{White}
-      \texttt{<} & 0 &   & 0     &      & 1     & CE(DP)  & DEC(DP) & AE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-      \rowcolor{Gray}
-                 & 1 &   & 0     &      & 1     & EN(D)   & EN(DP)  & WE(RAM) &        &       &         \\
-      \rowcolor{Gray}
-                 & 1 &   & 0     &      & 2     & CE(DP)  & DEC(DP) & AE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-                 &   &   & 1     &      & 1     & CE(IP)  & CR(CU)  &         &        &       &          \\ \hline
-      \rowcolor{Gray}
-      \texttt{[} &   & 0 & 0     & 1    & 1     & CE(LS)  & CE(IP)  & CR(CU)  &        &       &          \\
-      \rowcolor{White}  
-                 &   & 0 & 0     & 0    & 1     & CE(SP)  &         &         &        &       &          \\
-      \rowcolor{White}
-                 &   & 0 & 0     & 0    & 2     & WE(RAM) & EN(SP) & EN(IP)   &        &       &          \\
-      \rowcolor{White}
-                 &   & 0 & 0     & 0    & 3     & CE(IP)  & CR(CU) &          &        &       &          \\
-      \rowcolor{Gray}
-                 &   & 1 & 0     &      & 1     & EN(DP)  & LD(D) & OE(RAM)   &        &       &          \\
-      \rowcolor{Gray}
-                 &   & 1 & 0     &      & 2     & EN(IP)  & LD(I) &           &        &       &          \\
-      \rowcolor{Gray}
-                 &   & 1 & 0     & 1    & 3     & CE(LS)  & CE(IP) & CR(CU)   &        &       &          \\
-      \rowcolor{White}
-                 &   & 1 & 0     & 0    & 3     & CE(SP)  &        &          &        &       &          \\
-      \rowcolor{White}
-                 &   & 1 & 0     & 0    & 4     & WE(RAM) & EN(SP) & EN(IP)   &        &       &          \\
-      \rowcolor{White}
-                 &   & 1 & 0     & 0    & 5     & LD(F)   & CE(IP) & CR(CU)   &        &       &          \\ 
-      \rowcolor{Gray}
-                &   &   & 1     &      & 1      & CE(LS)  & CE(IP) & CR(CU)   &        &       &          \\ \hline
-      \rowcolor{White}
-      \texttt{]} &   & 0 & 0     & 1    & 1     & CE(SP)  & DEC(SP) & CE(IP)  & CR(CU) &       &          \\
-      \rowcolor{Gray}
-                 &   & 0 & 0     & 0    & 1     & EN(SP)  & EN(RAM) & LD(IP)  &        &       &          \\
-      \rowcolor{Gray}
-                 &   & 0 & 0     & 0    & 2     & CE(IP)  & CR(CU)  &         &        &       &          \\
-      \rowcolor{White}
-                 &   & 1 & 0     &      & 1     & EN(DP)  & EN(RAM) & LD(D)   &        &       &          \\
-      \rowcolor{White}
-                 &   & 1 & 0     &      & 2     & EN(IP)  & EN(F)   & LD(I)   &        &       &          \\
-      \rowcolor{White}
-                 &   & 1 & 0     & 1    & 3     & CE(SP)  & DEC(SP) & CE(IP)  & CR(CU) &       &          \\
-      \rowcolor{Gray}
-                 &   & 1 & 0     & 0    & 3     & EN(SP)  & EN(RAM) & LD(IP)  &        &       &          \\
-      \rowcolor{Gray}
-                 &   & 1 & 0     & 0    & 4     & CE(IP)  & CR(CU)  &         &        &       &          \\
-      \rowcolor{White}
-                 &   &   & 1     &      & 1     & CE(LS)  & DEC(LS) & CE(IP)  & CR(CU) &       &          \\ \hline
-      \rowcolor{Gray}
-      \texttt{.} &   & 0 & 0     &      & 1     & PRE(SCR)& EN(D)   & CE(IP)  & CR(CU) &       &          \\
-      \rowcolor{White}
-                 &   & 1 & 0     &      & 1     & EN(DP)  & EN(RAM) & LD(D)   &        &       &          \\
-      \rowcolor{White}
-                 &   & 1 & 0     &      & 2     & PRE(SCR)& EN(D)   & CE(IP)  & CR(CU) &       &          \\ \hline
-      \rowcolor{Gray}
-      \texttt{,} & TBD & & &       &      &       &                   &         &        &       &          \\ \hline
       
-      
-      
-    \end{tabular}
-  }
-  \caption{Control signals for each of the BF instructions in different scenario's, depending on the state flags.}
+
+  \caption{Control signals for each of the BF instructions in different scenario's, depending on the state flags. Note that in order to distinguish between the two input modes, the regular comma (\texttt{,}) and the apostrophe (\texttt{'}) are used for buffered and immediate inputs respectively. See also Section \ref{sec:architecture:input}.}
   \label{tab:microcode}
-\end{table}
+\end{longtable}
+
+\end{landscape}
