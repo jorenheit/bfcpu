@@ -1,5 +1,48 @@
 \section{Implementation} \label{sec:implementation}
 \subsection{Registers}
+This chapter will explain the implementation details of the register-module: the architecture of the driver module, data-pointer register, data, stack, loop-skip, instruction, instruction-pointer, and flag register. At the end of this chapter, we will provide the entire picture of the register-module.
+
+\subsubsection{Overview}
+In BFCPU, we omitted ALU because the only mathematical operation that brainf*ck can perform is adding and subtracting one. For the sake of simplicity, we decided to utilize 74LS193 and 74LS161 integrated chips to make individual registers. Both chips provide memory functionality along with incrementing of the value. Additionally, 74LS193 provides decrementing of the current value stored in the chip. It is important to note that F-R does not need any increment-decrement (INC-DEC) functionality. Thus, we used 74LS*** since it provides only the storage of a 4-bit value. 
+
+\subsubsection{Common INC-DEC functionality problem}
+Register module possesses a lot of INC and DEC pins that the control unit needs to manipulate in order to alter the value of registers. Driver module removes this inconvenience and serves as the common interface for all registers, and thus the entire register-module. The idea behind driver module is limiting all INC and DEC pins to one DEC pin and one CE (count enable) pin, along with CLK (clock). If CE is HIGH, then based on the value of DEC pin, we can either decrement or increment on the rising edge of the clock pulse (CLK). The output of the driver module is the pair UP-DOWN that must be transmitted to an appropriate register\footnote{Or just UP signal for registers with 74LS161, as this chip can only increment}. Hence, we need a selecting interface to choose what register the computer is dealing with. The inner circuitry (see \ref{driver-module-arch}) accomplished this goal. A very general overview of the register-module is shown in the figure below. There are three select pins that provide us with 8 different possible paths, which is sufficient because we have less than 8 different registers.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/register_module_overview}
+	\caption{Register-module Overview}
+	\label{fig:registerModuleOverview}
+\end{figure}
+
+\subsubsection{74LS193 Chaining}
+Registers use 74LS193 (or 74LS161) to obtain storage and INC-DEC functionality. However, one 74LS193 chip has 4 bits whereas registers require 8 and 16 bits. Fortunately, 74LS193\footnote{Similar configuration works out for 74LS161, so we will not discuss it here} has a chaining ability: if CO (carry out) is connected to the UP pin of the other chip, and BO (borrow out) is connected to the DOWN pin, then we will obtain more bits available (see figure below). This technique is used in every register that requires more than 4 bits.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/register_module_chaining}
+	\caption{Register-module 74LS193 chaining}
+	\label{fig:registerModuleChaining}
+\end{figure}
+
+\subsubsection{Circuit: Driver Module}
+
+\subsubsection{Circuit: Data Register}
+
+\subsubsection{Circuit: Data-Pointer Register}
+
+\subsubsection{Circuit: Loop-Skip Register}
+
+\subsubsection{Circuit: Instruction Register}
+
+\subsubsection{Circuit: Instruction-Pointer Register}
+
+\subsubsection{Circuit: Stack Register}
+
+\subsubsection{Circuit: Flag Register}
+
+
+
 \subsection{Memory}
 \subsection{Control Unit}
 \subsection{Input}
