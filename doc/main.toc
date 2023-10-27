@@ -30,11 +30,12 @@
 \contentsline {subsection}{\numberline {4.3}Moving the Pointer: \texttt {<} and \texttt {>}}{15}{}%
 \contentsline {subsection}{\numberline {4.4}Conditional Jumping: \texttt {[} and \texttt {]}}{15}{}%
 \contentsline {paragraph}{Loop Start:}{15}{}%
-\contentsline {paragraph}{Loop End:}{15}{}%
+\contentsline {paragraph}{Loop End:}{16}{}%
 \contentsline {subsection}{\numberline {4.5}Output: \texttt {.}}{16}{}%
 \contentsline {subsection}{\numberline {4.6}Input: \texttt {,} and \texttt {'}}{16}{}%
-\contentsline {paragraph}{Buffered Mode:}{16}{}%
-\contentsline {paragraph}{Immediate Mode:}{16}{}%
+\contentsline {paragraph}{Buffered Mode:}{17}{}%
+\contentsline {paragraph}{Immediate Mode:}{17}{}%
+\contentsline {subsection}{\numberline {4.7}Non-BF instructions: \texttt {NOP} and \texttt {ERR}}{17}{}%
 \contentsline {section}{\numberline {5}Implementation}{20}{}%
 \contentsline {subsection}{\numberline {5.1}Registers}{20}{}%
 \contentsline {subsubsection}{\numberline {5.1.1}Overview}{20}{}%

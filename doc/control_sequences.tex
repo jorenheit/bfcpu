@@ -1,8 +1,18 @@
 \section{Control Sequences} \label{sec:sequences}
-By setting the control signals as described in Section \ref{sec:architecture:signals} appropriately, the modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction (also known as microcode instructions). The Control Unit implements this as a lookup table in ROM, where the instruction, flags and cycle counter act as an address into this table and the control signal configuration is stored at this address in ROM. The final microcode instruction of each sequence automatically resets the cycle counter, as a result of which the next instruction will be loaded and executed. Below we will go through each of the instructions in order to annotate the contents of Table \ref{tab:microcode}.
+By setting the control signals as described in Section \ref{sec:architecture:signals} appropriately, the modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction (also known as microcode instructions). The Control Unit implements this as a lookup table in ROM, where the instruction, flags and cycle counter act as an address into this table and the control signal configuration is stored at this address in ROM (Figure \ref{fig:decoder}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{img/instruction_decoding}
+  \caption{Decoding an instruction: the current instruction and state index the ROM, which returns the control signal configuration.}
+  \label{fig:decoder}
+\end{figure}
+
+The final microcode instruction of each sequence automatically resets the cycle counter, as a result of which the next instruction will be loaded and executed. Below we will go through each of the instructions in order to annotate the contents of Table \ref{tab:microcode}.
+
 
 \subsection{Cylce 0}
-The first cycle of each instruction is identical. In fact, it's not really part of any instruction yet, because its purpose is to fetch the next instruction from ROM. In order to do so, the IP is enabled (address-in to the ROM module) and the resulting instruction is loaded into the I-register. Note that this also means that the A and V flags from the F register is loaded in (F is always enabled), together with the Z flags supplied by both the D and LS registers.
+The first cycle of each instruction is identical. In fact, it's not really part of any instruction yet, because its purpose is to fetch the next instruction from ROM. In order to do so, the IP is enabled (address-in to the ROM module) and the resulting instruction is loaded into the I-register. Note that this also means that the A and V flags from the F register are loaded in (F is always enabled), together with the Z flags supplied by both the D and LS registers.
 
 \subsection{Modifying Data: \texttt{+} and \texttt{-}}
 The operations performed by the \texttt{+} command depend on the state of the system. If the A flag is not set (the address has not changed since the last instruction), this means that the value in D already corresponds to the current cell in memory. In that case, the CE signal for the D register is set for it to increment on the next clock pulse. In addition to this, the V-flag is set to indicate that the value in D has been changed, which is then loaded into the F register. Lastly, the CE is set for the IP register to load the next instruction and the cycle count of the CU is reset to 0.
@@ -51,15 +61,7 @@ In this mode, control flow is stuck in a loop, waiting for something nonzero to 
 \paragraph{Immediate Mode:}
 In this mode, we don't care what was loaded into D, even if there was nothing there in the keyboard buffer. It is up to the programmer to handle the case where no keys were pressed. This makes the implementation a lot easier, taking at most 2 cycles to complete. In the first case, the V-flag is not set, so we can simply overwrite the contents of D by loading in whatever is in the keyboard-buffer and move to the next instruction. In the second case, where V \emph{is} set, we write the contents of D to RAM before copying the keyboard buffer into D. Again, when Z(LS) is zero, this instruction is skipped.
   
-
-
-
-  
-
-
-
-  
-
-
+\subsection{Non-BF instructions: \texttt{NOP} and \texttt{ERR}}
+For debugging purposes, two non-BF instructions have been included. The \texttt{NOP} instruction does nothing. It simply increments the IP and resets the cycle count to move to the next instruction. The \texttt{ERR} instruction is inserted in all non-reachable states. If for some reason a state occurs that maps to the \texttt{ERR} command, the clock will be halted and some indicator on the Control Unit should light up to let its users know that something has gone wrong.
 
 \input{microcode_table}
