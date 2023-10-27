@@ -10,7 +10,6 @@
 
 # pdflatex generated stuff
 *.aux
-*.pdf
 *.log
 
 # build folder for cmake (google test)
