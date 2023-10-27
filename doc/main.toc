@@ -17,28 +17,39 @@
 \contentsline {subsubsection}{\numberline {3.6.1}A and V}{9}{}%
 \contentsline {subsubsection}{\numberline {3.6.2}Z(D) and Z(LS)}{10}{}%
 \contentsline {subsection}{\numberline {3.7}Loop Skip Register (LS)}{10}{}%
-\contentsline {subsection}{\numberline {3.8}Control Unit}{10}{}%
-\contentsline {subsubsection}{\numberline {3.8.1}Register Control Signals}{11}{}%
-\contentsline {subsubsection}{\numberline {3.8.2}Memory (RAM)}{11}{}%
-\contentsline {subsubsection}{\numberline {3.8.3}Control Unit}{12}{}%
+\contentsline {subsubsection}{\numberline {3.7.1}Preprocessing}{10}{}%
+\contentsline {subsection}{\numberline {3.8}Control Unit and Control Signals}{11}{}%
+\contentsline {subsubsection}{\numberline {3.8.1}Control Unit}{11}{}%
+\contentsline {subsubsection}{\numberline {3.8.2}Register Control Signals}{11}{}%
+\contentsline {subsubsection}{\numberline {3.8.3}Memory (RAM)}{12}{}%
 \contentsline {subsubsection}{\numberline {3.8.4}Screen (Output)}{12}{}%
 \contentsline {subsubsection}{\numberline {3.8.5}Keyboard (Input)}{12}{}%
-\contentsline {subsection}{\numberline {3.9}Control Sequences}{13}{}%
-\contentsline {section}{\numberline {4}Implementation}{16}{}%
-\contentsline {subsection}{\numberline {4.1}Registers}{16}{}%
-\contentsline {subsubsection}{\numberline {4.1.1}Overview}{16}{}%
-\contentsline {subsubsection}{\numberline {4.1.2}Common INC-DEC functionality problem}{16}{}%
-\contentsline {subsubsection}{\numberline {4.1.3}74LS193 Chaining}{17}{}%
-\contentsline {subsubsection}{\numberline {4.1.4}Circuit: Driver Module}{18}{}%
-\contentsline {subsubsection}{\numberline {4.1.5}Circuit: Data Register}{18}{}%
-\contentsline {subsubsection}{\numberline {4.1.6}Circuit: Data-Pointer Register}{18}{}%
-\contentsline {subsubsection}{\numberline {4.1.7}Circuit: Loop-Skip Register}{18}{}%
-\contentsline {subsubsection}{\numberline {4.1.8}Circuit: Instruction Register}{18}{}%
-\contentsline {subsubsection}{\numberline {4.1.9}Circuit: Instruction-Pointer Register}{18}{}%
-\contentsline {subsubsection}{\numberline {4.1.10}Circuit: Stack Register}{18}{}%
-\contentsline {subsubsection}{\numberline {4.1.11}Circuit: Flag Register}{18}{}%
-\contentsline {subsection}{\numberline {4.2}Memory}{18}{}%
-\contentsline {subsection}{\numberline {4.3}Control Unit}{18}{}%
-\contentsline {subsection}{\numberline {4.4}Input}{18}{}%
-\contentsline {subsection}{\numberline {4.5}Output}{18}{}%
-\contentsline {section}{\numberline {5}Algorithms}{19}{}%
+\contentsline {section}{\numberline {4}Control Sequences}{14}{}%
+\contentsline {subsection}{\numberline {4.1}Cylce 0}{14}{}%
+\contentsline {subsection}{\numberline {4.2}Modifying Data: \texttt {+} and \texttt {-}}{14}{}%
+\contentsline {subsection}{\numberline {4.3}Moving the Pointer: \texttt {<} and \texttt {>}}{15}{}%
+\contentsline {subsection}{\numberline {4.4}Conditional Jumping: \texttt {[} and \texttt {]}}{15}{}%
+\contentsline {paragraph}{Loop Start:}{15}{}%
+\contentsline {paragraph}{Loop End:}{15}{}%
+\contentsline {subsection}{\numberline {4.5}Output: \texttt {.}}{16}{}%
+\contentsline {subsection}{\numberline {4.6}Input: \texttt {,} and \texttt {'}}{16}{}%
+\contentsline {paragraph}{Buffered Mode:}{16}{}%
+\contentsline {paragraph}{Immediate Mode:}{16}{}%
+\contentsline {section}{\numberline {5}Implementation}{20}{}%
+\contentsline {subsection}{\numberline {5.1}Registers}{20}{}%
+\contentsline {subsubsection}{\numberline {5.1.1}Overview}{20}{}%
+\contentsline {subsubsection}{\numberline {5.1.2}Common INC-DEC functionality problem}{20}{}%
+\contentsline {subsubsection}{\numberline {5.1.3}74LS193 Chaining}{21}{}%
+\contentsline {subsubsection}{\numberline {5.1.4}Circuit: Driver Module}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.5}Circuit: Data Register}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.6}Circuit: Data-Pointer Register}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.7}Circuit: Loop-Skip Register}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.8}Circuit: Instruction Register}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.9}Circuit: Instruction-Pointer Register}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.10}Circuit: Stack Register}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.11}Circuit: Flag Register}{22}{}%
+\contentsline {subsection}{\numberline {5.2}Memory}{22}{}%
+\contentsline {subsection}{\numberline {5.3}Control Unit}{22}{}%
+\contentsline {subsection}{\numberline {5.4}Input}{22}{}%
+\contentsline {subsection}{\numberline {5.5}Output}{22}{}%
+\contentsline {section}{\numberline {6}Algorithms}{23}{}%
