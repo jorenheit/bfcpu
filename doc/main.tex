@@ -8,6 +8,10 @@
 \usepackage{xcolor,colortbl}
 \usepackage{longtable}
 \usepackage{pdflscape}
+\usepackage{fancyvrb}
+\usepackage{cprotect}
+
+\VerbatimFootnotes
 
 \lstset{
   basicstyle=\ttfamily,
@@ -22,7 +26,7 @@
 \definecolor{Gray}{gray}{0.9}
 \definecolor{White}{gray}{1}
 
-
+\AtBeginEnvironment{longtable}{\small}
 
 \title{BFCPU}
 \begin{document}
@@ -32,6 +36,7 @@
 \include{introduction}
 \include{brainfck}
 \include{architecture}
+\include{control_sequences}
 \include{implementation}
 \include{algorithms}
 \include{references}

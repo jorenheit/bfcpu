@@ -58,11 +58,24 @@ In addition to the A and V flags, there are two flags which are not buffered in 
 
 \subsection{Loop Skip Register (LS)} \label{sec:architecture:loopskip}
 The Loop Skip (LS) register is a counter that indicates whether or not we're in the process of sckipping a loop. In BF, a loop (\texttt{[}) is only entered when the value currently pointed to is nonzero. In the case that it is zero, execution resumes beyond its matching \texttt{]}. When it is determined (by the Control Unit) that a loop must be skipped (based on the zero-flag set by the D-register), the LS register is incremented from 0 to 1. Subsequent instructions are then skipped until either another (nested) loop opening \texttt{[} or a closing \texttt{]} is encountered. On the former, the LS is incremented again while on the latter the LS is decremented. This has the effect that the LS becomes 0 again after the \texttt{]} that matches the original \texttt{[} which led to the skip. Normal execution occurs as soon as LS has become 0 again.
+
+\subsubsection{Preprocessing}
+The LS-register is solving a problem that can be avoided by preprocessing the BF code. We could have chosen to somehow include jump-locations in the program and render scanning during runtime (keeping track of the counter to determine when to resume execution) unnecessary. This would however introduce its own set of issues but would also require a fundamental modification to the BF instruction set. We therefore chose not to preprocess the program and require the computer to handle `vanilla' BF.
     
-\subsection{Control Unit} \label{sec:architecture:controlunit}
-Each of the aforementioned components/modules has one or more control inputs that determine what happens on the next clock cycle. For example, some register-modules can be told to either load a value from their input, increment or decrement the currently stored value, or do nothing at all. It is the Control Unit (CU) that supplies the appropriate control signals to each of the modules before the next clock pulse occurs. The implementation details of how this is done in hardware are discussed in section \ref{sec:implementation}. The current and next section (\ref{sec:architecture:sequences}), however, will provide an overview of the control signals for each module and the sequences of control signals that are necessary to perform each BF instruction.
-\subsubsection{Register Control Signals}
-Not all registers (green modules in Figure \ref{fig:architecture}) have the exact same functionality. All of them store a value, but not all are required to count, let alone count in both directions. Table \ref{tab:registers} shows which of the registers are able to perform certain actions. The control signals have been abbrivated according to the following schema:
+\subsection{Control Unit and Control Signals} \label{sec:architecture:signals}
+Each of the aforementioned components/modules has one or more control inputs that determine what happens on the next clock cycle. For example, some register-modules can be told to either load a value from their input, increment or decrement the currently stored value, or do nothing at all. It is the Control Unit (CU) that supplies the appropriate control signals to each of the modules before the next clock pulse occurs. The implementation details of how this is done in hardware are discussed in section \ref{sec:implementation}. The following sections will provide an overview of each of the control signals for each module. Section \ref{sec:sequences} will discuss the control sequences necessary to perform each BF instruction.
+
+\subsubsection{Control Unit}  \label{sec:architecture:signals:cu}
+Even though the control unit is setting the control signals for all other modules, it has some control signals that it should be able to set for itself. Depending on the instruction that is being executed, it should write values to the flag register. The control signals to indicate that this is being done are called AE and VE respectively. Moreover, its internal instruction counter should be reset in the final cycle of each instruction. This is indicated with the CR (cycle reset) signal.
+\begin{itemize}
+\item AE: A-flag enable - outputs a high value into the A-bit of the flag register;
+\item VE: V-flag enable - outputs a high value into the V-bit of the flag register.
+\item CR: Cycle reset - reset the internal cycle counter to 0 to prepare for the next instruction.
+\end{itemize}
+
+
+\subsubsection{Register Control Signals}  \label{sec:architecture:signals:register}
+Not all registers (green modules in Figure \ref{fig:architecture}) have the exact same functionality. All of them store a value, but not all are required to count, let alone count in both directions. Table \ref{tab:registers} shows which of the registers are able to perform certain actions. The control signals have been abbrivated as follows:
 \begin{itemize}
 \item EN: output enable - if this signal is unavailable, its output is either always available or not used at all;
 \item LD: load a value from the input;
@@ -74,41 +87,33 @@ Not all registers (green modules in Figure \ref{fig:architecture}) have the exac
   \centering
   \begin{tabular}{c|c|c|c|c|c}
     Register & \#Bits & EN  & LD  & CE  & DEC \\ \hline 
-    D        & 8     & Yes & Yes & Yes & Yes \\
-    I        & 8     & No  & Yes & No  & No  \\
-    DP       & 16    & Yes & No  & Yes & Yes \\ 
-    SP       & 8     & Yes & No  & Yes & Yes \\ 
-    IP       & 16    & Yes & Yes & Yes & No  \\ 
-    F        & 4     & No  & Yes & No  & No  \\ 
-    LS       & 8     & No  & No  & Yes & Yes \\ 
+    D        & 8     & x & x & x & x \\
+    I        & 8     &   & x &   &   \\
+    DP       & 16    & x &   & x & x \\ 
+    SP       & 8     & x &   & x & x \\ 
+    IP       & 16    & x & x & x &   \\ 
+    F        & 4     &   & x &   &   \\ 
+    LS       & 8     &   &   & x & x \\ 
   \end{tabular}
   \caption{Control signals available to each of the registers.}
   \label{tab:registers}
 \end{table}
 
-\subsubsection{Memory (RAM)}
+\subsubsection{Memory (RAM)}  \label{sec:architecture:signals:ram}
 The memory module has an address input and a set of I/O lines which can be used for either storing a new value into memory (input) or outputting the value stored at the current address. It is therefore sufficient to have only two control signals that go into the RAM module:
 \begin{itemize}
 \item OE: output enable - the value at the current address (supplied on the address lines) will be available at the output;
 \item WE: write enable - writes the value at the input to the current address.
 \end{itemize}
 
-\subsubsection{Control Unit}
-Even though the control unit is setting the control signals for all other modules, it has some control signals that it should be able to set for itself. Depending on the instruction that is being executed, it should write values to the flag register. The control signals to indicate that this is being done are called AE and VE respectively. Moreover, its internal instruction counter should be reset in the final cycle of each instruction. This is indicated with the CR (cycle reset) signal.
-\begin{itemize}
-\item AE: A-flag enable - outputs a high value into the A-bit of the flag register;
-\item VE: V-flag enable - outputs a high value into the V-bit of the flag register.
-\item CR: Cycle reset - reset the internal cycle counter to 0 to prepare for the next instruction.
-\end{itemize}
-
-\subsubsection{Screen (Output)}
+\subsubsection{Screen (Output)}  \label{sec:architecture:signals:output}
 The output module (which is assumed to be a screen) will be directly attached to the data-register and will display whatever is in there (on every clock pulse), when the PRE signal (print enable) is active.
 \begin{itemize}
 \item PRE: Print Enable - Display the contents of D on the next clock pulse.
 \end{itemize}
 
 
-\subsubsection{Keyboard (Input)} \label{sec:architecture:input}
+\subsubsection{Keyboard (Input)} \label{sec:architecture:signals:input}
 The input device to the computer is assumed to be a keyboard of some sort, which contains a buffer from which some 8-bit value can be read. Immediately, a design choice has to be made: what happens if the buffer is empty? Either the program continues to run (immediate mode) or the program waits for something to appear in the buffer (buffered mode). The former is convenient for instance when playing games, while the latter is convenient for programs that require user input in order to continue meaningfully. Rather than deciding on either of these modes, we can just implement both. In the microcode table (Table \ref{tab:microcode}, Section \ref{sec:architecture:sequences}) there are two variants of the \texttt{,} command listed (the other one denoted by \texttt{'}), each of which has a different binary representation. When assembling a BF program, we simply pick one or the other and the program should run in the appropriate mode: \texttt{,} for buffered and \texttt{'} for immediate mode.
 
 The buffer of the module contains all zero's when nothing is present. When running in immediate mode, the programmer should programmatically determine if a value was read and how to act accordingly. In buffered-mode however, after reading from the buffer, the control unit will use the Z-flag from the D-register to determine whether or not to continue. As long as the value in D is zero, control flow will loop around, trying to get a value from the input buffer.
@@ -118,122 +123,3 @@ The only control signal going in to the input-module should therefore be the ena
 \item EN: Output Enable - enables the contents of the input buffer to be loaded into D.
 \end{itemize}
 
-\subsection{Control Sequences} \label{sec:architecture:sequences}
-Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction. The Control Unit implements this as a lookup table in ROM, where the instruction, flags and cycle counter act as an address into this table and the control signal configuration is stored at this address in ROM. The final microcode instruction of each sequence automatically resets the cycle counter, as a result of which the next instruction will be loaded and executed.
-
-\begin{landscape}
-  \begin{longtable}[c] {c|cccc|c|llllll}
-    Instr      & V & A & Z(LS) & Z(D) & Cycle & \multicolumn{6}{c}{Control Signals}                   \\ \hline
-    \rowcolor{White}
-    Any        &   &   &       &      & 0     & EN(IP) & LD(I)   &         &        &       &         \\ \hline
-    \rowcolor{Gray}
-    \texttt{+} &   & 0 & 0     &      & 1     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
-    \rowcolor{White}
-               &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     &      & 2     & CE(D)  & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
-    \rowcolor{Gray}
-               &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
-    \rowcolor{White}
-    \texttt{-} &   & 0 & 0     &      & 1     & CE(D)  & DEC(D)  & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-    \rowcolor{Gray}
-               &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
-    \rowcolor{Gray}
-               &   & 1 & 0     &      & 2     & CE(D)  & DEC(D)  & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-    \rowcolor{White}
-               &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
-    \rowcolor{Gray}
-    \texttt{>} & 0 &   & 0     &      & 1     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
-    \rowcolor{White}
-               & 1 &   & 0     &      & 1     & EN(D)  & EN(DP)  & WE(RAM) &        &        &        \\
-    \rowcolor{White}
-               & 1 &   & 0     &      & 2     & CE(DP) & AE(CU)  & LD(F)   & CE(IP) & CR(CU) &        \\
-    \rowcolor{Gray}
-               &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
-    \rowcolor{White}
-    \texttt{<} & 0 &   & 0     &      & 1     & CE(DP) & DEC(DP) & AE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-    \rowcolor{Gray}
-               & 1 &   & 0     &      & 1     & EN(D)  & EN(DP)  & WE(RAM) &        &                 \\
-    \rowcolor{Gray}
-               & 1 &   & 0     &      & 2     & CE(DP) & DEC(DP) & AE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-    \rowcolor{White}
-               &   &   & 1     &      & 1     & CE(IP) & CR(CU)  &         &        &        &        \\ \hline
-    \rowcolor{Gray}
-    \texttt{[} &   & 0 & 0     & 1    & 1     & CE(LS) & CE(IP)  & CR(CU)  &        &        &        \\
-    \rowcolor{White}  
-               &   & 0 & 0     & 0    & 1     & CE(SP) &         &         &        &        &        \\
-    \rowcolor{White}
-               &   & 0 & 0     & 0    & 2     & WE(RAM)& EN(SP)  & EN(IP)  &        &        &        \\
-    \rowcolor{White}
-               &   & 0 & 0     & 0    & 3     & CE(IP) & CR(CU)  &         &        &        &        \\
-    \rowcolor{Gray}
-               &   & 1 & 0     &      & 1     & EN(DP) & LD(D)   & OE(RAM) &        &        &        \\
-    \rowcolor{Gray}
-               &   & 1 & 0     &      & 2     & EN(IP) & LD(I)   &         &        &        &        \\
-    \rowcolor{Gray}
-               &   & 1 & 0     & 1    & 3     & CE(LS)  & CE(IP) & CR(CU)  &        &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     & 0    & 3     & CE(SP)  &        &         &        &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     & 0    & 4     & WE(RAM) & EN(SP) & EN(IP)  &        &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     & 0    & 5     & LD(F)   & CE(IP) & CR(CU)  &        &        &        \\ 
-    \rowcolor{Gray}
-               &   &   & 1     &      & 1     & CE(LS)  & CE(IP) & CR(CU)  &        &        &        \\ \hline
-    \rowcolor{White}
-    \texttt{]} &   & 0 & 0     & 1    & 1     & CE(SP)  & DEC(SP)& CE(IP)  & CR(CU) &        &        \\
-    \rowcolor{Gray}
-               &   & 0 & 0     & 0    & 1     & EN(SP)  & EN(RAM)& LD(IP)  &        &        &        \\
-    \rowcolor{Gray}
-               &   & 0 & 0     & 0    & 2     & CE(IP)  & CR(CU) &         &        &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     &      & 1     & EN(DP)  & EN(RAM) & LD(D)  &        &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     &      & 2     & EN(IP)  & EN(F)   & LD(I)  &        &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     & 1    & 3     & CE(SP)  & DEC(SP) & CE(IP) & CR(CU) &        &        \\
-    \rowcolor{Gray}
-               &   & 1 & 0     & 0    & 3     & EN(SP)  & EN(RAM) & LD(IP) &        &        &        \\
-    \rowcolor{Gray}
-               &   & 1 & 0     & 0    & 4     & CE(IP)  & CR(CU)  &        &        &        &        \\
-    \rowcolor{White}
-               &   &   & 1     &      & 1     & CE(LS)  & DEC(LS) & CE(IP) & CR(CU) &        &        \\ \hline
-    \rowcolor{Gray}
-    \texttt{.} &   & 0 & 0     &      & 1     & PRE(SCR)& EN(D)   & CE(IP) & CR(CU) &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     &      & 1     & EN(DP)  & EN(RAM) & LD(D)  &        &        &        \\
-    \rowcolor{White}
-               &   & 1 & 0     &      & 2     & PRE(SCR)& EN(D)   & CE(IP) & CR(CU) &        &        \\ \hline
-    \rowcolor{Gray}
-    \texttt{,} & 0 &   &       &      & 1     & EN(KB)  & LD(D)   &        &        &        &        \\
-    \rowcolor{Gray}
-               & 0 &   &       &      & 2     & EN(IP)  & LD(I)   &        &        &        &        \\
-    \rowcolor{Gray}
-               & 0 &   &       & 0    & 3     & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        &        \\
-    \rowcolor{White}
-               & 0 &   &       & 1    & 3     & CR(CU)  &         &        &        &        &        \\   
-    \rowcolor{Gray}
-               & 1 &   &       &      & 1     & EN(D)   & EN(DP)  & WE(RAM)&        &        &        \\       
-    \rowcolor{Gray}
-               & 1 &   &       &      & 2     & EN(KB)  & LD(D)   &        &        &        &        \\
-    \rowcolor{Gray}
-               & 1 &   &       &      & 3     & EN(IP)  & LD(I)   &        &        &        &        \\
-    \rowcolor{Gray}
-               & 1 &   &       & 0    & 4     & VE(CU)  & LD(F)   & CE(IP) & CR(CU) &        &        \\
-    \rowcolor{White}
-               & 1 &   &       & 1    & 4     & LD(F)   & CR(CU)  &        &        &        &        \\ \hline
-    \rowcolor{Gray}
-    \texttt{'} & 0 &   &       &      & 1     & EN(KB)  & LD(D)   & VE(CU) & LD(F)  & CE(IP) & CR(CU) \\
-    \rowcolor{White}
-               & 1 &   &       &      & 1     & EN(D)   & EN(DP)  & WE(RAM)&        &        &        \\
-    \rowcolor{White}
-               & 1 &   &       &      & 2     & EN(KB)  & LD(D)   & VE(CU) & LD(F)  & CE(IP) & CR(CU) \\ \hline
-
-
-      
-
-  \caption{Control signals for each of the BF instructions in different scenario's, depending on the state flags. Note that in order to distinguish between the two input modes, the regular comma (\texttt{,}) and the apostrophe (\texttt{'}) are used for buffered and immediate inputs respectively. See also Section \ref{sec:architecture:input}.}
-  \label{tab:microcode}
-\end{longtable}
-
-\end{landscape}
