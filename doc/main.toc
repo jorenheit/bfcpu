@@ -1,0 +1,56 @@
+\contentsline {section}{\numberline {1}Introduction}{3}{}%
+\contentsline {section}{\numberline {2}Brainf*ck}{4}{}%
+\contentsline {subsection}{\numberline {2.1}BF as a Language}{4}{}%
+\contentsline {subsection}{\numberline {2.2}Architectures}{5}{}%
+\contentsline {subsubsection}{\numberline {2.2.1}Von Neumann}{5}{}%
+\contentsline {subsubsection}{\numberline {2.2.2}Harvard}{5}{}%
+\contentsline {subsubsection}{\numberline {2.2.3}BF Architecture}{6}{}%
+\contentsline {subsection}{\numberline {2.3}BF as an Instruction Set}{6}{}%
+\contentsline {subsection}{\numberline {2.4}Brainfix}{6}{}%
+\contentsline {section}{\numberline {3}Architecture}{7}{}%
+\contentsline {subsection}{\numberline {3.1}Overview}{7}{}%
+\contentsline {subsection}{\numberline {3.2}Instruction Pointer Register (IP)}{8}{}%
+\contentsline {subsection}{\numberline {3.3}Stack Pointer (SP)}{8}{}%
+\contentsline {subsection}{\numberline {3.4}Instruction Register (I)}{9}{}%
+\contentsline {subsection}{\numberline {3.5}Data Register (D) and Data Pointer Register (DP)}{9}{}%
+\contentsline {subsection}{\numberline {3.6}Flags and the Flag Register (F)}{9}{}%
+\contentsline {subsubsection}{\numberline {3.6.1}A and V}{9}{}%
+\contentsline {subsubsection}{\numberline {3.6.2}Z(D) and Z(LS)}{10}{}%
+\contentsline {subsection}{\numberline {3.7}Loop Skip Register (LS)}{10}{}%
+\contentsline {subsubsection}{\numberline {3.7.1}Preprocessing}{10}{}%
+\contentsline {subsection}{\numberline {3.8}Control Unit and Control Signals}{11}{}%
+\contentsline {subsubsection}{\numberline {3.8.1}Control Unit}{11}{}%
+\contentsline {subsubsection}{\numberline {3.8.2}Register Control Signals}{11}{}%
+\contentsline {subsubsection}{\numberline {3.8.3}Memory (RAM)}{12}{}%
+\contentsline {subsubsection}{\numberline {3.8.4}Screen (Output)}{12}{}%
+\contentsline {subsubsection}{\numberline {3.8.5}Keyboard (Input)}{12}{}%
+\contentsline {section}{\numberline {4}Control Sequences}{14}{}%
+\contentsline {subsection}{\numberline {4.1}Cylce 0}{14}{}%
+\contentsline {subsection}{\numberline {4.2}Modifying Data: \texttt {+} and \texttt {-}}{15}{}%
+\contentsline {subsection}{\numberline {4.3}Moving the Pointer: \texttt {<} and \texttt {>}}{15}{}%
+\contentsline {subsection}{\numberline {4.4}Conditional Jumping: \texttt {[} and \texttt {]}}{15}{}%
+\contentsline {paragraph}{Loop Start:}{15}{}%
+\contentsline {paragraph}{Loop End:}{16}{}%
+\contentsline {subsection}{\numberline {4.5}Output: \texttt {.}}{16}{}%
+\contentsline {subsection}{\numberline {4.6}Input: \texttt {,} and \texttt {'}}{16}{}%
+\contentsline {paragraph}{Buffered Mode:}{17}{}%
+\contentsline {paragraph}{Immediate Mode:}{17}{}%
+\contentsline {subsection}{\numberline {4.7}Non-BF instructions: \texttt {NOP} and \texttt {ERR}}{17}{}%
+\contentsline {section}{\numberline {5}Implementation}{21}{}%
+\contentsline {subsection}{\numberline {5.1}Registers}{21}{}%
+\contentsline {subsubsection}{\numberline {5.1.1}Overview}{21}{}%
+\contentsline {subsubsection}{\numberline {5.1.2}Common INC-DEC functionality problem}{21}{}%
+\contentsline {subsubsection}{\numberline {5.1.3}74LS193 Chaining}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.4}Circuit: Driver Module}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.5}Circuit: Data Register}{23}{}%
+\contentsline {subsubsection}{\numberline {5.1.6}Circuit: Data-Pointer Register}{24}{}%
+\contentsline {subsubsection}{\numberline {5.1.7}Circuit: Loop-Skip Register}{25}{}%
+\contentsline {subsubsection}{\numberline {5.1.8}Circuit: Instruction Register}{25}{}%
+\contentsline {subsubsection}{\numberline {5.1.9}Circuit: Instruction-Pointer Register}{25}{}%
+\contentsline {subsubsection}{\numberline {5.1.10}Circuit: Stack Register}{25}{}%
+\contentsline {subsubsection}{\numberline {5.1.11}Circuit: Flag Register}{25}{}%
+\contentsline {subsection}{\numberline {5.2}Memory}{25}{}%
+\contentsline {subsection}{\numberline {5.3}Control Unit}{25}{}%
+\contentsline {subsection}{\numberline {5.4}Input}{25}{}%
+\contentsline {subsection}{\numberline {5.5}Output}{25}{}%
+\contentsline {section}{\numberline {6}Algorithms}{26}{}%
