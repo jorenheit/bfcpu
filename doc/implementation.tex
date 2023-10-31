@@ -49,7 +49,7 @@ Data register is a 8-bit valued flip-flop with both increment and decrement func
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{img/data_register_implementation}
-	\caption{Data Register Implementation}
+	\caption{Data, and Loop-Skip Register Implementation (\ref{sec:implementation:registers:loop_skip})}
 	\label{fig:dataRegisterImplementation}
 \end{figure}
 
@@ -64,7 +64,8 @@ Data-Pointer register is a 8-bit valued flip-flop with both increment and decrem
 	\label{fig:dataPointerRegisterImplementation}
 \end{figure}
 
-\subsubsection{Circuit: Loop-Skip Register}
+\subsubsection{Circuit: Loop-Skip Register} \label{sec:implementation:registers:loop_skip}
+Fundamentally, from the inner-circuit perspective loop-skip register (LS-R) has entirely the same implementation as the data-register (D-R): storage capacity of 8 bits, increment and decrement facilities, along with loop-flag\footnote{Loop-flag is the same as zero-flag for data-register, thus is implemented the same way as in the data register}. (refer to figure \ref{fig:dataRegisterImplementation})
 
 \subsubsection{Circuit: Instruction Register}
 
