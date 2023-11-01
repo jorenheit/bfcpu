@@ -6,7 +6,7 @@ This chapter will explain the implementation details of the register-module: the
 In BFCPU, we omitted ALU because the only mathematical operation that brainf*ck can perform is adding and subtracting one. For the sake of simplicity, we decided to utilize 74LS193 and 74LS161 integrated chips to make individual registers. Both chips provide memory functionality along with incrementing of the value. Additionally, 74LS193 provides decrementing of the current value stored in the chip. It is important to note that F-R does not need any increment-decrement (INC-DEC) functionality. Thus, we used 74LS*** since it provides only the storage of a 4-bit value. 
 
 \subsubsection{Common INC-DEC functionality problem}
-Register module possesses a lot of INC and DEC pins that the control unit needs to manipulate in order to alter the value of registers. Driver module removes this inconvenience and serves as the common interface for all registers, and thus the entire register-module. The idea behind driver module is limiting all INC and DEC pins to one DEC pin and one CE (count enable) pin, along with CLK (clock). If CE is HIGH, then based on the value of DEC pin, we can either decrement or increment on the rising edge of the clock pulse (CLK). The output of the driver module is the pair UP-DOWN that must be transmitted to an appropriate register\footnote{Or just UP signal for registers with 74LS161, as this chip can only increment}. Hence, we need a selecting interface to choose what register the computer is dealing with. The inner circuitry (see figure \ref{driver-module-arch}) accomplished this goal. A very general overview of the register-module is shown in the figure below. There are three select pins that provide us with 8 different possible paths, which is sufficient because we have less than 8 different registers.
+Register module possesses a lot of INC and DEC pins that the control unit needs to manipulate in order to alter the value of registers. Driver module removes this inconvenience and serves as the common interface for all registers, and thus the entire register-module. The idea behind driver module is limiting all INC and DEC pins to one pair of DEC and INC pins, along with CLK (clock). If INC and DEC are both at low or high voltage, the mode of the selected register on the raising edge of the CLK is none, meaning that the value is neither incremented nor decremented. However, whenever INC-DEC pair has the digital value 01 or 10, the value of the selected register will be either incremented or decremented. The output of the driver module is the pair UP-DOWN that must be transmitted to an appropriate register\footnote{Or just UP signal for registers with 74LS161, as this chip can only increment}. Hence, we need a selecting interface to choose what register the computer is dealing with. The inner circuitry (see figure \ref{fig:registerModuleOverview}) accomplished this goal. A very general overview of the register-module is shown in the figure below. There are three select pins that provide us with 8 different possible paths, which is sufficient because we have less than 8 different registers.
 
 \begin{figure}[H]
 	\centering
@@ -26,19 +26,33 @@ Registers use 74LS193 (or 74LS161) to obtain storage and INC-DEC functionality. 
 \end{figure}
 
 \subsubsection{Circuit: Driver Module}
-As visible from figure \ref{fig:registerModuleOverview}, the driver module has two parts: common interface, select interface. Connection to registers is the bridge between the driver module and registers in the register module.
+When designing the computer, we had a lot of different ideas on the actual implementation of this module. Firstly, we utilized the demux-circuit, however, it was working only partially. Such problems as the potential propagation and incompatibility with 74LS193 were practically impossible to solve in a way that was sustainable and effective. Hence, we decided to remove this driver module design\footnote{See Appendix A(\ref{sec:appendix:old_driver_module_design})  to dive into the first driver module's circuitry}, and make another circuit, which is now the official part of the computer architecture. 
 
-We used two demuxers to create the common interface. The basic idea behind this implementation is the following: DEC pin defines the way where CE and CLK signals are propagated, so DEC is connected to the select pin of both demuxers. CE switches the signals off or on, while CLK stimulates the alterations in UP/DOWN pairs, contributing to the change in the value of a register. 
-
-Because of the inner circuit of 74LS193, we need to avoid simultaneous pulsing and UP/DOWN pair grounded since it unfavorably alters the value of a register. The solution was quite straightforward: CLK pin of the driver module is connected to the output of anded clock signal and CE pin. 
-
-The resulting UP/DOWN pair is directed to the select interface, that redirects the pair to a specific, selected, register. This behavior is accomplished by utilizing 3-to-8 demuxers, because we have less than 8 registers but more than 4.
+The idea behind this stable driver module is fairly simple: 
+\begin{itemize}
+	\item Set UP-DOWN\footnote{The output of the driver module} to HIGH whenever INC-DEC are both either high or low;
+	\item Pulse UP and keep DOWN high, whenever INC is high and DEC is low;
+	\item Pulse DOWN and keep UP high, whenever INC is low and DEC is high;
+\end{itemize}
+The actual implementation is visible in figure \ref{fig:actual_driver_module_implementation}, and the corresponding solutions are:
+\begin{itemize}
+	\item Common Interface:
+	\begin{itemize}
+		\item Use $$CLK + (INC \oplus DEC)$$ to eliminate any pulsing when INC-DEC have the same value;
+		\item Connect the previous result with inverted INC-DEC into a NAND gate to achieve favorable behavior whenever INC-DEC have different values;
+		\item Additional inverters are essential for the sake of compatibility with the registers and the select interface\footnote{The 3-to-8 demultiplexer that we used inverts the output};
+	\end{itemize}
+	\item Select Interface:
+	\begin{itemize}
+		\item Connect UP-DOWN pair to the 3-to-8 demultiplexer in order to route this pair to the selected register input;
+	\end{itemize}
+\end{itemize}
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.9\textwidth]{img/driver_module_implementation}
-	\caption{Driver Module Implementation}
-	\label{fig:driverModuleImplementation}
+	\includegraphics[width=0.9\textwidth]{img/actual_driver_module_implementation}
+	\caption{The Actual Driver Module Implementation}
+	\label{fig:actual_driver_module_implementation}
 \end{figure}
 
 
