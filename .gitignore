@@ -11,6 +11,7 @@
 # pdflatex generated stuff
 *.aux
 *.log
+*.toc
 
 # build folder for cmake (google test)
 bfemu/src/build
