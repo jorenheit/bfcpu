@@ -36,21 +36,21 @@
 \contentsline {paragraph}{Buffered Mode:}{17}{}%
 \contentsline {paragraph}{Immediate Mode:}{17}{}%
 \contentsline {subsection}{\numberline {4.7}Non-BF instructions: \texttt {NOP} and \texttt {ERR}}{17}{}%
-\contentsline {section}{\numberline {5}Implementation}{21}{}%
-\contentsline {subsection}{\numberline {5.1}Registers}{21}{}%
-\contentsline {subsubsection}{\numberline {5.1.1}Overview}{21}{}%
-\contentsline {subsubsection}{\numberline {5.1.2}Common INC-DEC functionality problem}{21}{}%
-\contentsline {subsubsection}{\numberline {5.1.3}74LS193 Chaining}{22}{}%
-\contentsline {subsubsection}{\numberline {5.1.4}Circuit: Driver Module}{22}{}%
-\contentsline {subsubsection}{\numberline {5.1.5}Circuit: Data Register}{23}{}%
-\contentsline {subsubsection}{\numberline {5.1.6}Circuit: Data-Pointer Register}{24}{}%
-\contentsline {subsubsection}{\numberline {5.1.7}Circuit: Loop-Skip Register}{25}{}%
-\contentsline {subsubsection}{\numberline {5.1.8}Circuit: Instruction Register}{25}{}%
-\contentsline {subsubsection}{\numberline {5.1.9}Circuit: Instruction-Pointer Register}{25}{}%
-\contentsline {subsubsection}{\numberline {5.1.10}Circuit: Stack Register}{25}{}%
-\contentsline {subsubsection}{\numberline {5.1.11}Circuit: Flag Register}{25}{}%
-\contentsline {subsection}{\numberline {5.2}Memory}{25}{}%
-\contentsline {subsection}{\numberline {5.3}Control Unit}{25}{}%
-\contentsline {subsection}{\numberline {5.4}Input}{25}{}%
-\contentsline {subsection}{\numberline {5.5}Output}{25}{}%
-\contentsline {section}{\numberline {6}Algorithms}{26}{}%
+\contentsline {section}{\numberline {5}Implementation}{20}{}%
+\contentsline {subsection}{\numberline {5.1}Registers}{20}{}%
+\contentsline {subsubsection}{\numberline {5.1.1}Overview}{20}{}%
+\contentsline {subsubsection}{\numberline {5.1.2}Common INC-DEC functionality problem}{20}{}%
+\contentsline {subsubsection}{\numberline {5.1.3}74LS193 Chaining}{21}{}%
+\contentsline {subsubsection}{\numberline {5.1.4}Circuit: Driver Module}{21}{}%
+\contentsline {subsubsection}{\numberline {5.1.5}Circuit: Data Register}{22}{}%
+\contentsline {subsubsection}{\numberline {5.1.6}Circuit: Data-Pointer Register}{23}{}%
+\contentsline {subsubsection}{\numberline {5.1.7}Circuit: Loop-Skip Register}{24}{}%
+\contentsline {subsubsection}{\numberline {5.1.8}Circuit: Instruction Register}{24}{}%
+\contentsline {subsubsection}{\numberline {5.1.9}Circuit: Instruction-Pointer Register}{24}{}%
+\contentsline {subsubsection}{\numberline {5.1.10}Circuit: Stack Register}{24}{}%
+\contentsline {subsubsection}{\numberline {5.1.11}Circuit: Flag Register}{24}{}%
+\contentsline {subsection}{\numberline {5.2}Memory}{24}{}%
+\contentsline {subsection}{\numberline {5.3}Control Unit}{24}{}%
+\contentsline {subsection}{\numberline {5.4}Input}{24}{}%
+\contentsline {subsection}{\numberline {5.5}Output}{24}{}%
+\contentsline {section}{\numberline {6}Algorithms}{25}{}%
