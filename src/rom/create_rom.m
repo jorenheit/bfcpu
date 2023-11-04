@@ -71,7 +71,7 @@ function create_rom(filename_base)
   % Fill remaining addresses with the ERR instruction
   for i = 1:size(result, 1)
     if isnan(result(i))
-      result(i) = getBits({"ERR", "CR"});
+      result(i) = getBits({"ERR", "CR", "HLT"});
     endif
   endfor
   
@@ -185,7 +185,8 @@ function pattern = getPattern(state)
     "MINUS",
     "LEFT",
     "RIGHT",
-    "IN",
+    "IN_BUF",
+    "IN_IM",
     "OUT",
     "LOOP_START",
     "LOOP_END",

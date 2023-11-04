@@ -3,6 +3,7 @@
 
 # generated files and executables
 *.o
+main
 
 # temporaries
 *~
