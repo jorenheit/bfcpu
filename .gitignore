@@ -16,3 +16,7 @@ main
 
 # build folder for cmake (google test)
 bfemu/src/build
+
+# executables and output of bfasm.cc
+src/bfasm/*.out
+src/bfasm/*.bin
