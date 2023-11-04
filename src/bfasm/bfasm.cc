@@ -168,25 +168,23 @@ int assemble(Options const &opt)
     if (opt.instructionSize == NIBBLE)
     {
         std::vector<unsigned char> packed;
-        unsigned char buf;
+        unsigned char buf = 0;
 
-        bool buffered = false;
         for (size_t i = 0; i != result.size(); ++i)
         {
             unsigned char cmd = result[i];
             if ((i & 1) == 0)
             {
                 buf = cmd;
-                buffered = true;
                 continue;
             }
 
             buf |= (cmd << 4);
             packed.push_back(buf);
-            buffered = false;
         }
 
-        if (buffered)
+        // account for odd number of instructions
+        if (result.size() & 1)
             packed.push_back(buf);
         
         result.swap(packed);

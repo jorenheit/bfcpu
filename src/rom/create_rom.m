@@ -71,7 +71,7 @@ function create_rom(filename_base)
   % Fill remaining addresses with the ERR instruction
   for i = 1:size(result, 1)
     if isnan(result(i))
-      result(i) = getBits({"ERR", "CR", "HLT"});
+      result(i) = getBits({"ERR", "CR"});
     endif
   endfor
   
@@ -159,7 +159,7 @@ function value = getBits(args)
     "CR",
     "VE",
     "AE",
-    "PRE"
+    "PRE",
     "ERR"
   };
   
@@ -168,6 +168,9 @@ function value = getBits(args)
   for i = 1:length(args)
     sig = args{i};
     idx = find(ismember(signals, sig)) - 1;
+    if numel(idx) ~= 1
+      error("Invalid signal");
+    endif
     value += 2^idx;
   endfor
   
@@ -189,8 +192,7 @@ function pattern = getPattern(state)
     "IN_IM",
     "OUT",
     "LOOP_START",
-    "LOOP_END",
-    "HLT"
+    "LOOP_END"
   };
   commandBits = 4;
   cycleBits = 3;
