@@ -77,12 +77,12 @@ void print(std::vector<bank> &banks, unsigned int n = 5, unsigned int offset = 3
 
     std::cout << "BANK 2 \t\t\tADDRESS\n";
     for (unsigned int i = offset; i < offset + n; ++i)
-        std::cout << banks[1][i] << '\t' << std::bitset<13>{ i } << '\n';
+        std::cout << banks[1][i] << '\t' << std::bitset<13>{ N1 + i } << '\n';
     std::cout << "=================================================================\n";
 
     std::cout << "BANK 3 \t\t\tADDRESS\n";
     for (unsigned int i = offset; i < offset + n; ++i)
-        std::cout << banks[2][i] << '\t' << std::bitset<13>{ i } << '\n';
+        std::cout << banks[2][i] << '\t' << std::bitset<13>{ N1 + N1 + i } << '\n';
     std::cout << "=================================================================\n";
 }
 
