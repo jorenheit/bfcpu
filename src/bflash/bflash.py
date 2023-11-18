@@ -116,7 +116,7 @@ class SerialHandler:
 
 def prompt():
     while True:
-        choice = input_with_autocomplete("Enter (D) to dump the current ROM to a file or (F) to flash a file onto the ROM: ", \
+        choice = input_with_autocomplete("Enter 'D' to dump the current ROM to a file or 'F' to flash a file onto the ROM: ", \
                                          filename_completer).lower()
         if choice in ["d", "f"]:
             return choice
