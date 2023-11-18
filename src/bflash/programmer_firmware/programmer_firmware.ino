@@ -54,7 +54,7 @@ void enableEEPROM() {
 }
 
 void disableEEPROM() {
-  digitalWrite(CE, LOW);
+  digitalWrite(CE, HIGH);
 }
 
 byte readEEPROM(int addr, bool disableAfterRead = true) {
@@ -87,7 +87,7 @@ void readEEPROM(int start, int nBytes, byte *buf) {
 void writeEEPROM(int addr, byte value) {
 
   // Make sure EEPROM is disabled while setting the outputs of the arduino
-  digitalWrite(CE, HIGH);
+  disableEEPROM();
   setIOPinsAs(OUTPUT);
   for (int pin = IO_0; pin <= IO_7; ++pin) {
     digitalWrite(pin, (value >> (pin - IO_0)) & 1);
