@@ -1,3 +1,6 @@
+#define MAX_ROM_SIZE 1024
+byte romBuffer[MAX_ROM_SIZE];
+
 enum Pins {
   SHIFT_DATA = 2,
   SHIFT_LATCH = 3,
@@ -12,6 +15,13 @@ enum Pins {
 enum ReadWrite {
   READ,
   WRITE
+};
+
+enum Signals {
+  DUMP_REQUEST = 0,
+  FLASH_REQUEST = 1,
+  PROGRAMMER_READY = 2,
+  PROGRAMMER_FINISHED = 3
 };
 
 void setShiftRegisters(int const addr, ReadWrite const RW) {
@@ -95,21 +105,30 @@ void writeEEPROM(int addr, byte value) {
   setIOPinsAs(INPUT);
 }
 
+int showPercentage(float current, float total, int previous) {
+    int newPercentage = current / total * 10;
+    newPercentage *= 10;
+    if (newPercentage > previous) {
+      Serial.print("PROGRAMMER: ");
+      Serial.print(newPercentage);
+      Serial.println("%");
+      return newPercentage;
+    }
+    return previous;
+}
 
-#define MAX_ROM_SIZE 1024
-byte romBuffer[MAX_ROM_SIZE];
-
-void setup() {
-  Serial.begin(9600);
-
+void flash() {
   Serial.println("PROGRAMMER: Waiting for data transfer");
-  Serial.write(1); // let computer know we're ready
   while (!Serial.available()) {} // wait
   Serial.println("PROGRAMMER: Receiving data ...");
 
   uint32_t dataLength = 0;
   Serial.readBytes(reinterpret_cast<byte*>(&dataLength), 4);
   dataLength = (dataLength <= MAX_ROM_SIZE) ? dataLength : MAX_ROM_SIZE;
+
+  Serial.print("PROGRAMMER: writing ");
+  Serial.print(dataLength);
+  Serial.println(" bytes.");
 
   int percentage = 0;
   for (int i = 0; i != MAX_ROM_SIZE; ++i) {
@@ -119,14 +138,7 @@ void setup() {
     else {
       romBuffer[i] = 0;
     }
-    
-    int newPercentage = (float)i / (float)dataLength * 10;
-    if (newPercentage > percentage) {
-      percentage = newPercentage;
-      Serial.print("PROGRAMMER: ");
-      Serial.print(10 * percentage);
-      Serial.println("%");
-    }
+    percentage = showPercentage(i, MAX_ROM_SIZE, percentage);
   }
 
   Serial.println("PROGRAMMER: 100%");
@@ -135,17 +147,36 @@ void setup() {
   percentage = 0;
   for (int i = 0; i != MAX_ROM_SIZE; ++i) {
     writeEEPROM(i, romBuffer[i]);
-    int newPercentage = (float)i / (float)dataLength * 10;
-    if (newPercentage > percentage) {
-      percentage = newPercentage;
-      Serial.print("PROGRAMMER: ");
-      Serial.print(10 * percentage);
-      Serial.println("%");
-    }
+    percentage = showPercentage(i, MAX_ROM_SIZE, percentage);
   }
   Serial.println("PROGRAMMER: 100%");
   Serial.println("PROGRAMMER: Done!");
-  Serial.write(0); // let computer know we're done
+  Serial.write(PROGRAMMER_FINISHED); // let computer know we're done
+}
+
+void dump() {
+  readEEPROM(0, MAX_ROM_SIZE, romBuffer); 
+  static constexpr uint32_t dataLength = MAX_ROM_SIZE;
+  Serial.write(reinterpret_cast<byte const*>(&dataLength), sizeof(dataLength));
+  Serial.write(romBuffer, MAX_ROM_SIZE);
+}
+
+void setup() {
+  Serial.begin(9600);
+  Serial.write(PROGRAMMER_READY); // let computer know we're ready
+
+  while (true) { 
+    byte c = Serial.read();
+    if (c == DUMP_REQUEST) {
+      dump(); 
+      return;
+    }
+    else if (c == FLASH_REQUEST) {
+      flash();
+      return;
+    }
+  }
+  
 }
 
 void loop() {
