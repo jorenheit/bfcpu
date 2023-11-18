@@ -10,20 +10,22 @@ const unsigned int TOTAL{ 8192 };
 const unsigned int N    { 2730 }; 
 
 typedef bitset<8> val_t;
+typedef bitset<13> address_t;
 
-val_t getValAt(unsigned int address);
-void beautiful_print();
+address_t mask_bank_1  (0b0000000000000);
+address_t mask_bank_2  (0b0100000000000);
+address_t mask_bank_3  (0b1000000000000);
+address_t mask_residue (0b1100000000000);
+
+// functions declarations
+val_t getValAt_Arthur(unsigned int);
+val_t getValAt(unsigned int);
+void beautiful_print(val_t (*)(unsigned int));
 
 
 int main(int argc, char **argv)
 {
-    beautiful_print();
-
-    // for debugging
-    // cout << getValAt(8189) << '\n';
-    // cout << getValAt(8190) << '\n';
-    // cout << getValAt(8191) << '\n';
-    // cout << getValAt(8192) << '\n';
+    beautiful_print(getValAt);
 
     ofstream file;
     file.open("output.bin", std::ios::binary);
@@ -50,7 +52,7 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
 }
 
-val_t getValAt(unsigned int address)
+val_t getValAt_Arthur(unsigned int address)
 {
     /*
         address = what address to get value in.
@@ -115,38 +117,77 @@ val_t getValAt(unsigned int address)
     return val;
 }
 
-void beautiful_print()
+val_t getValAt(unsigned int address)
+{
+    val_t bank_value(0b00000000);
+    address_t address_value(address);
+
+    // determine the bank number and set the corresponding address
+    if ((address_value & mask_bank_1) == mask_bank_1)
+    {
+        bank_value |= val_t(0b00000000);
+
+        if (address - mask_bank_1.to_ulong() < 64)
+            bank_value |= val_t(address - mask_bank_1.to_ulong());
+    }
+    if ((address_value & mask_bank_2) == mask_bank_2)
+    {
+        bank_value |= val_t(0b01000000);
+
+        if (address - mask_bank_2.to_ulong() < 64)
+            bank_value |= val_t(address - mask_bank_2.to_ulong());
+    }
+    if ((address_value & mask_bank_3) == mask_bank_3)
+    {
+        bank_value |= val_t(0b10000000);
+
+        if (address - mask_bank_3.to_ulong() < 64)
+            bank_value |= val_t(address - mask_bank_3.to_ulong());
+    }
+    if ((address_value & mask_residue) == mask_residue)
+        bank_value |= val_t(0b11000000);
+    
+    return bank_value;
+}
+
+void beautiful_print(val_t (*get_val_at)(unsigned int))
 {
     /*
         BANK 1    ||  ADDRESS
-        0100 0000 ||  0 0000 0000 0000 (0)
-        0100 0001 ||  0 0000 0000 0001 (1)
-        0100 0010 ||  0 0000 0000 0010 (2)
+        0000 0000 ||  00 00000 000000 (0)
+        0000 0001 ||  00 00000 000001 (1)
+        0000 0010 ||  00 00000 000010 (2)
         ...       ||  ...
-        0111 1111 ||  0 0000 0011 1111 (63)
-        0100 0000 ||  0 0000 xxxx xxxx (< 2730)
+        0011 1111 ||  00 00000 111111 (63)
+        0000 0000 ||  00 xxxxx xxxxxx (<2048)
         ===============================
         BANK 2    ||  ADDRESS
-        1000 0000 ||  0 1010 1010 1010 (2730 + 0)
-        1000 0001 ||  0 1010 1010 1011 (2730 + 1)
-        1000 0010 ||  0 1010 1010 1100 (2730 + 2)
+        0100 0000 ||  01 00000 000000 (2048)
+        1000 0001 ||  01 00000 000001 (2049)
+        1000 0010 ||  01 00000 000010 (2050)
         ...       ||  ...
-        1011 1111 ||  0 1010 1110 1001 (2730 + 63)
-        1000 0000 ||  0 xxxx xxxx xxxx (< 2730 * 2)
+        1011 1111 ||  01 00000 111111 (2111)
+        1000 0000 ||  01 xxxxx xxxxxx (<4096)
         ===============================
         similar for BANK 3
     */
 
-    for (unsigned int i = 1; i < 4; ++i)
+    for (unsigned int i = 0; i < 3; ++i)
     {
-        cout << "BANK " << i << "\t||\t\t" << "ADDRESS\n";
-
+        std::cout << "==============================================\n";
+        std::cout << "BANK " << i + 1 << "\t\t||\t\t" << "ADDRESS" << '\n';
         for (unsigned int j = 0; j < 3; ++j)
-            cout << getValAt(j + N * (i - 1)) << "\t||\t" << bitset<13>(j + N * (i - 1)) << " (" << j + N * (i - 1) << ")\n";
-        cout << "...\n";
-        cout << getValAt(63 + N * (i - 1)) << "\t||\t" << bitset<13>(63 + N * (i - 1)) << " (" << 63 + N * (i - 1) << ")\n";
-        cout << getValAt(70 + N * (i - 1)) << "\t||\t" << bitset<13>(70 + N * (i - 1)) << " < (" << N*i <<")\n";
-
-        cout << "===================================================\n";
+        {
+            unsigned int num{ j + i * 2048 };
+            std::cout << get_val_at(num) << "\t||\t" << address_t(num) << '(' << address_t(num).to_ulong() << ")\n";
+        }
+        std::cout << "...\t\t||\t\t...\n";
+        std::cout << get_val_at(63 + 2048 * i) << "\t||\t" << address_t(63 + 2048 * i) << '(' << address_t(63 + 2048 * i).to_ulong() << ")\n";
+        std::cout << get_val_at(79 + 2048 * i) << "\t||\t" << address_t(79 + 2048 * i) << "(<" << 64 + 2048*i << ")\n";
     }
+
+    std::cout << "========================================\n";
+    std::cout << "RESIDUE " << "\t||\t\t" << "ADDRESS" << '\n';
+    std::cout << "...\t\t||\t\t...\n";
+    std::cout << get_val_at(7000) << "\t||\t" << address_t(7000) << "(<8192)\n";
 }
