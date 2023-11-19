@@ -15,7 +15,6 @@ PROGRAMMER_FINISHED = b"\3"
 
 ready = threading.Event()
 
-
 def show_percentage(current, total, previous, msg):
     new_percentage = math.floor(current / total * 10) * 10
     if new_percentage > previous:
@@ -84,34 +83,29 @@ def filename_completer(text, state):
     return files[state] if state < len(files) else None
 
 
-class SerialHandler:
-    def __init__(self, worker, file_flags, prompt, serial_monitor_keep_alive):
-        self.worker = worker
-        self.file_flags = file_flags
-        self.prompt = prompt
-        self.serial_monitor_keep_alive = serial_monitor_keep_alive
-
-    def handle(self, args):
-        filename = input_with_autocomplete(self.prompt, filename_completer).strip()
-        try:
-            with serial.Serial(args.port, args.baudrate, timeout=None) as ser, \
-                    open(filename, self.file_flags) as file:
-
-                writer = threading.Thread(target=self.worker, \
-                                          args=(ser, file))
-                monitor = threading.Thread(target=serial_monitor, \
-                                           args=(ser, self.serial_monitor_keep_alive))
-
-                writer.start()
-                monitor.start()
-
-                writer.join()
-                monitor.join()
-
-        except FileNotFoundError:
-            print(f"Error: File '{filename}' not found.")
-        except serial.SerialException as e:
-            print(f"Error: {e}. Check if the specified serial port is valid.")
+def handle(port, baudrate, worker, filename, file_flags, msg, serial_monitor_keep_alive):
+    try:
+        if not filename:
+            filename = input_with_autocomplete(msg, filename_completer).strip()
+        
+        with serial.Serial(port, baudrate, timeout=None) as ser, \
+             open(filename, file_flags) as file:
+            
+            workerThread  = threading.Thread(target=worker, \
+                                             args=(ser, file))
+            monitorThread = threading.Thread(target=serial_monitor, \
+                                             args=(ser, serial_monitor_keep_alive))
+            
+            workerThread.start()
+            monitorThread.start()
+            
+            workerThread.join()
+            monitorThread.join()
+            
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found.")
+    except serial.SerialException as e:
+        print(f"Error: {e}. Check if the specified serial port is valid.")
 
 
 def prompt():
@@ -125,17 +119,44 @@ def prompt():
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Serial Communication Program')
+    parser = argparse.ArgumentParser(description='Application to dump/flash ROM over serial connection.')
     parser.add_argument('port', help='Serial port name')
     parser.add_argument('baudrate', type=int, help='Baud rate for the serial connection')
-
+    parser.add_argument('--dump', '-d', nargs=1, help='Dump ROM to file')
+    parser.add_argument('--flash', '-f', nargs=1, help='Flash file onto ROM')    
+    
     args = parser.parse_args()
+    
+    if (args.dump and args.flash):
+        print("Please provide either --dump (-d) or --flash (-f) but not both.")
+        return
+    elif (args.dump):
+        choice = "d"
+        fname = args.dump[0]
+    elif (args.flash):
+        choice = "f"
+        fname = args.flash[0]
+    else:
+        choice = prompt()
+        fname = None
 
-    choice = prompt()
     if choice == "d":
-        SerialHandler(read_data, "wb", "Enter the file to dump ROM into: ", False).handle(args)
+        handle(port=args.port,\
+               baudrate=args.baudrate,\
+               worker=read_data,\
+               filename=fname,\
+               file_flags="wb",\
+               msg="Enter the file to dump ROM into: ",\
+               serial_monitor_keep_alive=False)
+        
     elif choice == "f":
-        SerialHandler(write_data, "rb", "Enter the file to flash onto ROM: ", True).handle(args)
+        handle(port=args.port,\
+               baudrate=args.baudrate,\
+               worker=write_data,\
+               filename=fname,\
+               file_flags="rb",\
+               msg="Enter the file to flash onto ROM: ",\
+               serial_monitor_keep_alive=True)
 
 
 if __name__ == "__main__":
