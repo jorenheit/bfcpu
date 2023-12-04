@@ -104,7 +104,7 @@ void writeEEPROM(int addr, byte value) {
 
   // Pulse CE of the EEPROM to write the value into it
   enableEEPROM();
-  delay(1); // CE needs to be held low at least 100ns
+  delayMicroseconds(1); // CE needs to be held low at least 100ns
   disableEEPROM();
   delay(10); // It needs a rather big delay... if not, subsequent writes do not work for some reason.
 
