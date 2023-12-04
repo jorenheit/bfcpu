@@ -14,6 +14,7 @@ PROGRAMMER_READY = b"\2"
 PROGRAMMER_FINISHED = b"\3"
 
 ready = threading.Event()
+done = threading.Event()
 
 def show_percentage(current, total, previous, msg):
     new_percentage = math.floor(current / total * 10) * 10
@@ -27,9 +28,12 @@ def write_data(ser, file):
     data = bytearray(file.read())
     data_length = len(data).to_bytes(4, byteorder='little')
 
-    while not ready.is_set():
+    while not ready.is_set() and not done.is_set():
         time.sleep(0.5)
 
+    if done.is_set():
+        return
+    
     ser.write(FLASH_REQUEST)
     ser.write(data_length)
     ser.write(data)
@@ -37,18 +41,20 @@ def write_data(ser, file):
 
 
 def read_data(ser, file):
-    while not ready.is_set():
+    while not ready.is_set() and not done.is_set():
         time.sleep(0.5)
 
     ser.write(DUMP_REQUEST)
     data_length = int.from_bytes(ser.read(4), byteorder='little')
+    print("Getting ", data_length, " bytes")
     data = bytearray()
     percentage = 0
     for i in range(0, data_length):
         percentage = show_percentage(i, data_length, percentage, "Downloading... ")
         data += ser.read()
     print("Downloading... 100%")
-        
+
+    #print(data)
     file.write(data)
 
 
@@ -61,6 +67,7 @@ def serial_monitor(ser, keep_alive):
                 if not keep_alive:
                     return
             elif c == PROGRAMMER_FINISHED:
+                done.set()
                 break
             else:
                 print(c.decode(), end="")
@@ -122,8 +129,8 @@ def main():
     parser = argparse.ArgumentParser(description='Application to dump/flash ROM over serial connection.')
     parser.add_argument('port', help='Serial port name')
     parser.add_argument('baudrate', type=int, help='Baud rate for the serial connection')
-    parser.add_argument('--dump', '-d', nargs=1, help='Dump ROM to file')
-    parser.add_argument('--flash', '-f', nargs=1, help='Flash file onto ROM')    
+    parser.add_argument('--dump', '-d', metavar='file', nargs=1, help='Dump ROM to file')
+    parser.add_argument('--flash', '-f', metavar='file', nargs=1, help='Flash file onto ROM')    
     
     args = parser.parse_args()
     
@@ -139,7 +146,7 @@ def main():
     else:
         choice = prompt()
         fname = None
-
+        
     if choice == "d":
         handle(port=args.port,\
                baudrate=args.baudrate,\

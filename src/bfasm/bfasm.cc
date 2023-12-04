@@ -52,8 +52,9 @@ void printHelp(std::string const &progName)
 }
 
 
-std::pair<Options, int> parseCmdLine(std::vector<std::string> const &args)
+std::pair<Options, int> parseCmdLine(int argc, char **argv)
 {
+    std::vector<std::string> const args{argv, argv + argc};
     Options opt;
 
     opt.mode = BUFFERED;
@@ -199,7 +200,7 @@ int assemble(Options const &opt)
 
 int main(int argc, char **argv)
 {
-    auto [opt, ret] = parseCmdLine(std::vector<std::string>(argv, argv + argc));
+    auto [opt, ret] = parseCmdLine(argc, argv);
 
     if (ret == 1)
     {
