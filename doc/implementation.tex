@@ -83,8 +83,11 @@ The data register functions as an 8-bit valued flip-flop, equipped with both inc
 \end{figure}
 
 
-\subsubsection{Circuit: Data-Pointer Register}
+\subsubsection{Circuit: Data-Pointer Register} \label{sec:implementation:registers:dpreg}
 The Data-Pointer register operates as a 16-bit valued flip-flop equipped with both increment and decrement functionalities, consequently utilizing the 74LS193 chip. While the Data-Pointer register itself holds no distinct exceptional properties, its output (the stored value) maintains a connection to the bus transceiver, a characteristic shared among other registers as well\footnote{The implementation of the bus transceiver involves a straightforward approach: connecting only outputs alongside the DIR and CE (chip enable) pins as inputs, employing the 74LS245 chips}. Refer to Figure \ref{fig:dataPointerRegisterImplementation} for an illustrative depiction of its implementation.
+
+\subsubsection{Circuit: Stack-Pointer Register} \label{sec:implementation:registers:spreg}
+The Stack-Pointer register operates as a 8-bit valued flip-flop equipped with both increment and decrement operations. Comparing with the DP-Reg, the SP-Reg could have been implemented in the same way. Thus, instead of using four 74LS193 chips for DP-Reg, only two chips were sufficient. 
 
 
 \begin{figure}[H]
@@ -109,13 +112,41 @@ The Flag Register is designed to manage precisely two bits, functioning as a 2-b
 
 
 \subsection{Memory} \label{sec:implementation:memory}
+\subsubsection{RAM} \label{sec:implementation:memory:ram}
+In our architecture, we utilized 16-bit address, 8-bit word RAM chip (\textbf{********}). Important to note, because some cells will need a bigger value than 8-bit, two RAMs are chained together with addresses and control pins connected. First 256 words with address from 0 to 255 store stack values pointed by the stack pointer. All other words are data in individual BF-cells pointed by data-pointer. Therefore, it was necessary to combine DP-Reg (see \ref{sec:implementation:registers:dpreg}) and SP-Reg (see \ref{sec:implementation:registers:spreg}). The problem was that we cannot hard-connect the output of two pointers directly to the address lines of the RAM chip since it would cause voltage interference, and other hard to debug, impaired functionality. The solution was to use several 8-bit bus transceivers. (see ********)
+
+Firstly, let us explore the reasoning how to split two pointers. SP-Reg has 8 bits whereas DP-Reg has 16 bits. Suppose we connect DP-Reg directly to the address lines of the RAM chip. Then, add SP-Reg's 8-bits of output to the first eight address lines of the RAM. In this configuration, if both registers output voltage simultaneously, voltage interference happens as high and low bias equals high bias. The first step is to connect the output of both pointers to the bus transceivers (from now on we use the abbreviation nBT8 for n 8-bit bus transceivers): SP-Reg---1BT8, and DP-Reg---2BT8. Control Unit can either activate a BT8 or disable for the pointer registers. Control unit must not activate both BT8s at the same time to prevent voltage interference.
+
+From the first sight, it may be reasonable to state that this is a complete solution. However, the problem arises when we try to output SP-Reg: first 8-bit address lines have correct input from the register while other 8-bit address lines (remember that the RAM has sixteen address lines) are noise, as they are connected to the disabled BT8 of the DP-Reg. Therefore, we required to ground these 'higher,' disabled 8-bits of address lines. Another bus was introduced, right in the vicinity of the RAM with all the values connected to the ground. We call it the GND-Reg. The necessity to introduce a new bus rather than connect the values to the ground was interference with DP-Reg input - we do not want higher 8-bits to be always at the low potential. On this point, address lines are properly configured. The complete picture you can see in \ref{fig:ram} and figure ****
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/ram}
+	\caption{Encapsulated overview of RAM}
+	\label{fig:ram}
+\end{figure}
+
+Now, we can shed light on the output of the RAM. The chip that we are using have three control pins: Write-Enable (WE), Output-Enable (OE), and Chip-Enable (CE). The map of possible combinations and corresponding actions you can see in the official data-sheet for *****. Depending on the combination of WE, OE, and CE, BT8s of SP-Reg, DP-Reg, and GND-Reg must be configured appropriately. In particular, its direction and output-enable pin. This was done by several elongated wires that you can see in figure ****.
+
+When RAM outputs the data, it must be stored in the D-Reg and IP-Reg. However, since the two RAMs output 16-bit value, D-Reg is not able to store all 16-bits of information. Therefore, we divided 16-bit RAM output in higher and lower 8-bit values (HV AND LV for compactness). HV and LV are connected to two BT8s. The principle is actually the same as we dealt with address lines. One BT8 is connected to ground, the second to D-Reg, and, finally, both are connected to the IP-Reg for loading. Proper configuration of BT8's direction and output-enable pins is necessary, so proper wires have been added\footnote{if you would like to know the location of these configuration wires, you can search them in the real circuit or in the photos provided in Appendix B}.
+
+\subsubsection{ROM} \label{sec:implementation:memory:rom}
+...
 
 
-\subsection{Control Unit} \label{sec:implementation:control_unity}
+\subsection{Control Unit} \label{sec:implementation:control_unit}
+For the proper functionality of the Control Unit (see \ref{sec:control_unit:working_principle}), it requires two 4-bit unary counters, particularly cycle counter (CC) and bank counter (BC), and three 8-bit registers that we refer to as CUR1, CUR2, and CUR3 (or just CUR(s)). While all counters and registers are not chained and are the same in implementation, we provide the reader with the implementation of one counter and one register.
+
+\subsubsection{CUR - Control-Unit Register} \label{sec:implementation:control_unit:cur}
+Each CUR only needs to be able to load 8-bit data, reset, and to have a 3-state buffer\footnote{That is, to have Output-Enable pin.}. Luckily, we have this 4-bit 3-state flip-flop covered in one conventional chip, **************. Two chips are chained together with OE and address lines connected. The abstract circuit and breadboard implementation you can observe in **** and ******.
+
+
+\subsubsection{Counters} \label{sec:implementation:control_unit:counters}
+The counter needs to count in this order: 00 --- 01 --- 10 --- 11 --- 00. It should have reset and output pin. Luckily, our inventory did contain a conventional chip with appropriate logic, *****. Because the circuit is not complicated, we provide you with the abstract circuit and the real one, which you can find in ***** and *****.
 
 
 \subsection{Input} \label{sec:implementation:input}
-
+...
 
 \subsection{Output} \label{sec:implementation:output}
-
+...

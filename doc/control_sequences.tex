@@ -11,13 +11,13 @@ By setting the control signals as described in Section \ref{sec:architecture:sig
 It is important to note that, because of the choice of driving all of the (counting) registers with a common interface (Section \ref{sec:implementation:registers}), only one register can be driven each clock cycle. That is, the CE and DEC signals can be applied to only one register in a clock cycle. Below we will go through each of the instructions in order to annotate the contents of Table \ref{tab:microcode}.
 
 
-\subsection{Cylce 0}
+\subsection{Cycle 0}
 The first cycle of each instruction is identical. In fact, it's not really part of any instruction yet, because its purpose is to fetch the next instruction from ROM. In order to do so, the IP is enabled (address-in to the ROM module) and the resulting instruction is loaded into the I-register. Note that this also means that the A and V flags from the F register are loaded in (F is always enabled), together with the Z flags supplied by both the D and LS registers.
 
 \subsection{Modifying Data: \texttt{+} and \texttt{-}}
 The operations performed by the \texttt{+} command depend on the state of the system. If the A flag is not set (the address has not changed since the last instruction), this means that the value in D already corresponds to the current cell in memory. In that case, the CE signal for the D register is set for it to increment on the next clock pulse. In addition to this, the V-flag is set to indicate that the value in D has been changed, which is then loaded into the F register. In the next cycle, the CE is set for the IP register to load the next instruction and the cycle count of the CU is reset to 0.
 
-On the other hand, when the A flag \emph{was} set, we first need to fetch the new value from RAM by enabeling the DP register and loading the resulting value into D. From hereon, the next set of control signals is identical to that described above in the case where A was not set.
+On the other hand, when the A flag \emph{was} set, we first need to fetch the new value from RAM by enabling the DP register and loading the resulting value into D. From hereon, the next set of control signals is identical to that described above in the case where A was not set.
 
 The control signals necessary to perform the \texttt{-} command are similar to those of the \texttt{+} command, the only difference being the DEC(D) signal to perform a subtraction rather than addition.
 
@@ -64,4 +64,9 @@ In this mode, we don't care what was loaded into D, even if there was nothing th
 \subsection{Non-BF instructions: \texttt{NOP} and \texttt{ERR}}
 For debugging purposes, two non-BF instructions have been included. The \texttt{NOP} instruction does nothing. It simply increments the IP and resets the cycle count to move to the next instruction. The \texttt{ERR} instruction is inserted in all non-reachable states. If for some reason a state occurs that maps to the \texttt{ERR} command, the clock will be halted and some indicator on the Control Unit should light up to let its users know that something has gone wrong.
 
+\subsection{Microcode table}
 \input{microcode_table}
+
+
+
+
