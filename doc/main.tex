@@ -10,6 +10,9 @@
 \usepackage{pdflscape}
 \usepackage{fancyvrb}
 \usepackage{cprotect}
+%\usepackage{adjustbox}
+
+\usepackage[margin=1in]{geometry}
 
 \VerbatimFootnotes
 
@@ -21,7 +24,7 @@
 \captionsetup{font=footnotesize,format=hang}
 
 \newcommand{\nocontentsline}[3]{}
-\newcommand{\tocless}[2]{\bgroup\let\addcontentsline=\nocontentsline#1{#2}\egroup}
+%\newcommand{\tocless}[2]{\bgroup\let\addcontentsline=\nocontentsline#1{#2}\egroup}
 
 \definecolor{Gray}{gray}{0.9}
 \definecolor{White}{gray}{1}
@@ -29,10 +32,22 @@
 %\AtBeginEnvironment{longtable}{\small}
 
 \title{BFCPU}
+\author{ Joren Heit, Arthur Topal }
+\date{}
 \begin{document}
 \maketitle
+\thispagestyle{empty}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/_processor}
+\end{figure}
+
+\newpage
 \tableofcontents
 
+\include{acknowledgements}
+\include{about}
 \include{preface}
 \include{inventory}
 \include{introduction}
@@ -42,6 +57,8 @@
 \include{implementation}
 \include{control_unit}
 \include{algorithms}
+\include{electromagnetism}
+\include{digital_electronics}
 \include{appendix}
 \include{references}
 
