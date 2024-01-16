@@ -186,8 +186,19 @@ The counter needs to count in this order: 00 --- 01 --- 10 --- 11 --- 00. It sho
 \end{figure}
 
 
+Before diving in the following section it is important to note that the implementation details of input and output are not provided as it deviates from the main course of this book. Readers with experience in Arduino and programming, willing to delve more in these modules, are free to write directly to one of the authors.
+
 \subsection{Input} \label{sec:implementation:input}
-...
+The input of the processor is a program written in an appropriate machine code. However, following the principle of abstraction, the user can make a program in brainf*ck programming language, use brainfix (\ref{brainfix}), or any other programming language translated in brainf*ck. Afterward, an arduino program takes up the code and converts it in the appropriate machine code, recognizable by bfcpu. However, this machine code is not yet stored in the processor's memory rather on a separate module of the processor. Therefore, a so-called ROM-Programmer comes into play. It is based on Arduino and it loads machine code into the processor's ROM for the execution process.
+
+**************************************** insert photo of this module and rom ??????????
 
 \subsection{Output} \label{sec:implementation:output}
-...
+The output of the processor equals the output of the program. The process of execution is visible at different frequencies, set by a resistor with changeable resistance. Furthermore, the overall result will be displayed on a small screen that you can see in \ref{fig:output:screen_module}. The screen module is driven by Arduino for simplicity of its implementation. The brightness and symbol representation (binary, hex, etc.) could be explicitly set by the user.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/screen}
+	\caption{Arduino-driven output module (Screen)}
+	\label{fig:output:screen_module}
+\end{figure}
