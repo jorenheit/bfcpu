@@ -144,9 +144,6 @@ Now, we can shed light on the output of the RAM. The chip that we are using have
 
 When RAM outputs the data, it must be stored in the D-Reg and IP-Reg. However, since the two RAMs output 16-bit value, D-Reg is not able to store all 16-bits of information. Therefore, we divided 16-bit RAM output in higher and lower 8-bit values (HV AND LV for compactness). HV and LV are connected to two BT8s. The principle is actually the same as we dealt with address lines. One BT8 is connected to ground, the second to D-Reg, and, finally, both are connected to the IP-Reg for loading. Proper configuration of BT8's direction and output-enable pins is necessary, so proper wires have been added\footnote{if you would like to know the location of these configuration wires, you can search them in the real circuit or in the photos provided in Appendix B}.
 
-\subsubsection{ROM} \label{sec:implementation:memory:rom}
-...
-
 
 \subsection{Control Unit} \label{sec:implementation:control_unit}
 For the proper functionality of the Control Unit (see \ref{sec:control_unit:working_principle}), it requires two 4-bit unary counters, particularly cycle counter (CC) and bank counter (BC), and three 8-bit registers that we refer to as CUR1, CUR2, and CUR3 (or just CUR(s)). While all counters and registers are not chained and are the same in implementation, we provide the reader with the implementation of one counter and one register.
@@ -186,12 +183,10 @@ The counter needs to count in this order: 00 --- 01 --- 10 --- 11 --- 00. It sho
 \end{figure}
 
 
-Before diving in the following section it is important to note that the implementation details of input and output are not provided as it deviates from the main course of this book. Readers with experience in Arduino and programming, willing to delve more in these modules, are free to write directly to one of the authors.
+Before diving in the following section it is important to note that the implementation details of input and output are not provided as it deviates from the main course of this book. 
 
 \subsection{Input} \label{sec:implementation:input}
-The input of the processor is a program written in an appropriate machine code. However, following the principle of abstraction, the user can make a program in brainf*ck programming language, use brainfix (\ref{brainfix}), or any other programming language translated in brainf*ck. Afterward, an arduino program takes up the code and converts it in the appropriate machine code, recognizable by bfcpu. However, this machine code is not yet stored in the processor's memory rather on a separate module of the processor. Therefore, a so-called ROM-Programmer comes into play. It is based on Arduino and it loads machine code into the processor's ROM for the execution process. You can observe these modules and components in the figure \ref{*****************************************************}
-
-**************************************** insert photo of this module and rom ??????????
+The input of the processor is a program written in an appropriate machine code. However, following the principle of abstraction, the user can make a program in brainf*ck programming language, use brainfix (\ref{brainfix}), or any other programming language translated in brainf*ck. Afterward, an arduino program takes up the code and converts it in the appropriate machine code, recognizable by bfcpu. However, this machine code is not yet stored in the processor's memory rather on a separate module of the processor. Therefore, a so-called ROM-Programmer comes into play. It is based on Arduino, and it loads machine code into the processor's ROM for the execution process.
 
 \subsection{Output} \label{sec:implementation:output}
 The output of the processor equals the output of the program. The process of execution is visible at different frequencies, set by a resistor with changeable resistance. Furthermore, the overall result will be displayed on a small screen that you can see in \ref{fig:output:screen_module}. The screen module is driven by Arduino for simplicity of its implementation. The brightness and symbol representation (binary, hex, etc.) could be explicitly set by the user.
