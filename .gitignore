@@ -23,3 +23,9 @@ src/test.suite/.vscode
 # executables and output of bfasm.cc
 src/bfasm/*.out
 src/bfasm/*.bin
+
+# python cache
+PWS_presentation/__pycache__
+
+# animation videos and images
+PWS_presentation/media
