@@ -4,7 +4,8 @@ from copy import deepcopy
 class BF_Animation(Scene):
     def bf_setup(self):
         # program to visualize
-        self.program = "++>++>--<+--<+++>--<+++>-++>--<+-<+"
+        # self.program = "++>++>--<+--<+++>--<+++>-++>--<+-<+"
+        self.program = "+>+>+>-<"
         
         # number of BF-operations
         self.N = len(self.program)
