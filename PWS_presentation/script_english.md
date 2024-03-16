@@ -1,5 +1,5 @@
 ### Short Introduction (~30 seconds)
-I am a student from V6, and because of my passion in computer science, and electronics, I chose to make a research and development of a processor that runs special machine code. In fact, I thank you my physics teacher, Joren Heit, for offering me the participation in this awesome project.
+I am a student from V6, and because of my passion in computer science, and electronics, I chose to make a research and development of a processor that runs special machine code. In fact, I thank my physics teacher, Joren Heit, for offering me the participation in this awesome project.
 
 ### Brainfuck 
 Before I go deeper in the goal of the project, we need some background knowledge. In particular, the understanding of the esoteric programming language, BF. Despite a suspicous name, you can think of this language as a set of specific "commands", that you can run and create different kinds of programs. 
@@ -22,7 +22,7 @@ To understand BF, consider a row of so-called cells that can store a number.
 
 I will associate the first cell with number 1. So a 1 points at the first cell. It is the cell currently selected.
 
-Now consider this simple program: ++>--<+>++<--
+Now consider this simple program: ++>--<+>++
 "+" in BF means to add a one to a currently selected cell, so we have 1 in the 1st cell.
 
 [1][][][][][][]

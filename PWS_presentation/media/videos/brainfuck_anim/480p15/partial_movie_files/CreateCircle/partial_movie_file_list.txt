@@ -1,2 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:/home/horki/Documents/bfcpu/PWS_presentation/media/videos/brainfuck_anim/480p15/partial_movie_files/CreateCircle/1185818338_1912650126_223132457.mp4'
