@@ -1,5 +1,5 @@
 # Short Introduction (~30 seconds)
-Ik ben een student uit V6B en aangezien mijn passie in computer science en electronics, ik kies een onderzoek en ontwikkeling van een processor die speciale machinecode uitovert. In feite, Ik bedank mijn natuurkundeleraar, Joren Heit, voor het aanbieden van deelname aan dit geweldige project.
+Ik ben een student uit V6B en aangezien mijn passie in computer science en electronics, ik kies een onderzoek en ontwikkeling van een processor die speciale machinecode uitvoert. In feite, Ik bedank mijn natuurkundeleraar, Joren Heit, voor het aanbieden van deelname aan dit project.
 
 # Brainfck
 Voordat ik dieper inga op het doel van het project, hebben we wat achtergrondkennis nodig. In het bijzonder begrip van de esoterische programmeertaal, BF. Ondanks een verdachte naam, kun je aan deze taal denken als een set van specifieke "opdrachten" die je kunt uitvoeren en waarmee je verschillende soorten programma's kunt maken.
@@ -12,8 +12,8 @@ Ga voorzichtig naar de badkamer.
 Kleren uitdoen.
 Begin met water laten stromen.
 Enzovoort.
-Deze mini-acties zijn "opdrachten" die een programma vormen, dat in ons geval "douchen in de ochtend" is.
-Op dezelfde manier zijn in BF de opdrachten: >, <, +, -, ., ",", [, ]
+Deze mini-acties zijn "opdrachten" die een programma vormen, dat in ons geval het "douchen in de ochtend" is.
+Op dezelfde manier zijn in BF de operaties aanwezig: >, <, +, -, ., ",", [, ]
 Met behulp van deze opdrachten kun je een programma maken.
 
 Om BF te begrijpen, stel je een rij zogenaamde cellen voor die een getal kunnen opslaan.
