@@ -18,11 +18,11 @@ Using these commands you can make a program.
 
 To understand BF, consider a row of so-called cells that can store a number. 
 
-[][][][][][][]
+***first animation***
 
-I will associate the first cell with number 1. So a 1 points at the first cell. It is the cell currently selected.
+The currently selected cell is pointed at by the arrow.
 
-Now consider this simple program: ++>--<+>++
+Now consider this simple program: "++>++>--<+--<+++>--<+++>-++>--<+-<+"
 "+" in BF means to add a one to a currently selected cell, so we have 1 in the 1st cell.
 
 [1][][][][][][]
