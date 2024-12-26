@@ -29,3 +29,6 @@ PWS_presentation/__pycache__
 
 # animation videos and images
 PWS_presentation/media
+
+# datasheets
+doc/datasheets/

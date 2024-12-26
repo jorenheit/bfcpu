@@ -36,6 +36,7 @@ struct Options
     std::istream *inStream;
     std::ostream *outStream;
     InstructionSize instructionSize;
+    int maxDepth;
 };
 
 void printHelp(std::string const &progName)
@@ -44,6 +45,7 @@ void printHelp(std::string const &progName)
               << "Options:\n"
               << "-h, --help            Display this text.\n"
               << "-i, --immediate-input Assemble input commands (,) to immediate mode (\').\n"
+	      << "-d, --max-depth       Maximum nesting depth of []-pairs.\n"
               << "-n, --nibble          Make every instruction 1 nibble long. The assembler will pack two\n"
               << "                      commands in every byte, where the low nibble is the first to be executed.\n"
               << "                      E.g. the byte 0x42 consists of the command 0x2 and 0x4 in that order.\n"
@@ -61,6 +63,7 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     opt.inStream = &std::cin;
     opt.outStream = &std::cout;
     opt.instructionSize = BYTE;
+    opt.maxDepth = 15;
 
     std::string inputFile = "stdin";
     size_t idx = 1;
@@ -80,11 +83,21 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
             opt.instructionSize = NIBBLE;
             ++idx;
         }
+	else if (args[idx] == "-d" || args[idx] == "--max-depth")
+	{
+	    if (idx == args.size() - 1)
+	    {
+                std::cerr << "ERROR: No argument passed to option " << args[idx] << ".\n";
+		return {opt, 1};
+	    }
+	    opt.maxDepth = std::stoi(args[idx + 1]);
+	    idx += 2;
+	}
         else if (args[idx] == "-o")
         {
             if (idx == args.size() - 1)
             {
-                std::cerr << "ERROR: No argument passed to option \'-o\'.\n";
+                std::cerr << "ERROR: No argument passed to option " << args[idx] << ".\n";
                 return {opt, 1};
             }
 
@@ -146,6 +159,7 @@ int assemble(Options const &opt)
 {
     std::istream &in  = *(opt.inStream);
     std::vector<unsigned char> result;
+    int nestingDepth = 0;
     
     while (in)
     {
@@ -158,8 +172,22 @@ int assemble(Options const &opt)
         case '>': result.push_back(RIGHT); break; 
         case '.': result.push_back(OUT); break; 
         case ',': result.push_back(opt.mode == BUFFERED ? IN_BUF : IN_IM); break; 
-        case '[': result.push_back(LOOP_START); break; 
-        case ']': result.push_back(LOOP_END); break; 
+
+        case '[': {
+	    result.push_back(LOOP_START);
+	    if (++nestingDepth > opt.maxDepth)
+	    {
+		std::cerr << "ERROR: Nesting depth exceeds maximum value (" << opt.maxDepth << ").\n"
+			  << "You can change the maximum depth using the -d option.\n";
+		return 1;
+	    }
+	    break;
+	}
+        case ']': {
+	    result.push_back(LOOP_END);
+	    --nestingDepth;
+	    break;
+	}
         default:
             continue;
         }
