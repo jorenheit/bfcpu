@@ -57,4 +57,7 @@ void handleButtons() {
     lcdBuffer.scrollDown();
     delay(BUTTON_DEBOUNCE_DELAY);
   }
+
+  // TODO: clear when both buttons pushed at the same time
+  // CLEAR_HOLD_TIME was already defined but not used yet.
 }

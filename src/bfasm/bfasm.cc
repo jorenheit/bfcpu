@@ -37,6 +37,7 @@ struct Options
     std::ostream *outStream;
     InstructionSize instructionSize;
     int maxDepth;
+    bool allowUnbalanced;
 };
 
 void printHelp(std::string const &progName)
@@ -46,6 +47,9 @@ void printHelp(std::string const &progName)
               << "-h, --help            Display this text.\n"
               << "-i, --immediate-input Assemble input commands (,) to immediate mode (\').\n"
 	      << "-d, --max-depth       Maximum nesting depth of []-pairs.\n"
+	      << "-u, --allow-unbalanced-loops\n"
+	      << "                      By default, the assembler will refuse to produce a program with unbalanced\n"
+	      << "                      loops ([ and ] do not match). Using this option will allow for this to occur.\n"
               << "-n, --nibble          Make every instruction 1 nibble long. The assembler will pack two\n"
               << "                      commands in every byte, where the low nibble is the first to be executed.\n"
               << "                      E.g. the byte 0x42 consists of the command 0x2 and 0x4 in that order.\n"
@@ -63,7 +67,8 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     opt.inStream = &std::cin;
     opt.outStream = &std::cout;
     opt.instructionSize = BYTE;
-    opt.maxDepth = 15;
+    opt.maxDepth = 1<<8;
+    opt.allowUnbalanced = false;
 
     std::string inputFile = "stdin";
     size_t idx = 1;
@@ -81,6 +86,11 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
         else if (args[idx] == "-n" || args[idx] == "--nibble")
         {
             opt.instructionSize = NIBBLE;
+            ++idx;
+        }
+        else if (args[idx] == "-u" || args[idx] == "--allow-unbalanced-loops")
+        {
+            opt.allowUnbalanced = true;
             ++idx;
         }
 	else if (args[idx] == "-d" || args[idx] == "--max-depth")
@@ -160,7 +170,7 @@ int assemble(Options const &opt)
     std::istream &in  = *(opt.inStream);
     std::vector<unsigned char> result;
     int nestingDepth = 0;
-    
+
     while (in)
     {
         char c = in.get();
@@ -193,6 +203,14 @@ int assemble(Options const &opt)
         }
     }
 
+
+    if (not opt.allowUnbalanced && nestingDepth != 0)
+    {
+	std::cerr << "ERROR: Program contains unbalanced loops. Use the -u option to ignore.\n";
+	return 1;
+    }
+
+    
     // Pack nibbles together
     if (opt.instructionSize == NIBBLE)
     {

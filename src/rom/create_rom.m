@@ -33,7 +33,7 @@ function create_rom(filename_base)
   {"LEFT",  1, "xx0x"}, {"INC", "RS0", "RS2", "CR"};
   
   {"LOOP_START", 1, "x011"}, {"INC", "RS1", "RS2"};
-  {"LOOP_START", 2, "x011"}, {"INC", "RS0", "RS1", "CR"};
+  {"LOOP_START", 2, "x011"}, {"INC", "RS0", "RS2", "CR"};
   {"LOOP_START", 1, "x010"}, {"INC", "RS1"};
   {"LOOP_START", 2, "x010"}, {"WE_RAM", "EN_SP", "EN_IP"};
   {"LOOP_START", 3, "x010"}, {"INC", "RS0", "RS2", "CR"};
@@ -160,7 +160,8 @@ function value = getBits(args)
     "VE",
     "AE",
     "PRE",
-    "ERR"
+    "HLT",
+    "ERR"    
   };
   
   
