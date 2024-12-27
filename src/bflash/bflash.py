@@ -33,12 +33,21 @@ def write_data(ser, file):
 
     if done.is_set():
         return
-    
+
     ser.write(FLASH_REQUEST)
     ser.write(data_length)
-    ser.write(data)
+
+    CHUNK_SIZE = 50
+    for i in range(0, len(data), CHUNK_SIZE):
+        ready.clear()
+        chunk = data[i:i+CHUNK_SIZE]
+        ser.write(chunk)
+        ser.flush()
+        ready.wait()
+
     ser.flush()
 
+    
 
 def read_data(ser, file):
     while not ready.is_set() and not done.is_set():
@@ -54,7 +63,6 @@ def read_data(ser, file):
         data += ser.read()
     print("Downloading... 100%")
 
-    #print(data)
     file.write(data)
 
 
@@ -122,7 +130,7 @@ def prompt():
         if choice in ["d", "f"]:
             return choice
         else:
-            print("Invalid choice. Please enter 'D' or 'F'")
+            print("Invalid choice. Please enter 'D', 'F'")
 
 
 def main():
@@ -130,7 +138,7 @@ def main():
     parser.add_argument('port', help='Serial port name')
     parser.add_argument('baudrate', type=int, help='Baud rate for the serial connection')
     parser.add_argument('--dump', '-d', metavar='file', nargs=1, help='Dump ROM to file')
-    parser.add_argument('--flash', '-f', metavar='file', nargs=1, help='Flash file onto ROM')    
+    parser.add_argument('--flash', '-f', metavar='file', nargs=1, help='Flash file onto ROM')
     
     args = parser.parse_args()
     

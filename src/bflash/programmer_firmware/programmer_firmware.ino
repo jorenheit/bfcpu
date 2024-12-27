@@ -1,4 +1,6 @@
 #define MAX_ROM_SIZE (1 << 13)
+#define BAUD_RATE 115200
+#define CHUNK_SIZE 50
 
 enum Pins {
   SHIFT_DATA = 13,
@@ -31,6 +33,7 @@ void setShiftRegisters(int const addr, ReadWrite const RW) {
   //      |   Shift Register 1 (msb)  |  Shift Register 0 (lsb) |
   // Bit: | 15 14 13  12  11 10 09 08 | 07 06 05 04 03 02 01 00 |
   //      | OE WE -- A12 A11  ...  A8 | A7 ...           ... A0 |
+  //        SHIFT DIRECTION -->    -->   -->
 
 
   // Set bits 13, 14, 15 (OR with 0xE000 = 0b1110...0) and clear either bit 14 or 15 depending 
@@ -40,13 +43,12 @@ void setShiftRegisters(int const addr, ReadWrite const RW) {
     value16 &= (RW == WRITE) ? ~(1 << 14) : ~(1 << 15);
   }
 
-  // Shift the least significant byte in first, so that one will end up on the right
-  // after shifting in the most significant byte, leaving us in a little endian representation.
-  shiftOut(SHIFT_DATA, SHIFT_CLOCK, MSBFIRST, (value16 >> 8) & 0xff); 
-  shiftOut(SHIFT_DATA, SHIFT_CLOCK, MSBFIRST, (value16 >> 0) & 0xff);
+  shiftOut(SHIFT_DATA, SHIFT_CLOCK, LSBFIRST, (value16 >> 0) & 0xff); 
+  shiftOut(SHIFT_DATA, SHIFT_CLOCK, LSBFIRST, (value16 >> 8) & 0xff);
 
   // Latch result onto the pins
   digitalWrite(SHIFT_LATCH, LOW);
+  delayMicroseconds(10);
   digitalWrite(SHIFT_LATCH, HIGH);
   delayMicroseconds(10);
   digitalWrite(SHIFT_LATCH, LOW);
@@ -119,9 +121,8 @@ void showPercentage(int p) {
 }
 
 int showPercentage(float current, float total, int previous) {
-    int newPercentage = current / total * 10;
-    newPercentage *= 10;
-    if (newPercentage > previous) {
+    int newPercentage = current / total * 100;
+    if (newPercentage - previous >= 5) {
       showPercentage(newPercentage);
       return newPercentage;
     }
@@ -143,11 +144,19 @@ void flash() {
   Serial.println(" bytes to EEPROM");
 
   int percentage = 0;
-  for (int i = 0; i != min(dataLength, MAX_ROM_SIZE); ++i) {
-    writeEEPROM(i, Serial.read());
-    percentage = showPercentage(i, MAX_ROM_SIZE, percentage);
+  int chunks = dataLength / CHUNK_SIZE + (dataLength % CHUNK_SIZE != 0);
+  byte chunkBuffer[CHUNK_SIZE]{};
+  int bytesRead = 0;
+  for (int i = 0; i != chunks; ++i) {
+    size_t n = (dataLength - bytesRead > CHUNK_SIZE) ? CHUNK_SIZE : (dataLength - bytesRead);
+    Serial.readBytes(chunkBuffer, n);
+    for (int j = 0; j != n; ++j) {
+      writeEEPROM(i * CHUNK_SIZE + j, chunkBuffer[j]);
+      percentage = showPercentage(bytesRead, dataLength, percentage);      
+    }
+    Serial.write(PROGRAMMER_READY);
+    bytesRead += n;
   }
-  showPercentage(100);
 }
 
 void dump() {
@@ -169,7 +178,7 @@ void setup() {
   disableEEPROM();
   pinMode(STATUS_LED, OUTPUT);
 
-  Serial.begin(9600);
+  Serial.begin(BAUD_RATE);
   Serial.write(PROGRAMMER_READY); // let computer know we're ready
   digitalWrite(STATUS_LED, HIGH);
 
