@@ -1,5 +1,5 @@
 \section{Control Sequences} \label{sec:sequences}
-By setting the control signals as described in Section \ref{sec:architecture:signals} appropriately, the modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction (also known as microcode instructions). The Control Unit implements this as a lookup table in ROM, where the instruction, flags and cycle counter act as an address into this table and the control signal configuration is stored at this address in ROM (Figure \ref{fig:decoder}).
+By setting the control signals as described in Section \ref{sec:architecture} appropriately, the modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction (also known as microcode instructions). The Control Unit implements this as a lookup table in ROM, where the instruction (in I), flags (also in I) and cycle counter (kept by the CU) act as an address into this table and the control signal configuration is stored at this address in ROM (Figure \ref{fig:decoder}).
 
 \begin{figure}[H]
   \centering
@@ -8,43 +8,42 @@ By setting the control signals as described in Section \ref{sec:architecture:sig
   \label{fig:decoder}
 \end{figure}
 
-It is important to note that, because of the choice of driving all of the (counting) registers with a common interface (Section \ref{sec:implementation:registers}), only one register can be driven each clock cycle. That is, the CE and DEC signals can be applied to only one register in a clock cycle. Below we will go through each of the instructions in order to annotate the contents of Table \ref{tab:microcode}.
+It is important to note that, because of the choice of driving all of the (counting) registers with a common interface (Section \ref{sec:implementation:registers}), only one register can be driven each clock cycle. That is, the INC and DEC signals can be applied to only one register in a clock cycle. Below we will go through each of the instructions in order to annotate the contents of Table \ref{tab:microcode}.
 
 
 \subsection{Cycle 0}
-The first cycle of each instruction is identical. In fact, it's not really part of any instruction yet, because its purpose is to fetch the next instruction from ROM. In order to do so, the IP is enabled (address-in to the ROM module) and the resulting instruction is loaded into the I-register. Note that this also means that the A and V flags from the F register are loaded in (F is always enabled), together with the Z flags supplied by both the D and LS registers.
+The first cycle of each instruction is identical. In fact, it's not really part of any instruction yet, because its purpose is to fetch the next instruction from ROM. In order to do so, the IP is enabled (address-in to the ROM module) and the resulting instruction is loaded into the I-register. Note that this also means that the A and V flags from the F register are loaded in (F is always enabled), together with the Z ans S flags supplied by the D and LS registers.
 
 \subsection{Modifying Data: \texttt{+} and \texttt{-}}
-The operations performed by the \texttt{+} command depend on the state of the system. If the A flag is not set (the address has not changed since the last instruction), this means that the value in D already corresponds to the current cell in memory. In that case, the CE signal for the D register is set for it to increment on the next clock pulse. In addition to this, the V-flag is set to indicate that the value in D has been changed, which is then loaded into the F register. In the next cycle, the CE is set for the IP register to load the next instruction and the cycle count of the CU is reset to 0.
+The operations performed by the \texttt{+} command depend on the state of the system. If the A flag is not set (the address has not changed since the last instruction), this means that the value in D already corresponds to the current cell in memory. In that case, the INC signal for the D register is set for it to increment on the next clock pulse. In addition to this, the V-flag is set to indicate that the value in D has been changed, which is then loaded into the F register. In the next cycle, the INC signal is set for the IP register to load the next instruction and the cycle count of the CU is reset to 0.
 
 On the other hand, when the A flag \emph{was} set, we first need to fetch the new value from RAM by enabling the DP register and loading the resulting value into D. From hereon, the next set of control signals is identical to that described above in the case where A was not set.
 
 The control signals necessary to perform the \texttt{-} command are similar to those of the \texttt{+} command, the only difference being the DEC(D) signal to perform a subtraction rather than addition.
 
-None of the actions above need to be performed when the Z(LS) flag is zero, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately.
+None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately.
 
 \subsection{Moving the Pointer: \texttt{<} and \texttt{>}}
-Moving the datapointer around requires similar instructions compared to modifying the dataregister, the difference being that we increment or decrement the DP-register instead of the D-register. If the V-flag was set in the previous instruction, we need to write the updated value in the D-register back to RAM before moving the pointer. If not, we can immediately move the pointer. In either case do we need to set the A-flag in the F-register in order for the next instruction to take into account that the address has changed and the contents in the D-register are therefore not synchronized with the RAM. Like before, this instruction is ignored when the Z(LS) flag is zero.
+Moving the datapointer around requires similar instructions compared to modifying the dataregister, the difference being that we increment or decrement the DP-register instead of the D-register. If the V-flag was set in the previous instruction, we need to write the updated value in the D-register back to RAM before moving the pointer. If not, we can immediately move the pointer. In either case do we need to set the A-flag in the F-register in order for the next instruction to take into account that the address has changed and the contents in the D-register are therefore not synchronized with the RAM. Like before, this instruction is ignored when S is set.
 
-%\subsubsection*{} % not sure what is happening but this will fix it.
 \subsection{Conditional Jumping: \texttt{[} and \texttt{]}}
-These are by far the most complicated instructions that require a lot of additional logic. Because the BFISC lacks a JMP-instruction where the argument holds the destination address, the computer has to store the address of the opening \texttt{[}-command in case it needs to loop back when the time comes. Also, if the loop is not entered, the LS-register is used to determine when execution resumes.
+These are by far the most complicated instructions that require a lot of additional logic. Because the BF instruction set lacks a JMP-instruction where some argument holds the destination address, the computer has to store the address of the opening \texttt{[}-command in case it needs to loop back when the time comes. Also, if the loop is not entered, the LS-register is used to determine when execution should resume.
 
 \paragraph{Loop Start:}  
-In the first scenario, where the D-register is up-to-date (A-flag not set) and its Z-flag is high, we can immediately conclude that this loop should be skipped over. Hence, the LS-register is incremented and the next instruction is loaded (to be ignored until the LS-register becomes 0 again).
+In the first scenario, where the D-register is up-to-date (A not set) and its Z-flag is set, we can immediately conclude that this loop should be skipped over. Hence, the LS-register is incremented and the next instruction is loaded (to be ignored until the LS-register becomes 0 again).
 
 In the second scenario, the A-flag is still not set but the Z-flag for the D-register is not set either, meaning that control should enter the loop. It takes 3 cycles to do so: increment the stack-pointer (cycle 1), write the current IP to this address on the stack (cycle 2) and move to the next instruction (cycle 3).
 
 In scenario 3, the A-flag is set, which means that we should first load the new data from RAM into the D-register (cycle 1). After loading a new value into D, flags and cycle count are reset to 0 (without incrementing the instruction pointer). This means the same instruction is reloaded with updated flags on the next iteration, putting the system into either one of the states above.
 
-In the case that we were already skipping code (Z(LS) low), we need to increment the LS-register once more to account for another pair of nested \texttt{[]}'s (cycle 1) and then continue to the next instruction (cycle 2).
+In the case that we were already skipping code (S set), we need to increment the LS-register once more to account for another pair of nested \texttt{[]}'s (cycle 1) and then continue to the next instruction (cycle 2).
 
 \paragraph{Loop End:}
-In the first scenario, which takes 2 cycles to execute, there is a known (synchronized) zero in the D-register. This means we can immediately choose to exit the loop. To do so, the stack-pointer is decremented (cycle 1) to point at the previous value on the stack. In cycle 2, the IP is incremented as usual.
+In the first scenario, which takes 2 cycles to execute, there is a known (synchronized) zero in the D-register (Z set, A not set). This means we can immediately choose to exit the loop. To do so, the stack-pointer is decremented (cycle 1) to point at the previous value on the stack. In cycle 2, the IP is incremented as usual.
 
-If there is a known nonzero value in D (scenario 2: Z(D) is low), this means we must loop back to the IP stored on the top of the stack. This value is loaded into the IP-register by enabling the SP and RAM and setting the LD signal for the IP-register (cycle 1). On the second cycle, this new IP (pointing to a \texttt{[}) is incremented to re-enter the loop.
+If there is a known nonzero value in D (scenario 2: Z not set, A not set), this means we must loop back to the IP stored on the top of the stack. This value is loaded into the IP-register by enabling the SP and RAM and setting the LD signal for the IP-register (cycle 1). On the second cycle, this new IP (pointing to a \texttt{[}) is incremented to re-enter the loop.
   
-In the thrid scenario, the contents of D are not yet synchronized with the RAM (A-flag is set), so we first need to load it in. After loading the value into D, the flags and cycle counter are reset to put the system back into one of the previously defined states.
+In the thrid scenario, the contents of D are not yet synchronized with the RAM (A set), so we first need to load it in. After loading the value into D, the flags and cycle counter are reset to put the system back into one of the previously defined states.
 
 Finally, when already in the process of skipping a loop, the LS-register is decremented before moving to the next instruction.
 
@@ -53,18 +52,24 @@ There are three states that need to be taking into account when implementing the
 
 %\subsubsection*{}
 \subsection{Input: \texttt{,} and \texttt{'}}
-As mentioned before in Section \ref{sec:architecture:signals:input}, the architecture implements two versions of the input command, buffered (\texttt{,}) and immediate (\texttt{'}). Because buffered inputs are more common in most (BF) programs other than game-like applications, this is the default mode (even though it is more complicated).
+As mentioned before in Section \ref{sec:architecture:kb}, the architecture implements two versions of the input command, buffered (\texttt{,}) and immediate (\texttt{'}). Because buffered inputs are more common in most (BF) programs other than game-like applications, this is the default mode (even though it is more complicated).
 
 \paragraph{Buffered Mode:}
-In this mode, control flow is stuck in a loop, waiting for something nonzero to appear in its D-register. A nonzero value means something was read from the input module, whereas a zero value indicates that the input buffer was empty. When the V-flag is not set, the contents of D can be overwritten immediately by loading the keyboard-buffer into D. After doing so, the instruction is reloaded to update the Z(D) flag, which is then used to decide between either moving to the next instruction (when Z(D) is 0) or looping back to cycle 0 (without incrementing the IP). When the V-flag \emph{is} set however, the current value stored in D must first be written to RAM in order to synchronize.  After having done so, the cycle counter is reset to 0 to put the system back into the state above where the keyboard-buffer can be read into the D-register. Of course, when Z(LS) is zero, we can simply skip all of this.
+In this mode, control flow is stuck in a loop, waiting for something nonzero to appear in its D-register. A nonzero value means something was read from the input module, whereas a zero value indicates that the input buffer was empty. When the V-flag is not set, the contents of D can be overwritten immediately by loading the keyboard-buffer into D. After doing so, the instruction is reloaded to update the Z flag, which is then used to decide between either moving to the next instruction (when Z is 0) or looping back to cycle 0 (without incrementing the IP). When the V-flag \emph{is} set however, the current value stored in D must first be written to RAM in order to synchronize.  After having done so, the cycle counter is reset to 0 to put the system back into the state above where the keyboard-buffer can be read into the D-register. Of course, when S is set, we can simply skip all of this.
 
 \paragraph{Immediate Mode:}
 In this mode, we don't care what was loaded into D, even if there was nothing there in the keyboard buffer; it is up to the programmer to handle the case where no keys were pressed. This makes the implementation a lot easier, taking at most 2 cycles to complete. In the first case, the V-flag is not set, so we can simply overwrite the contents of D by loading in whatever is in the keyboard-buffer and move to the next instruction. In the second case, where V \emph{is} set, we write the contents of D to RAM before copying the keyboard buffer into D. Again, when Z(LS) is zero, this instruction is skipped.
   
-\subsection{Non-BF instructions: \texttt{NOP} and \texttt{ERR}}
-For debugging purposes, two non-BF instructions have been included. The \texttt{NOP} instruction does nothing. It simply increments the IP and resets the cycle count to move to the next instruction. The \texttt{ERR} instruction is inserted in all non-reachable states. If for some reason a state occurs that maps to the \texttt{ERR} command, the clock will be halted and some indicator on the Control Unit should light up to let its users know that something has gone wrong.
+\subsection{Non-BF instructions: \texttt{NOP}, \texttt{HLT} and \texttt{ERR}}
+For debugging purposes, two non-BF instructions have been included.
+\begin{enumerate}
+\item  The \texttt{NOP} instruction does nothing. It simply increments the IP and resets the cycle count to move to the next instruction.
+\item The \texttt{HLT} instruction immediately halts the clock and stops the program. The assembler (bfasm) supports the \texttt{!}-command to be able to halt a program programmatically.
+  The \texttt{ERR} instruction is inserted in all non-reachable states. If for some reason a state occurs that maps to the \texttt{ERR} command, the clock will be halted and some indicator on the Control Unit should light up to let its users know that something has gone wrong.
+\end{enumerate}
 
 \subsection{Microcode table}
+Table \ref{tab:microcode} shows each of the control sequences described in previous sections sections.
 \input{microcode_table}
 
 

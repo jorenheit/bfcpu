@@ -1,66 +1,68 @@
 
 
   \begin{longtable}[c] {c|cccc|c|llllll}
-                     Instr        & V & A & Z(LS) & Z(D) & Cycle & \multicolumn{6}{c}{Control Signals}                      \\ \hline
+                     Instr        & V & A & S     & Z    & Cycle & \multicolumn{6}{c}{Control Signals}                      \\ \hline
     \rowcolor{White} Any          &   &   &       &      & 0     & EN(IP)   & LD(I)    &         &        &        &        \\ \hline
-    \rowcolor{Gray}  \texttt{+}   &   & 0 & 1     &      & 1     & CE(D)    & VE(CU)   & LD(F)   &        &        &        \\
-    \rowcolor{Gray}               &   & 0 & 1     &      & 2     & CE(IP)   & CR(CU)   &         &        &        &        \\    
-    \rowcolor{White}              &   & 1 & 1     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) & LD(F)  & CR(CU) &        \\
-    \rowcolor{Gray}               &   &   & 0     &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{Gray}  \texttt{+}   &   & 0 & 0     &      & 1     & INC(D)   & VE(CU)   & LD(F)   &        &        &        \\
+    \rowcolor{Gray}               &   & 0 & 0     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\    
+    \rowcolor{White}              &   & 1 & 0     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) & LD(F)  & CR(CU) &        \\
+    \rowcolor{Gray}               &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{White} \texttt{-}   &   & 0 & 1     &      & 1     & CE(D)    & DEC(D)   & VE(CU)  & LD(F)  &        &        \\
-    \rowcolor{White}              &   & 0 & 1     &      & 2     & CE(IP)   & CR(CU)   &         &        &        &        \\
-    \rowcolor{Gray}               &   & 1 & 1     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) & LD(F)  & CR(CU) &        \\
-    \rowcolor{White}              &   &   & 0     &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{White} \texttt{-}   &   & 0 & 0     &      & 1     & DEC(D)   &          & VE(CU)  & LD(F)  &        &        \\
+    \rowcolor{White}              &   & 0 & 0     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
+    \rowcolor{Gray}               &   & 1 & 0     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) & LD(F)  & CR(CU) &        \\
+    \rowcolor{White}              &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{Gray}  \texttt{>}   & 0 &   & 1     &      & 1     & CE(DP)   & AE(CU)   & LD(F)   &        &        &        \\
-    \rowcolor{Gray}               & 0 &   & 1     &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\
-    \rowcolor{White}              & 1 &   & 1     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) & LD(F)  & CR(CU) &        \\
-    \rowcolor{Gray}               &   &   & 0     &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{Gray}  \texttt{>}   & 0 &   & 0     &      & 1     & INC(DP)  & AE(CU)   & LD(F)   &        &        &        \\
+    \rowcolor{Gray}               & 0 &   & 0     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\
+    \rowcolor{White}              & 1 &   & 0     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) & LD(F)  & CR(CU) &        \\
+    \rowcolor{Gray}               &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{White} \texttt{<}   & 0 &   & 1     &      & 1     & CE(DP)   & DEC(DP)  & AE(CU)  & LD(F)  &        &        \\
-    \rowcolor{White}              & 0 &   & 1     &      & 2     & CE(IP)   & CR(CU)   &         &        &        &        \\
-    \rowcolor{Gray}               & 1 &   & 1     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) & LD(F)  & CR(CU) &        \\
-    \rowcolor{White}              &   &   & 0     &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{White} \texttt{<}   & 0 &   & 0     &      & 1     & DEC(DP)  &          & AE(CU)  & LD(F)  &        &        \\
+    \rowcolor{White}              & 0 &   & 0     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
+    \rowcolor{Gray}               & 1 &   & 0     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) & LD(F)  & CR(CU) &        \\
+    \rowcolor{White}              &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{Gray}  \texttt{[}   &   & 0 & 1     & 1    & 1     & CE(LS)   &          &         &        &        &        \\
-    \rowcolor{Gray}               &   & 0 & 1     & 1    & 2     & CE(IP)   & CR(CU)   &         &        &        &        \\      
-    \rowcolor{White}              &   & 0 & 1     & 0    & 1     & CE(SP)   &          &         &        &        &        \\
-    \rowcolor{White}              &   & 0 & 1     & 0    & 2     & WE(RAM)  & EN(SP)   & EN(IP)  &        &        &        \\
-    \rowcolor{White}              &   & 0 & 1     & 0    & 3     & CE(IP)   & CR(CU)   &         &        &        &        \\
-    \rowcolor{Gray}               &   & 1 & 1     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) &        &        &        \\
-    \rowcolor{Gray}               &   & 1 & 1     &      & 2     & LD(F)    & CR(CU)   &         &        &        &        \\
-    \rowcolor{White}              &   &   & 0     &      & 1     & CE(LS)   &          &         &        &        &        \\
-    \rowcolor{White}              &   &   & 0     &      & 2     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{Gray}  \texttt{[}   &   & 0 & 0     & 1    & 1     & INC(LS)  &          &         &        &        &        \\
+    \rowcolor{Gray}               &   & 0 & 0     & 1    & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\      
+    \rowcolor{White}              &   & 0 & 0     & 0    & 1     & INC(SP)  &          &         &        &        &        \\
+    \rowcolor{White}              &   & 0 & 0     & 0    & 2     & WE(RAM)  & EN(SP)   & EN(IP)  &        &        &        \\
+    \rowcolor{White}              &   & 0 & 0     & 0    & 3     & INC(IP)  & CR(CU)   &         &        &        &        \\
+    \rowcolor{Gray}               &   & 1 & 0     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) &        &        &        \\
+    \rowcolor{Gray}               &   & 1 & 0     &      & 2     & LD(F)    & CR(CU)   &         &        &        &        \\
+    \rowcolor{White}              &   &   & 1     &      & 1     & INC(LS)  &          &         &        &        &        \\
+    \rowcolor{White}              &   &   & 1     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{White} \texttt{]}   &   & 0 & 1     & 1    & 1     & CE(SP)   & DEC(SP)  &         &        &        &        \\
-    \rowcolor{White}              &   & 0 & 1     & 1    & 2     & CE(IP)   & CR(CU)   &         &        &        &        \\
+    \rowcolor{White} \texttt{]}   &   & 0 & 0     & 1    & 1     & DEC(SP)  &          &         &        &        &        \\
+    \rowcolor{White}              &   & 0 & 0     & 1    & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
         
-    \rowcolor{Gray}               &   & 0 & 1     & 0    & 1     & EN(SP)   & EN(RAM)  & LD(IP)  &        &        &        \\
-    \rowcolor{Gray}               &   & 0 & 1     & 0    & 2     & CE(IP)   & CR(CU)   &         &        &        &        \\
-    \rowcolor{White}              &   & 1 & 1     &      & 1     & EN(DP)   & EN(RAM)  & LD(D)   &        &        &        \\
-    \rowcolor{White}              &   & 1 & 1     &      & 2     & LD(F)    & CR(CU)   &         &        &        &        \\
-    \rowcolor{Gray}               &   &   & 0     &      & 1     & CE(LS)   & DEC(LS)  &         &        &        &        \\ 
-    \rowcolor{Gray}               &   &   & 0     &      & 2     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{Gray}               &   & 0 & 0     & 0    & 1     & EN(SP)   & OE(RAM)  & LD(IP)  &        &        &        \\
+    \rowcolor{Gray}               &   & 0 & 0     & 0    & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
+    \rowcolor{White}              &   & 1 & 0     &      & 1     & EN(DP)   & OE(RAM)  & LD(D)   &        &        &        \\
+    \rowcolor{White}              &   & 1 & 0     &      & 2     & LD(F)    & CR(CU)   &         &        &        &        \\
+    \rowcolor{Gray}               &   &   & 1     &      & 1     & DEC(LS)  &          &         &        &        &        \\ 
+    \rowcolor{Gray}               &   &   & 1     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{Gray}  \texttt{.}   &   & 0 & 1     &      & 1     & PRE(SCR) & EN(D)    & CE(IP)  & CR(CU) &        &        \\
-    \rowcolor{White}              &   & 1 & 1     &      & 1     & EN(DP)   & EN(RAM)  & LD(D)   &        &        &        \\
-    \rowcolor{White}              &   & 1 & 1     &      & 2     & PRE(SCR) & EN(D)    & CE(IP)  & CR(CU) &        &        \\
-    \rowcolor{Gray}               &   &   & 0     &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{Gray}  \texttt{.}   &   & 0 & 0     &      & 1     & PRE(SCR) & EN(D)    & INC(IP) & CR(CU) &        &        \\
+    \rowcolor{White}              &   & 1 & 0     &      & 1     & EN(DP)   & OE(RAM)  & LD(D)   &        &        &        \\
+    \rowcolor{White}              &   & 1 & 0     &      & 2     & PRE(SCR) & EN(D)    & INC(IP) & CR(CU) &        &        \\
+    \rowcolor{Gray}               &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{White} \texttt{,}   & 0 &   & 1     &      & 1     & EN(KB)   & LD(D)    &         &        &        &        \\
-    \rowcolor{White}              & 0 &   & 1     &      & 2     & EN(IP)   & LD(I)    &         &        &        &        \\
-    \rowcolor{Gray}               & 0 &   & 1     & 0    & 3     & VE(CU)   & LD(F)    & CE(IP)  & CR(CU) &        &        \\
-    \rowcolor{White}              & 0 &   & 1     & 1    & 3     & CR(CU)   &          &         &        &        &        \\   
-    \rowcolor{Gray}               & 1 &   & 1     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) &        &        &        \\
-    \rowcolor{Gray}               & 1 &   & 1     &      & 2     & LD(F)    & CR(CU)   &         &        &        &        \\
-    \rowcolor{White}              &   &   & 0     &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{White} \texttt{,}   & 0 &   & 0     &      & 1     & EN(KB)   & LD(D)    &         &        &        &        \\
+    \rowcolor{White}              & 0 &   & 0     &      & 2     & EN(IP)   & LD(I)    &         &        &        &        \\
+    \rowcolor{Gray}               & 0 &   & 0     & 0    & 3     & VE(CU)   & LD(F)    & INC(IP) & CR(CU) &        &        \\
+    \rowcolor{White}              & 0 &   & 0     & 1    & 3     & CR(CU)   &          &         &        &        &        \\   
+    \rowcolor{Gray}               & 1 &   & 0     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) &        &        &        \\
+    \rowcolor{Gray}               & 1 &   & 0     &      & 2     & LD(F)    & CR(CU)   &         &        &        &        \\
+    \rowcolor{White}              &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{Gray}  \texttt{'}   & 0 &   & 1     &      & 1     & EN(KB)   & LD(D)    & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-    \rowcolor{White}              & 1 &   & 1     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) &        &        &        \\
-    \rowcolor{White}              & 1 &   & 1     &      & 2     & EN(KB)   & LD(D)    & VE(CU)  & LD(F)  & CE(IP) & CR(CU) \\
-    \rowcolor{Gray}               &   &   & 0     &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
-    \rowcolor{White} \texttt{NOP} &   &   &       &      & 1     & CE(IP)   & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{Gray}  \texttt{'}   & 0 &   & 0     &      & 1     & EN(KB)   & LD(D)    & VE(CU)  & LD(F)  & INC(IP)& CR(CU) \\
+    \rowcolor{White}              & 1 &   & 0     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) &        &        &        \\
+    \rowcolor{White}              & 1 &   & 0     &      & 2     & EN(KB)   & LD(D)    & VE(CU)  & LD(F)  & INC(IP)& CR(CU) \\
+    \rowcolor{Gray}               &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{White} \texttt{NOP} &   &   &       &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
+    \rowcolor{Gray}  \texttt{HLT} &   &   & 0     &      & 1     & HLT(CLC) &          &         &        &        &        \\ 
+    \rowcolor{White}              &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline        
     \rowcolor{Gray}  \texttt{ERR} &   &   &       &      &       & ERR(CU)  & HLT(CLC) &         &        &        &        \\ \hline
 
     \caption{Control signals for each of the BF instructions in different scenario's, depending on the state flags. Note that in order to distinguish between the two input modes, the regular comma (\texttt{,}) and the apostrophe (\texttt{'}) are used for buffered and immediate inputs respectively. See also Section \ref{sec:architecture:signals:input}.}
