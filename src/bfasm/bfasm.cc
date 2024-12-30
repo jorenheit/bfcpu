@@ -33,6 +33,7 @@ enum InstructionSize
 struct Options
 {
     KeyboardInputMode mode;
+    bool halt;
     std::istream *inStream;
     std::ostream *outStream;
     InstructionSize instructionSize;
@@ -46,6 +47,7 @@ void printHelp(std::string const &progName)
               << "Options:\n"
               << "-h, --help            Display this text.\n"
               << "-i, --immediate-input Assemble input commands (,) to immediate mode (\').\n"
+	      << "-H, --halt-enable     Interpret '!' as HLT in the BF code\n"
 	      << "-d, --max-depth       Maximum nesting depth of []-pairs.\n"
 	      << "-u, --allow-unbalanced-loops\n"
 	      << "                      By default, the assembler will refuse to produce a program with unbalanced\n"
@@ -64,6 +66,7 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     Options opt;
 
     opt.mode = BUFFERED;
+    opt.halt = false;
     opt.inStream = &std::cin;
     opt.outStream = &std::cout;
     opt.instructionSize = BYTE;
@@ -81,6 +84,11 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
         else if (args[idx] == "-i" || args[idx] == "--immediate-input")
         {
             opt.mode = IMMEDIATE;
+            ++idx;
+        }
+        else if (args[idx] == "-H" || args[idx] == "--halt-enable")
+        {
+            opt.halt = true;
             ++idx;
         }
         else if (args[idx] == "-n" || args[idx] == "--nibble")
@@ -198,10 +206,15 @@ int assemble(Options const &opt)
 	    --nestingDepth;
 	    break;
 	}
+	case '!': {
+	    result.push_back(HLT); break;
+	}
         default:
             continue;
         }
     }
+    // Reached end of program -> HLT
+    result.push_back(HLT);
 
 
     if (not opt.allowUnbalanced && nestingDepth != 0)
