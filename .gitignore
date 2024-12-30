@@ -32,3 +32,10 @@ PWS_presentation/media
 
 # datasheets
 doc/datasheets/
+
+#kicad
+*.kicad_prl
+*.kicad_pro
+
+#binary blobs
+*.bin
