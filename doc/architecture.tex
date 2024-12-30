@@ -39,7 +39,7 @@ The DP should be able to increment and decrement (corresponding to the \texttt{<
 \end{itemize}
 
 \subsection{Data Register (D)} \label{sec:architecture:d}
-The data register hold a representation of the value currently pointed to by the DP. This poses a synchronization issue between its value and the actual value in RAM, which is handled by the control unit (\ref{sec:architecture:cu}).
+The data register hold a representation of the value currently pointed to by the DP and can be incremented and decremented (corresponding to \texttt{+} and \texttt{-}). The synchronization issue between D and RAM, that results from changing the value in D, is handled by the control unit, as described in section \ref{sec:sequences}.
 
 \subsubsection*{Inputs}
 \begin{itemize}
