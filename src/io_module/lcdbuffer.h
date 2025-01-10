@@ -2,6 +2,7 @@
 
 #include <LiquidCrystalSerial.h>
 #include "settings.h"
+#include "common.h"
 
 class LCDBuffer {
   char buf[TOTAL_LINES][CHARS + 1];
