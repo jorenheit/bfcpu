@@ -15,6 +15,8 @@ enum Instructions
     OUT		= 0x07,
     LOOP_START	= 0x08,
     LOOP_END	= 0x09,
+    INIT        = 0x0d,
+    HOME        = 0x0e,
     HLT         = 0x0f
 };
 
@@ -39,6 +41,7 @@ struct Options
     InstructionSize instructionSize;
     int maxDepth;
     bool allowUnbalanced;
+    int init;
 };
 
 void printHelp(std::string const &progName)
@@ -49,6 +52,7 @@ void printHelp(std::string const &progName)
               << "-i, --immediate-input Assemble input commands (,) to immediate mode (\').\n"
 	      << "-H, --halt-enable     Interpret '!' as HLT in the BF code\n"
 	      << "-d, --max-depth       Maximum nesting depth of []-pairs.\n"
+	      << "-z [N]                Initialize N chunks of 256 bytes with zero\'s\n"
 	      << "-u, --allow-unbalanced-loops\n"
 	      << "                      By default, the assembler will refuse to produce a program with unbalanced\n"
 	      << "                      loops ([ and ] do not match). Using this option will allow for this to occur.\n"
@@ -67,6 +71,7 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
 
     opt.mode = BUFFERED;
     opt.halt = false;
+    opt.init = 0;
     opt.inStream = &std::cin;
     opt.outStream = &std::cout;
     opt.instructionSize = BYTE;
@@ -111,6 +116,25 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
 	    opt.maxDepth = std::stoi(args[idx + 1]);
 	    idx += 2;
 	}
+        else if (args[idx] == "-z")
+        {
+            if (idx == args.size() - 1)
+            {
+                std::cerr << "ERROR: No argument passed to option " << args[idx] << ".\n";
+                return {opt, 1};
+            }
+
+	    try {
+		opt.init = std::stoi(args[idx + 1]);
+		if (opt.init > 256) throw 0;
+		idx += 2;
+	    }
+	    catch (...) {
+		std::cerr << "ERROR: Argument to -z must be an integer <= 256.\n";
+		return {opt, 1};
+	    }
+        }
+	
         else if (args[idx] == "-o")
         {
             if (idx == args.size() - 1)
@@ -179,6 +203,20 @@ int assemble(Options const &opt)
     std::vector<unsigned char> result;
     int nestingDepth = 0;
 
+
+    
+    // Zero init DATA,  then restore the DP back to its home position (0x0100)
+    if (opt.init)
+    {
+	for (int i = 0; i != opt.init; ++i)
+	    result.push_back(INIT);
+	result.push_back(HOME);
+    }
+
+    // Halt before running program
+    result.push_back(HLT);
+
+    // Run!
     while (in)
     {
         char c = in.get();
@@ -207,12 +245,13 @@ int assemble(Options const &opt)
 	    break;
 	}
 	case '!': {
-	    result.push_back(HLT); break;
+	    if (opt.halt) result.push_back(HLT); break;
 	}
         default:
             continue;
         }
     }
+    
     // Reached end of program -> HLT
     result.push_back(HLT);
 
