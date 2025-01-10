@@ -6,10 +6,11 @@ enum Pins {
   SHIFT_DATA = 13,
   SHIFT_LATCH = 11,
   SHIFT_CLOCK = 12,
+  SHIFT_OE = A0,
   
   CE = 2,
 
-  STATUS_LED = A0,
+  STATUS_LED = A1,
 };
 
 int IO_PINS[8] = {
@@ -36,6 +37,9 @@ void setShiftRegisters(int const addr, ReadWrite const RW) {
   //        SHIFT DIRECTION -->    -->   -->
 
 
+  // Disable output
+  digitalWrite(SHIFT_OE, HIGH);
+
   // Set bits 13, 14, 15 (OR with 0xE000 = 0b1110...0) and clear either bit 14 or 15 depending 
   // on if we're reading or writing:
   int value16 = (addr | 0xE000);
@@ -52,6 +56,10 @@ void setShiftRegisters(int const addr, ReadWrite const RW) {
   digitalWrite(SHIFT_LATCH, HIGH);
   delayMicroseconds(10);
   digitalWrite(SHIFT_LATCH, LOW);
+
+  // Enable output
+  digitalWrite(SHIFT_OE, LOW);
+  delay(1);
 }
 
 void setOutput(byte const value) {
@@ -173,6 +181,7 @@ void setup() {
   pinMode(SHIFT_DATA, OUTPUT);
   pinMode(SHIFT_LATCH, OUTPUT);
   pinMode(SHIFT_CLOCK, OUTPUT);
+  pinMode(SHIFT_OE, OUTPUT);
   setShiftRegisters(0, NONE); // make sure we're not accidentally writing, before setting the pinmode of CE to output
   pinMode(CE, OUTPUT);
   disableEEPROM();
