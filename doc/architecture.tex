@@ -31,6 +31,7 @@ The DP should be able to increment and decrement (corresponding to the \texttt{<
 \item EN - Enable - when high, its value is sent to the address bus;
 \item INC - Increment - when high, the stored value is incremented on the next clock cycle;
 \item DEC - Decrement - when high, the stored value is decremented on the next clock cycle.
+\item R - Reset - used to reset only this module to its initial state. This input is only used during initialization, see \ref{seq:sequences:nonbf}
 \end{itemize}
 
 \subsubsection*{Outputs}
@@ -159,7 +160,7 @@ The RAM stores the data (tape) upon which the BF program is acting (addresses 0x
 The output module (which is assumed to be a screen) will be attached to the databus and will display whatever is on there when enabled using the Print Enable (PRE) signal.
 \subsubsection*{Inputs}
 \begin{itemize}
-\item PRE: Print Enable - Display the contents of D on the next clock pulse.
+\item EN: Enable Output - Display the contents of D on the next clock pulse.
 \end{itemize}
 
 \subsubsection*{Outputs}
