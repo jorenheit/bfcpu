@@ -47,12 +47,13 @@ DisplayMode LCDBuffer::getMode() const {
 
 void LCDBuffer::pushAscii(byte const c) {
   switch (c) {
-    case '\n': {
+    case '\n':
+    case PS2_ENTER: {
       ++line;
       pos = 0;
       break;
     }
-    case '\t': {
+    case PS2_TAB: {
       pos += TAB;
       break;
     }
@@ -61,6 +62,14 @@ void LCDBuffer::pushAscii(byte const c) {
       ++pos;
       break;
     }
+  }
+
+  if (pos < 0) {
+    if (line > 0) {
+      --line;
+      pos = CHARS - 1;
+    }
+    pos = 0;
   }
 
   if (pos >= CHARS) {
