@@ -79,7 +79,7 @@ The HLT instruction halts the clock and (temporarily) stops the program. When en
 The \texttt{ERR} instruction is inserted in all non-reachable states. If for some reason a state occurs that maps to the \texttt{ERR} command, the clock will be halted and some indicator on the Control Unit should light up to let its users know that something has gone wrong. It is therefore functionally the same as the HLT instruction, the only difference being that an addidional light indicates the error status.
 
 \subsection{Microcode table}
-Table \ref{tab:microcode} shows each of the control sequences described in previous sections sections.
+Table \ref{tab:microcode} shows each of the control sequences described in previous sections sections. Please note that in order to simplify notation, the control signals RS0, RS1 and RS2 have not been used to indicate register selection. Instead, the module to which the instruction (INC/DEC) is applied is provided in brackets. For example, incrementing the SP register would require control signals INC, RS0, RS1 which is denoted in Table \ref{tab:microcode} as INC(SP).
 \input{microcode_table}
 
 
