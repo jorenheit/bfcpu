@@ -28,14 +28,16 @@ The data-pointer corresponds to the pointer as specified in the BF-language. It 
 \subsubsection*{Inputs}
 The DP should be able to increment and decrement (corresponding to the \texttt{<} and \texttt{>} commands), and should be able to be enabled/disabled because of its connection to the address bus of the RAM (the Stack Pointer (SP, see \ref{sec:architecture:sp}, is also connected to this bus). Therefore, the DP has 3 control inputs:
 \begin{itemize}
+\itemsep0em 
 \item EN - Enable - when high, its value is sent to the address bus;
 \item INC - Increment - when high, the stored value is incremented on the next clock cycle;
-\item DEC - Decrement - when high, the stored value is decremented on the next clock cycle.
-\item R - Reset - used to reset only this module to its initial state. This input is only used during initialization, see \ref{seq:sequences:nonbf}
+\item DEC - Decrement - when high, the stored value is decremented on the next clock cycle;
+\item R - Reset - While all other modules have the ability to be reset, this is the only module where this signal is listed as it is the only module that needs to be reset during runtime (at initialization, see \ref{seq:sequences:nonbf}).
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em   
 \item DATA\_OUT - 16 bits, connected to the address bus when enabled (EN high).
 \end{itemize}
 
@@ -44,6 +46,7 @@ The data register hold a representation of the value currently pointed to by the
 
 \subsubsection*{Inputs}
 \begin{itemize}
+\itemsep0em   
 \item DATA\_IN - connected to the data bus;
 \item EN - Enable - when high, its value is sent to the data bus;
 \item LD - Load - when high, the data on the data bus is loaded into the register on the next clock cycle;
@@ -53,6 +56,7 @@ The data register hold a representation of the value currently pointed to by the
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em 
 \item DATA\_OUT - 8 bits, connected to the data bus;
 \item Z - Zero Flag - high when the register contains all zero's (0x00).
 \end{itemize}
@@ -63,6 +67,7 @@ The instruction pointer is a 16-bit value, kept in the IP register, which keeps 
 
 \subsubsection*{Inputs}
 \begin{itemize}
+\itemsep0em 
 \item DATA\_IN - 16 bits - connected to the data bus (for loading a stored address off the stack);
 \item EN - Enable - when high, its value is sent to the databus (for storing an address on the stack);
 \item LD - Load - when high, the value on the databus is loaded into the register on the next clock cycle;
@@ -71,6 +76,7 @@ The instruction pointer is a 16-bit value, kept in the IP register, which keeps 
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em 
 \item DATA\_OUT - 16 bits - connected to the databus of RAM and the address inputs of program-ROM;
 \end{itemize}
 
@@ -80,6 +86,7 @@ The stack is the first part of RAM (addresses 0x0000 - 0x00ff) which is reserved
 
 \subsubsection*{Inputs}
 \begin{itemize}
+\itemsep0em 
 \item EN - Enable - when high, its value is sent to the address bus;
 \item INC - Increment - when high, the stored value is incremented on the next clock cycle;
 \item DEC - Decrement - when high, the stored value is decremented on the next clock cycle.
@@ -87,6 +94,7 @@ The stack is the first part of RAM (addresses 0x0000 - 0x00ff) which is reserved
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em 
 \item DATA\_OUT - 8 bits - connected to the address bus of RAM.
 \end{itemize}
 
@@ -95,12 +103,14 @@ The Loop Skip (LS) register is a counter that indicates whether or not we're in 
 
 \subsubsection*{Inputs}
 \begin{itemize}
+\itemsep0em 
 \item INC - Increment - when high, the stored value is incremented on the next clock cycle;
 \item DEC - Decrement - when high, the stored value is decremented on the next clock cycle.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em 
 \item S - Skip flag - set when the stored data is nonzero. When high, the current instruction should be skipped ($S = \overline{Z}$).
 \end{itemize}
 
@@ -111,22 +121,25 @@ The sole purpose of the flag register is to buffer the A and V flags, set by the
 
 \subsubsection*{Inputs}
 \begin{itemize}
-\item A - Address-change-flag - from CU;
-\item V - Value-change-flag - from CU;
+\itemsep0em 
+\item SET\_A - Address-change-flag - from CU;
+\item SET\_V - Value-change-flag - from CU;
 \item LD - Load - when high, A and V are latched into the register.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em 
 \item DATA\_OUT - 2 bits - sends the stored A and V flags to the instruction register (\ref{sec:architecture:i}).
 \end{itemize}
 
 
 \subsection{Instruction Register (I)} \label{sec:architecture:i}
-The instruction register is an 8-bit register that stores the current instruction, which was loaded from ROM according to the IP value. The BF-instruction itself is only 4 bits wide, which leaves another 4 bits for encoding the state of the machine, using its flags:  A, V, Z and S.
+The instruction register is an 8-bit register that stores the current instruction, which was loaded from ROM according to the IP value. The BF-instruction itself is only 4 bits wide, which leaves another 4 bits for encoding the state of the machine, using its flags:  A, V, S and Z. Of these flags, S and Z are loaded directly from their corresponding register modules whereas A and V are loaded from the flag register where they are buffered by the control unit. The enire 8-bit word formed by the instruction- and flag-bits will serve as part of the address to the microcode ROM module to determine which control signals need to be set for the next clock cycle.
 
 \subsubsection*{Inputs}
 \begin{itemize}
+\itemsep0em 
 \item LD - Load - when high, the current instruction (pointed to by IP) is loaded from program-ROM;
 \item Z - Zero-flag - from D;
 \item S - Skip-flag - from LS;
@@ -145,6 +158,7 @@ The RAM stores the data (tape) upon which the BF program is acting (addresses 0x
 
 \subsubsection*{Inputs}
 \begin{itemize}
+\itemsep0em 
 \item DATA\_IN - 16 bits - connected to the databus (same lines as DATA\_OUT);
 \item ADDR\_IN - 16 bits - connected tot the address-bus;
 \item OE - Output Enable - the value at the current address is sent to the databus;
@@ -153,14 +167,17 @@ The RAM stores the data (tape) upon which the BF program is acting (addresses 0x
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em 
 \item DATA\_OUT - 16 bits - connected tot the databus (same lines as DATA\_IN);
 \end{itemize}
 
 \subsection{Screen (SCR)}  \label{sec:architecture:scr}
-The output module (which is assumed to be a screen) will be attached to the databus and will display whatever is on there when enabled using the Print Enable (PRE) signal.
+The output module (which is assumed to be a screen) will be attached to the databus and will display whatever is on there when enabled using the EN signal.
 \subsubsection*{Inputs}
 \begin{itemize}
-\item EN: Enable Output - Display the contents of D on the next clock pulse.
+\itemsep0em 
+\item DATA\_IN - 8 bits - connected to the databus;
+\item EN: Enable Output - Display the contents of DATA\_IN on the next clock pulse. The way output is displayed is could vary depending on the implementation of the output device.
 \end{itemize}
 
 \subsubsection*{Outputs}
@@ -174,18 +191,18 @@ The buffer of the module should contain all zero's when nothing is present. When
 
 \subsubsection*{Inputs}
 \begin{itemize}
+\itemsep0em 
 \item EN - Enable - sends the contents of the input buffer to the databus.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em 
 \item DATA\_OUT - 8 bits - connected to the databus.
 \end{itemize}
 
 \subsection{Control Unit} \label{sec:architecture:cu}
-Each of the aforementioned components/modules has one or more control inputs that determine what happens on the next clock cycle. For example, some register-modules can be told to either load a value from their input, increment or decrement the currently stored value, or do nothing at all. It is the Control Unit (CU) that supplies the appropriate control signals to each of the modules before the next clock pulse occurs. The implementation details of how this is done in hardware are discussed in section \ref{sec:implementation}.
-
-Even though the control unit is setting the control signals for all other modules, it has some control signals that it should be able to set for itself. Depending on the instruction that is being executed, it should write values to the flag register. The control signals to indicate that this is being done are called AE and VE respectively. Moreover, its internal instruction counter should be reset in the final cycle of each instruction. This is indicated with the CR (cycle reset) signal.
+Each of the aforementioned components/modules has one or more control inputs that determine what happens on the next clock cycle. For example, some register-modules can be told to either load a value from their input, increment or decrement the currently stored value, or do nothing at all. It is the Control Unit (CU) that supplies the appropriate control signals to each of the modules before the next clock pulse occurs, depending on the current instruction and state determined by the flags. The implementation details of how this is done in hardware are discussed in section \ref{sec:implementation}.
 
 \subsubsection*{Register Driver} \label{sec:architecture:cu:driver}
 Rather that having a seperate signal for each of the INC/DEC-inputs of each register (e.g.~ INC\_D, INC\_LS, etc), a driver module was designed (see \ref{sec:implementation:driver}) to drive the register modules that supports modification of its contents. In addition to a universal INC/DEC signal, three Register Select (RS) bits are used to index the target-register. This approach has two advantages:
@@ -215,34 +232,35 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
 
 \subsubsection*{Inputs}
 \begin{itemize}
+\itemsep0em
 \item DATA\_IN - 8 bits - current instruction from I;
-\item AE - A-flag enable - outputs a high value into the A-bit of the flag register;
-\item VE - V-flag enable - outputs a high value into the V-bit of the flag register;
 \item CR - Cycle reset - reset the internal cycle counter to 0 to prepare for the next instruction.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
+\itemsep0em 
+\item HLT - Halt Clock
 \item RS0 - Register Select, bit 0
 \item RS1 - Register Select, bit 1
 \item RS2 - Register Select, bit 2
 \item INC - Increment selected register
 \item DEC - Decrement selected register
-\item EN\_D - Enable D
-\item EN\_DP - Enable DP
-\item EN\_IP - Enable IP
-\item EN\_SP - Enable SP
+\item DPR - Reset datapointer
+\item EN\_SP- Enable SP to address bus \footnote{Note that there is no EN\_DP since this signal is mutally exclusive with EN\_SP; whenever one is set, the other is unset and vice versa.}
 \item OE\_RAM - Output Enable RAM
 \item WE\_RAM - Write Enable RAM
-\item LD\_D - Load D
-\item LD\_IP - Load IP
+\item EN\_IN - Enable input (keyboard) to databus
+\item EN\_OUT - Enable output device
+\item SET\_V - Set V flag in F
+\item SET\_A - Set A flag in F
 \item LD\_I - Load I
 \item LD\_F - Load F
+\item EN\_IP - Enable IP
+\item EN\_D - Enable D to databus
+\item LD\_D - Load D
+\item LD\_IP - Load IP
 \item CR - Cycle Reset (CU)
-\item VE - V Enable (CU)
-\item AE - A Enable (CU)
-\item PRE - Print Enable
-\item HLT - Halt Clock
 \item ERR - Error Signal (CU)
 \end{itemize}
 
