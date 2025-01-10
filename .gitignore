@@ -17,9 +17,6 @@ bfasm
 # build folder for cmake (google test)
 bfemu/src/build
 
-# vscode files
-src/test.suite/.vscode
-
 # executables and output of bfasm.cc
 src/bfasm/*.out
 src/bfasm/*.bin
