@@ -52,15 +52,14 @@ void printHelp(std::string const &progName)
               << "-i, --immediate-input Assemble input commands (,) to immediate mode (\').\n"
 	      << "-H, --halt-enable     Interpret '!' as HLT in the BF code\n"
 	      << "-d, --max-depth       Maximum nesting depth of []-pairs.\n"
-	      << "-z [N]                Initialize N chunks of 256 bytes with zero\'s\n"
+	      << "-z [N]                Initialize N chunks of 256 bytes with zero\'s. Default: N = 1.\n"
 	      << "-u, --allow-unbalanced-loops\n"
 	      << "                      By default, the assembler will refuse to produce a program with unbalanced\n"
 	      << "                      loops ([ and ] do not match). Using this option will allow for this to occur.\n"
-              << "-n, --nibble          Make every instruction 1 nibble long. The assembler will pack two\n"
-              << "                      commands in every byte, where the low nibble is the first to be executed.\n"
-              << "                      E.g. the byte 0x42 consists of the command 0x2 and 0x4 in that order.\n"
+              << "-b, --byte            Make every instruction 1 byte long rather than 1 nibble. This will double\n"
+	      << "                      the amount of memory needed to store the program.\n"
               << "-o [file, stdout]     Specify the output stream/file (default stdout).\n\n"
-              << "Example: " << progName << " --immediate-input --nibble -o program.bin program.bf\n";
+              << "Example: " << progName << " -o program.bin program.bf\n";
 }
 
 
@@ -71,11 +70,11 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
 
     opt.mode = BUFFERED;
     opt.halt = false;
-    opt.init = 0;
+    opt.init = 1;
     opt.inStream = &std::cin;
     opt.outStream = &std::cout;
-    opt.instructionSize = BYTE;
-    opt.maxDepth = 1<<8;
+    opt.instructionSize = NIBBLE;
+    opt.maxDepth = 255;
     opt.allowUnbalanced = false;
 
     std::string inputFile = "stdin";
@@ -96,9 +95,9 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
             opt.halt = true;
             ++idx;
         }
-        else if (args[idx] == "-n" || args[idx] == "--nibble")
+        else if (args[idx] == "-b" || args[idx] == "--byte")
         {
-            opt.instructionSize = NIBBLE;
+            opt.instructionSize = BYTE;
             ++idx;
         }
         else if (args[idx] == "-u" || args[idx] == "--allow-unbalanced-loops")
@@ -126,11 +125,11 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
 
 	    try {
 		opt.init = std::stoi(args[idx + 1]);
-		if (opt.init > 256) throw 0;
+		if (opt.init > 255) throw 0;
 		idx += 2;
 	    }
 	    catch (...) {
-		std::cerr << "ERROR: Argument to -z must be an integer <= 256.\n";
+		std::cerr << "ERROR: Argument to -z must be an integer <= 255.\n";
 		return {opt, 1};
 	    }
         }
@@ -245,7 +244,8 @@ int assemble(Options const &opt)
 	    break;
 	}
 	case '!': {
-	    if (opt.halt) result.push_back(HLT); break;
+	    if (opt.halt) result.push_back(HLT);
+	    break;
 	}
         default:
             continue;
