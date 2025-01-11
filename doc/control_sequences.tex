@@ -66,11 +66,11 @@ Several non-BF instructions have been implemented for debugging purposes and to 
 \subsubsection{\texttt{NOP}}
 The NOP instruction does nothing. It simply increments the IP and resets the cycle count to move to the next instruction.
 
-\subsubsection{\texttt{INIT}}
+\subsubsection{\texttt{INIT}} \label{sec:sequences:init}
 BF assumes that memory is zero-initialized. In practice, SRAM-modules will contain random values at startup, so the assembler must add a preamble to the main code in order to initialize the RAM (or part of it) to 0. While this can be handled using canonical BF commands, initializing one cell at a time using a sequence of \texttt{[-]} commands, it is much faster to write directly to RAM. This is the purpose of the INIT instruction: for each INIT instruction, a contiguous chunk of 256 memory-cells will be zero-initialized. Since it is guaranteed that the D register contains a zero after reset, this value can directly be written into RAM. By incrementing the LS data pointer at the same time and inspecting the S flag on the next cycle, the computer keeps track of the number of cells that have been initialized. While the LS register has not looped around back to 0, resetting the S flag, the data pointer is incremented to move to the next cell. When finally the S flag resets, the datapointer has to return to its starting value. For this purpose alone, the \texttt{HOME} instruction has been added.
 
-\subsubsection{\texttt{HOME}}
-In order for the datapointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the datapointer.
+\subsubsection{\texttt{HOME}} \label{sec:sequences:home}
+In order for the datapointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the datapointer using the DPR signal.
 
 \subsubsection{\texttt{HLT}}
 The HLT instruction halts the clock and (temporarily) stops the program. When enabled, the assembler will interpret an exclamation mark (\texttt{!}) as \texttt{HLT} in the BF-code. Moreover, the assembler will insert the HLT instruction at the end of the program and provides the option to insert a HLT instruction after initialization to pause the program before the code is executed. 

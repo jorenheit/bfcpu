@@ -9266,7 +9266,7 @@
 		)
 		(fill
 			(type color)
-			(color 10 0 255 0.05)
+			(color 10 0 255 0.1)
 		)
 		(uuid 11d50a22-b2e2-40e6-b423-4a4de906c3d0)
 	)
@@ -9279,7 +9279,7 @@
 		)
 		(fill
 			(type color)
-			(color 255 69 62 0.05)
+			(color 255 97 63 0.1)
 		)
 		(uuid 59affbae-c519-4581-9a5a-8f3391b1f60f)
 	)
@@ -9292,7 +9292,7 @@
 		)
 		(fill
 			(type color)
-			(color 255 230 6 0.05)
+			(color 255 230 6 0.1)
 		)
 		(uuid 7a407f87-0bb0-427f-8748-8dc23cec1197)
 	)
@@ -9305,7 +9305,7 @@
 		)
 		(fill
 			(type color)
-			(color 255 0 191 0.05)
+			(color 255 0 191 0.1)
 		)
 		(uuid 7b925794-c8a6-46fc-be7b-d3be910d3abb)
 	)
@@ -9318,7 +9318,7 @@
 		)
 		(fill
 			(type color)
-			(color 5 255 28 0.05)
+			(color 5 255 28 0.1)
 		)
 		(uuid 92c0f6a3-259e-46af-8a99-a1b20e16b3c1)
 	)
