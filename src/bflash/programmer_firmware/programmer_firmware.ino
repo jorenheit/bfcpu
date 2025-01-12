@@ -3,9 +3,9 @@
 #define CHUNK_SIZE 50
 
 enum Pins {
-  SHIFT_DATA = 13,
-  SHIFT_LATCH = 11,
-  SHIFT_CLOCK = 12,
+  SHIFT_DATA = 13,  // SER (pin 14)
+  SHIFT_LATCH = 11, // RCLK (pin 12)
+  SHIFT_CLOCK = 12, // SRCLK (pin 11)
   SHIFT_OE = A0,
   
   CE = 2,
