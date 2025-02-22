@@ -2,14 +2,18 @@
 
 LCDBuffer::LCDBuffer():
 #if USE_FAST_LIQUIDCRYSTAL_LIBRARY
-  lcd()
+  lcd(LINE_SIZE, VISIBLE_LINES)
 #else
   lcd(SH_CP, DS, ST_CP)
 #endif
 {}
 
 void LCDBuffer::begin(char const *msg) {
+#if USE_FAST_LIQUIDCRYSTAL_LIBRARY
+  lcd.begin();
+#else
   lcd.begin(LINE_SIZE, VISIBLE_LINES);
+#endif
   lcd.cursor();
   lcd.blink();
   
