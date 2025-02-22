@@ -1,6 +1,6 @@
 namespace FastDigitalReadImpl_ {
   
-  enum Port: byte {
+  enum Port: uint8_t {
     Invalid = 0,
     PortB, 
     PortC,

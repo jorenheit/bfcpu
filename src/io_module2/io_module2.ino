@@ -11,14 +11,13 @@ Button<SCROLL_DOWN_PIN> scrollDownButton;
 
 void setup() {
   pinMode(SYSTEM_CLOCK_INTERRUPT_PIN, INPUT);
+  pinMode(DISPLAY_MODE_PIN, INPUT);
   pinMode(DISPLAY_ENABLE_PIN, INPUT);
+  pinMode(KEYBOARD_ENABLE_PIN, INPUT);
   setIOPinsToInput();
   
-  pinMode(DISPLAY_MODE_PIN, INPUT);
-  pinMode(SCROLL_UP_PIN, INPUT);
-  pinMode(SCROLL_DOWN_PIN, INPUT);
-  pinMode(KEYBOARD_ENABLE_PIN, INPUT);
-
+  scrollUpButton.begin();
+  scrollDownButton.begin();
   keyboard.begin();
   lcdBuffer.begin("READY!\n");
 
@@ -50,7 +49,7 @@ void handleButtons() {
 }
 
 void onSystemClock() {
-  enum KeyboardState {
+  enum KeyboardState: uint8_t {
     IDLE,
     WAIT,
     RESET

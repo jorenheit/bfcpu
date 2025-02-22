@@ -30,42 +30,46 @@
 #define LCD_5x10DOTS 0x04
 #define LCD_5x8DOTS 0x00
 
+#define LCD_MAX_ROWS 4
+
 class LiquidCrystal_74HC595 : public Print {
-  public:
-    LiquidCrystal_74HC595();
-    
-    void begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS);
-    void clear();
-    void home();
-    void noDisplay();
-    void display();
-    void noCursor();
-    void cursor();
-    void noBlink();
-    void blink();
-    void scrollDisplayLeft();
-    void scrollDisplayRight();
-    void leftToRight();
-    void rightToLeft();
-    void autoscroll();
-    void noAutoscroll();
-    void createChar(uint8_t location, uint8_t charmap[]);
-    void setCursor(uint8_t col, uint8_t row);
-    void command(uint8_t value);
-    virtual size_t write(uint8_t value);
-    using Print::write;
 
-  private:
-    void send(uint8_t value, uint8_t mode);
-    void pulseEnable();
-    void write4bits(uint8_t value);
-    void transfer();
+  uint8_t const _cols;
+  uint8_t const _rows;
+  uint8_t const _row_offsets[LCD_MAX_ROWS];
+  
+  uint8_t _displayControl;
+  uint8_t _displayMode;
+  uint8_t _register;
 
-    uint8_t _cols;
-    uint8_t _rows;
-    uint8_t _displayControl;
-    uint8_t _displayMode;
-    uint8_t _register;
+public:
+  LiquidCrystal_74HC595(uint8_t const cols, uint8_t const rows);
+  
+  void begin(uint8_t const charsize = LCD_5x8DOTS);
+  void clear();
+  void home();
+  void noDisplay();
+  void display();
+  void noCursor();
+  void cursor();
+  void noBlink();
+  void blink();
+  void scrollDisplayLeft();
+  void scrollDisplayRight();
+  void leftToRight();
+  void rightToLeft();
+  void autoscroll();
+  void noAutoscroll();
+  void setCursor(uint8_t const col, uint8_t const row);
+  void command(uint8_t const value);
+  virtual size_t write(uint8_t const value);
+  using Print::write;
+
+private:
+  void send(uint8_t const value, uint8_t const mode);
+  void pulseEnable();
+  void write4bits(uint8_t const value);
+  void transfer() const;
 };
 
 #endif

@@ -5,6 +5,10 @@
 template <int Pin>
 class Button {
 public:
+  void begin() {
+    pinMode(Pin, OUTPUT);
+  }
+
   bool pressed() const {
     static unsigned long lastPressedTime = millis();
     unsigned long const currentTime = millis();

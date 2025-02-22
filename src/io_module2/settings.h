@@ -1,6 +1,6 @@
 #pragma once
 
-#define USE_FAST_LIQUIDCRYSTAL_LIBRARY 0
+#define USE_FAST_LIQUIDCRYSTAL_LIBRARY 1
 
 #if USE_FAST_LIQUIDCRYSTAL_LIBRARY
 // How low can we go? Datasheet says 37us should be enough.
@@ -8,13 +8,13 @@
 #endif
 
 enum LCDDriverPins: uint8_t {
-  // Connections on Arduino
+  // Connections frp, Shift Register to Arduino
   SH_CP = 6, // SRCLK
   DS    = 5, // SER
   ST_CP = 4, // RCLK
 
 #if USE_FAST_LIQUIDCRYSTAL_LIBRARY
-  // Connections on Shift Register
+  // Connections from LCD panel to Shift Register
   RS_595 = 1,
   E_595  = 3,
   D0_595 = 4,
