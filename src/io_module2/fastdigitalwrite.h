@@ -69,7 +69,7 @@ inline __attribute__((always_inline)) void fastDigitalWrite() {
 }
 
 template <int Pin>
-inline __attribute__((always_inline)) void fastDigitalWrite(bool state) {
+inline __attribute__((always_inline)) void fastDigitalWrite(bool const state) {
   if (state) fastDigitalWrite<Pin, HIGH>();
   else       fastDigitalWrite<Pin, LOW>();
 }

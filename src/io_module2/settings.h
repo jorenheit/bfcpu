@@ -1,17 +1,27 @@
 #pragma once
 
-#define USE_FAST_LIQUIDCRYSTAL_LIBRARY 1
-// Should I make a fast PS2Keyboard library as well??
+#define USE_FAST_LIQUIDCRYSTAL_LIBRARY 0
 
 #if USE_FAST_LIQUIDCRYSTAL_LIBRARY
 // How low can we go? Datasheet says 37us should be enough.
-#define LCD_COMMAND_EXECUTION_MICROS 100
+#define LCD_COMMAND_EXECUTION_MICROS 50
 #endif
 
 enum LCDDriverPins: uint8_t {
+  // Connections on Arduino
   SH_CP = 6, // SRCLK
-  DS = 5,    // SER
-  ST_CP = 4  // RCLK
+  DS    = 5, // SER
+  ST_CP = 4, // RCLK
+
+#if USE_FAST_LIQUIDCRYSTAL_LIBRARY
+  // Connections on Shift Register
+  RS_595 = 1,
+  E_595  = 3,
+  D0_595 = 4,
+  D1_595 = 5,
+  D2_595 = 6,
+  D3_595 = 7
+#endif
 };
 
 enum ModuleDriverPins: uint8_t {

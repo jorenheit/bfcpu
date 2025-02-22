@@ -42,7 +42,8 @@ void LCDBuffer::update(DisplayMode const mode) {
 }
 
 bool LCDBuffer::send(DisplayMode const mode, bool const forced) {
-  update(mode); // might set the changed flag (if not already set)
+  // Update screen-buffer
+  update(mode); 
   if (!changed && !forced) return false;
 
   // Screen-buffer is now up-to-date -> send visible lines to screen
@@ -57,6 +58,7 @@ bool LCDBuffer::send(DisplayMode const mode, bool const forced) {
     lcd.cursor();
   }
   else {
+    // Cursor not in view -> turn off
     lcd.noCursor();
   }
 

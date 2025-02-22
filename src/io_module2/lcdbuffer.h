@@ -1,8 +1,10 @@
 #pragma once
 
 #include "settings.h"
+
 #if USE_FAST_LIQUIDCRYSTAL_LIBRARY
-#include "LiquidCrystalSerial.h"
+#include "LiquidCrystal_74HC595.h"
+#define LiquidCrystalSerial LiquidCrystal_74HC595
 #else
 #include <LiquidCrystalSerial.h>
 #endif
