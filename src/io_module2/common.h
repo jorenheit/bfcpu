@@ -49,3 +49,17 @@ inline __attribute__((always_inline))
 void digitalWrite() {
   return fastDigitalWrite<Pin, State>();
 }
+
+template <int DataPin, int ClockPin, int BitOrder>
+void shiftOut(uint8_t val)
+{
+  for (uint8_t i = 0; i < 8; ++i)  {
+    digitalWrite<DataPin>(BitOrder == LSBFIRST ? 
+      val & (1 << i) :
+      val & (1 << (7 - i))
+    );
+        
+    digitalWrite<ClockPin, HIGH>();
+    digitalWrite<ClockPin, LOW>();        
+  }
+}

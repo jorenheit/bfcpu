@@ -50,31 +50,34 @@ void handleButtons() {
 }
 
 void onSystemClock() {
-  static byte kb_cycle = 0; 
+  enum KeyboardState {
+    IDLE,
+    WAIT,
+    RESET
+  };
+
+  static KeyboardState kb_state = IDLE;
   
-  if (kb_cycle == 0 && digitalRead<DISPLAY_ENABLE_PIN>()) {
+  if (kb_state == IDLE && digitalRead<DISPLAY_ENABLE_PIN>()) {
     lcdBuffer.push(readByteFromBus());
     return;
   }
 
-  if (kb_cycle != 0 || digitalRead<KEYBOARD_ENABLE_PIN>()) {
-    switch (kb_cycle) {
-      case 0: {
-        // Prepare outputs
+  if (kb_state != IDLE || digitalRead<KEYBOARD_ENABLE_PIN>()) {
+    switch (kb_state) {
+      case IDLE: {
         setIOPinsToOutput();
         writeByteToBus(keyboard.get());
-        ++kb_cycle;
+        kb_state = WAIT;
         return;
       }
-      case 1: {
-        // Data is being read, do nothing
-        ++kb_cycle;
+      case WAIT: {
+        kb_state = RESET;
         return;
       }
-      case 2: {
-        // Reset
+      case RESET: {
         setIOPinsToInput();
-        kb_cycle = 0;
+        kb_state = IDLE;
         return;
       }
     }
