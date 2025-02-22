@@ -6,7 +6,7 @@ template <int Pin>
 class Button {
 public:
   void begin() {
-    pinMode(Pin, OUTPUT);
+    pinMode(Pin, INPUT);
   }
 
   bool pressed() const {
