@@ -1,0 +1,62 @@
+#register select bits
+S0
+S1
+S2
+
+#register count
+UP
+DN
+
+#Instruction Pointer
+EN_IP
+LD_IP
+
+#Instruction Register
+LD_I
+
+#Data Pointer
+EN_DP
+
+#Stack Pointer
+EN_SP
+
+#Data register
+EN_D
+LD_D
+
+#Flag Register
+LD_F
+
+#Loop Register
+-
+
+#Control Unit
+VE_CU
+AE_CU
+CR_CU
+ERR_CU
+
+#RAM
+OE_RAM
+WE_RAM
+
+#Screen
+PRE_SCR
+
+#Keyboard
+EN_KB
+
+#Clock
+HLT_CLC
+
+========
+Total: 22 signals
++ Reset (not by CU)
+
+
+13 Address bits:
+Bank(2) Cycle (2) Instruction (4) Flags (4)
+
+4 Banks -> 4 * 8 = 32 possible signals
+
+

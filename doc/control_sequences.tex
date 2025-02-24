@@ -1,25 +1,26 @@
 \section{Control Sequences} \label{sec:sequences}
-By setting the control signals as described in Section \ref{sec:architecture} appropriately, the modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction (also known as microcode instructions). The Control Unit implements this as a lookup table in ROM, where the instruction (in I), flags (also in I) and cycle counter (kept by the CU) act as an address into this table and the control signal configuration is stored at this address in ROM (Figure \ref{fig:decoder}).
+\subsection{Instruction Decoding}
+By setting the control signals as described in Section \ref{sec:architecture} appropriately, the modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction (also known as microcode instructions). The Control Unit implements this as a lookup table in 3 ROM chips, where the instruction (4 bits), flags (4 bits) and cycle counter (3 bits) act as an address into this table (Figure \ref{fig:decoder}). There are 22 different control signals, so 3 8-bit EEPROM chips have been used to store the entire table. More details on the implementation can be found in Section \ref{sec:implementation:cu}. Below we will go through each of the instructions in order to annotate the contents of Table \ref{tab:microcode}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{img/instruction_decoding}
-  \caption{Decoding an instruction: the current instruction and state index the ROM, which returns the control signal configuration.}
+  \caption{Decoding an instruction: the current instruction, state and cycle-count function as an index to the ROMs, which return the control signal configuration.}
   \label{fig:decoder}
 \end{figure}
 
-It is important to note that, because of the choice of driving all of the (counting) registers with a common interface (Section \ref{sec:implementation:registers}), only one register can be driven each clock cycle. That is, the INC and DEC signals can be applied to only one register in a clock cycle. Below we will go through each of the instructions in order to annotate the contents of Table \ref{tab:microcode}.
+It is important to note that, because of the choice of driving all of the (counting) registers with a common interface (Section \ref{sec:architecture:cu:driver}), only one register can be driven during each clock cycle. That is, the INC and DEC signals can be applied to only one register at a time. 
 
 
 \subsection{Cycle 0}
-The first cycle of each instruction is identical. In fact, it's not really part of any instruction yet, because its purpose is to fetch the next instruction from ROM. In order to do so, the IP is enabled (address-in to the ROM module) and the resulting instruction is loaded into the I-register. Note that this also means that the A and V flags from the F register are loaded in (F is always enabled), together with the Z ans S flags supplied by the D and LS registers.
+The first cycle of each instruction is identical: all flags (A and V from FB and S and Z from LS and D) are loaded into the FB register. This provides the CU with all the necessary information to determine the control signals for the next cycle (the instruction is loaded directly from ROM and does not have to be enabled). 
 
 \subsection{Modifying Data: \texttt{+} and \texttt{-}}
-The operations performed by the \texttt{+} command depend on the state of the system. If the A flag is not set (the address has not changed since the last instruction), this means that the value in D already corresponds to the current cell in memory. In that case, the INC signal for the D register is set for it to increment on the next clock pulse. In addition to this, the V-flag is set to indicate that the value in D has been changed, which is then loaded into the F register. In the next cycle, the INC signal is set for the IP register to load the next instruction and the cycle count of the CU is reset to 0.
+The sequence of instructions necessary to execute a \texttt{+} command depends on the state of the system. If the A flag is not set, the value in D already corresponds to the value currently pointed to by the DP. In that case, its INC signal is set in order for it to increment on the next clock pulse. Additionally, the V-flag is set to indicate that the value in D has been changed, which is then loaded into the FA register. In the next cycle, the INC signal is set for the IP register and the cycle counter is reset to prepare for the next instruction.
 
-On the other hand, when the A flag \emph{was} set, we first need to fetch the new value from RAM by enabling the DP register and loading the resulting value into D. From hereon, the next set of control signals is identical to that described above in the case where A was not set.
+However, when the A flag \emph{was} set, we first need to fetch the correct value from RAM by enabling the DP register and loading the resulting value into D. From hereon, the next set of control signals is identical to that described above in the case where A was not set.
 
-The control signals necessary to perform the \texttt{-} command are similar to those of the \texttt{+} command, the only difference being the DEC(D) signal to perform a subtraction rather than addition.
+The control signals necessary to perform the \texttt{-} command are similar to those of the \texttt{+} command, the only difference being the DEC signal to perform a subtraction rather than addition.
 
 None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately.
 
@@ -48,7 +49,7 @@ In the thrid scenario, the contents of D are not yet synchronized with the RAM (
 Finally, when already in the process of skipping a loop, the LS-register is decremented before moving to the next instruction.
 
 \subsection{Output: \texttt{.}}
-There are three states that need to be taking into account when implementing the output-command. In the first state, the value in D is already in sync with the RAM and can be sent to the output device immediately. The output of D is enabled and PRE signal for the screen is set, in addition to incrementing the IP to move to the next instruction. When A was set, we first load the value from RAM into D before sending its contents to RAM. Lastly, when Z(LS) is low, this instruction can simply be skipped.
+There are three states that need to be taking into account when implementing the output-command. In the first state, the value in D is already in sync with the RAM and can be sent to the output device immediately. The output of D is enabled and PRE signal for the screen is set, in addition to incrementing the IP to move to the next instruction. When A was set, we first load the value from RAM into D before sending its contents to RAM. Lastly, when S is set, this instruction can simply be skipped.
 
 %\subsubsection*{}
 \subsection{Input: \texttt{,} and \texttt{'}}

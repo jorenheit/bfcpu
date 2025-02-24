@@ -4,6 +4,11 @@
 	(generator_version "8.0")
 	(uuid "1ee57526-2d5e-4fc4-a249-d49a49e9aef5")
 	(paper "A4")
+	(title_block
+		(date "2025")
+		(rev "1")
+		(company "J. Heit")
+	)
 	(lib_symbols
 		(symbol "74LS04_1"
 			(pin_numbers hide)

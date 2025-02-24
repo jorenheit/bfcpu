@@ -2,25 +2,25 @@
 
   \begin{longtable}[c] {c|cccc|c|llllll}
                      Instr        & V & A & S     & Z    & Cycle & \multicolumn{6}{c}{Control Signals}                      \\ \hline
-    \rowcolor{White} Any          &   &   &       &      & 0     & LD(I)    &          &         &        &        &        \\ \hline
-    \rowcolor{Gray}  \texttt{+}   &   & 0 & 0     &      & 1     & INC(D)   & SET\_V(F)& LD(F)   &        &        &        \\
+    \rowcolor{White} Any          &   &   &       &      & 0     & LD(FB)   &          &         &        &        &        \\ \hline
+    \rowcolor{Gray}  \texttt{+}   &   & 0 & 0     &      & 1     & INC(D)   & SETV(FA) & LD(FA)  &        &        &        \\
     \rowcolor{Gray}               &   & 0 & 0     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\    
-    \rowcolor{White}              &   & 1 & 0     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) & LD(F)  & CR(CU) &        \\
+    \rowcolor{White}              &   & 1 & 0     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) & LD(FA) & CR(CU) &        \\
     \rowcolor{Gray}               &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{White} \texttt{-}   &   & 0 & 0     &      & 1     & DEC(D)   & SET\_V(F)& LD(F)   &        &        &        \\
+    \rowcolor{White} \texttt{-}   &   & 0 & 0     &      & 1     & DEC(D)   & SETV(FA) & LD(FA)  &        &        &        \\
     \rowcolor{White}              &   & 0 & 0     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
-    \rowcolor{Gray}               &   & 1 & 0     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) & LD(F)  & CR(CU) &        \\
+    \rowcolor{Gray}               &   & 1 & 0     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) & LD(FA) & CR(CU) &        \\
     \rowcolor{White}              &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{Gray}  \texttt{>}   & 0 &   & 0     &      & 1     & INC(DP)  & SET\_A(F)& LD(F)   &        &        &        \\
+    \rowcolor{Gray}  \texttt{>}   & 0 &   & 0     &      & 1     & INC(DP)  & SETA(FA) & LD(FA)  &        &        &        \\
     \rowcolor{Gray}               & 0 &   & 0     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
-    \rowcolor{White}              & 1 &   & 0     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) & LD(F)  & CR(CU) &        \\
+    \rowcolor{White}              & 1 &   & 0     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) & LD(FA) & CR(CU) &        \\
     \rowcolor{Gray}               &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{White} \texttt{<}   & 0 &   & 0     &      & 1     & DEC(DP)  & SET\_A(F)& LD(F)   &        &        &        \\
+    \rowcolor{White} \texttt{<}   & 0 &   & 0     &      & 1     & DEC(DP)  & SETA(FA) & LD(FA)  &        &        &        \\
     \rowcolor{White}              & 0 &   & 0     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
-    \rowcolor{Gray}               & 1 &   & 0     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) & LD(F)  & CR(CU) &        \\
+    \rowcolor{Gray}               & 1 &   & 0     &      & 1     & EN(D)    & EN(DP)   & WE(RAM) & LD(FA) & CR(CU) &        \\
     \rowcolor{White}              &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
     \rowcolor{Gray}  \texttt{[}   &   & 0 & 0     & 1    & 1     & INC(LS)  &          &         &        &        &        \\
@@ -29,7 +29,7 @@
     \rowcolor{White}              &   & 0 & 0     & 0    & 2     & WE(RAM)  & EN(SP)   & EN(IP)  &        &        &        \\
     \rowcolor{White}              &   & 0 & 0     & 0    & 3     & INC(IP)  & CR(CU)   &         &        &        &        \\
     \rowcolor{Gray}               &   & 1 & 0     &      & 1     & EN(DP)   & LD(D)    & OE(RAM) &        &        &        \\
-    \rowcolor{Gray}               &   & 1 & 0     &      & 2     & LD(F)    & CR(CU)   &         &        &        &        \\
+    \rowcolor{Gray}               &   & 1 & 0     &      & 2     & LD(FA)   & CR(CU)   &         &        &        &        \\
     \rowcolor{White}              &   &   & 1     &      & 1     & INC(LS)  &          &         &        &        &        \\
     \rowcolor{White}              &   &   & 1     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
@@ -39,7 +39,7 @@
     \rowcolor{Gray}               &   & 0 & 0     & 0    & 1     & EN(SP)   & OE(RAM)  & LD(IP)  &        &        &        \\
     \rowcolor{Gray}               &   & 0 & 0     & 0    & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
     \rowcolor{White}              &   & 1 & 0     &      & 1     & EN(DP)   & OE(RAM)  & LD(D)   &        &        &        \\
-    \rowcolor{White}              &   & 1 & 0     &      & 2     & LD(F)    & CR(CU)   &         &        &        &        \\
+    \rowcolor{White}              &   & 1 & 0     &      & 2     & LD(FA)   & CR(CU)   &         &        &        &        \\
     \rowcolor{Gray}               &   &   & 1     &      & 1     & DEC(LS)  &          &         &        &        &        \\ 
     \rowcolor{Gray}               &   &   & 1     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
@@ -49,12 +49,12 @@
     \rowcolor{Gray}               &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
     \rowcolor{White} \texttt{,}   &   &   & 0     &      & 1     & EN(KB)   & LD(D)    &         &        &        &        \\
-    \rowcolor{White}              &   &   & 0     &      & 2     & LD(I)    &          &         &        &        &        \\
-    \rowcolor{White}              &   &   & 0     & 0    & 3     & SET\_V(F)   & LD(F)    & INC(IP) & CR(CU) &        &        \\
+    \rowcolor{White}              &   &   & 0     &      & 2     & LD(FB)   &          &         &        &        &        \\
+    \rowcolor{White}              &   &   & 0     & 0    & 3     & SETV(FA) & LD(FA)   & INC(IP) & CR(CU) &        &        \\
     \rowcolor{Gray}               &   &   & 0     & 1    & 3     & CR(CU)   &          &         &        &        &        \\   
     \rowcolor{White}              &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
-    \rowcolor{Gray}   \texttt{'}  &   &   & 0     &      & 1     & EN(KB)   & LD(D)    & SET\_V(F)& LD(F)  &        &        \\
+    \rowcolor{Gray}   \texttt{'}  &   &   & 0     &      & 1     & EN(KB)   & LD(D)    & SETV(FA)& LD(FA) &        &        \\
     \rowcolor{Gray}               &   &   & 0     &      & 2     & INC(IP)  & CR(CU)   &         &        &        &        \\
     \rowcolor{White}              &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline
     
@@ -63,10 +63,10 @@
     \rowcolor{Gray}               &   &   & 1     &      & 1     & INC(IP)  & CR(CU)   &         &        &        &        \\ \hline        
     \rowcolor{White} \texttt{ERR} &   &   &       &      &       & ERR(CU)  & HLT(CLC) &         &        &        &        \\ \hline
     \rowcolor{Gray}  \texttt{INIT}&   &   &       & 1    & 1     & EN(D)    & WE(RAM)  & INC(LS) &        &        &        \\
-    \rowcolor{Gray}               &   &   &       & 1    & 2     & LD(I)    & INC(DP)  &         &        &        &        \\
+    \rowcolor{Gray}               &   &   &       & 1    & 2     & LD(FB)   & INC(DP)  &         &        &        &        \\
     \rowcolor{Gray}               &   &   & 0     & 1    & 3     & INC(IP)  & CR(CU)   &         &        &        &        \\
     \rowcolor{White}              &   &   & 1     & 1    & 3     & CR(CU)   &          &         &        &        &        \\ \hline
-    \rowcolor{Gray}               &   &   &       &      & 1     & R(DP)     &          &         &        &        &        \\ \hline
+    \rowcolor{Gray}               &   &   &       &      & 1     & R(DP)    &          &         &        &        &        \\ \hline
     
 
     \caption{Control signals for each of the BF instructions in different scenario's, depending on the state flags. Note that in order to distinguish between the two input modes, the regular comma (\texttt{,}) and the apostrophe (\texttt{'}) are used for buffered and immediate inputs respectively. See also Section \ref{sec:architecture:signals:input}.}
