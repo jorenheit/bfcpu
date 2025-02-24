@@ -5,7 +5,7 @@
 
 enum Instructions
 {
-    NOOP	= 0x00,
+    NOP	        = 0x00,
     PLUS	= 0x01,
     MINUS	= 0x02,
     LEFT	= 0x03,
@@ -202,8 +202,6 @@ int assemble(Options const &opt)
     std::vector<unsigned char> result;
     int nestingDepth = 0;
 
-
-    
     // Zero init DATA,  then restore the DP back to its home position (0x0100)
     if (opt.init)
     {
