@@ -1,6 +1,6 @@
 namespace FastDigitalReadImpl_ {
   
-  enum Port: byte {
+  enum Port: uint8_t {
     Invalid = 0,
     PortB, 
     PortC,
@@ -16,31 +16,31 @@ namespace FastDigitalReadImpl_ {
   }
 
   template <int Pin, int Threshold, int Port>
-  struct Read_;
+  struct Read;
 
   template <int Pin, int Threshold>
-  struct Read_<Pin, Threshold, PortB> {
+  struct Read<Pin, Threshold, PortB> {
     static inline __attribute__((always_inline)) bool read() {
       return (PINB >> (Pin - 8)) & 1;
     }
   };
 
   template <int Pin, int Threshold>
-  struct Read_<Pin, Threshold, PortC> {
+  struct Read<Pin, Threshold, PortC> {
     static inline __attribute__((always_inline)) bool read() {
       return (PINC >> (Pin - A0)) & 1;
     }
   };
 
   template <int Pin, int Threshold>
-  struct Read_<Pin, Threshold, PortD> {
+  struct Read<Pin, Threshold, PortD> {
     static inline __attribute__((always_inline)) bool read() {
       return (PIND >> (Pin - 0)) & 1;
     }
   };
 
   template <int Pin, int Threshold>
-  struct Read_<Pin, Threshold, Analog> {
+  struct Read<Pin, Threshold, Analog> {
     static inline __attribute__((always_inline)) bool read() {
       return analogRead(Pin) > Threshold;
     }
@@ -49,7 +49,8 @@ namespace FastDigitalReadImpl_ {
 
 template <int Pin, int Threshold = 512>
 inline __attribute__((always_inline))  bool fastDigitalRead() {
-  static_assert(Pin >= 0 && Pin <= A7, "Invalid pin");
-  return FastDigitalReadImpl_::Read_<Pin, Threshold, FastDigitalReadImpl_::port(Pin)>::read();
+  static constexpr byte PORT = FastDigitalReadImpl_::port(Pin); 
+  static_assert(PORT != FastDigitalReadImpl_::Invalid, "Invalid pin (0 - A7)");
+  return FastDigitalReadImpl_::Read<Pin, Threshold, PORT>::read();
 }
 
