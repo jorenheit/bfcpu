@@ -51,12 +51,12 @@ void digitalWrite() {
 }
 
 template <int DataPin, int ClockPin, int BitOrder>
-void shiftOut(uint8_t val)
+void shiftOut(uint8_t const value)
 {
   for (uint8_t i = 0; i < 8; ++i)  {
     digitalWrite<DataPin>(BitOrder == LSBFIRST ? 
-      val & (1 << i) :
-      val & (1 << (7 - i))
+      value & (1 << i) :
+      value & (1 << (7 - i))
     );
         
     digitalWrite<ClockPin, HIGH>();

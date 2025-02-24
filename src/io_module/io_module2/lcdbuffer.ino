@@ -1,25 +1,16 @@
 #include "lcdbuffer.h"
 
 LCDBuffer::LCDBuffer():
-#if USE_FAST_LIQUIDCRYSTAL_LIBRARY
   lcd(LINE_SIZE, VISIBLE_LINES)
-#else
-  lcd(SH_CP, DS, ST_CP)
-#endif
 {}
 
 void LCDBuffer::begin(char const *msg) {
-#if USE_FAST_LIQUIDCRYSTAL_LIBRARY
   lcd.begin();
-#else
-  lcd.begin(LINE_SIZE, VISIBLE_LINES);
-#endif
   lcd.cursor();
   lcd.blink();
   
-  reset();
-  push(msg);
-  send(ASCII, true);
+  clear();
+  if (msg) direct(DIRECT_MESSAGE_TIME, msg);
 }
 
 void LCDBuffer::push(byte const c) {
@@ -31,7 +22,7 @@ void LCDBuffer::push(char const *str) {
   while (str[idx] != 0) push(str[idx++]);
 }
 
-void LCDBuffer::update(DisplayMode const mode) {
+void LCDBuffer::update() {
   // Select the insertion function
   using InsertFuncPtr = void (LCDBuffer::*)(byte const);
   InsertFuncPtr const insert = 
@@ -41,14 +32,23 @@ void LCDBuffer::update(DisplayMode const mode) {
 
   // Update screen-buffer by pushing all new bytes from the ring-buffer into it. 
   uint8_t const head = ringBufHead; // local copy, ringBufHead might be changed by interrupt
+  bool const newData = ringBufTail != head;
   while (ringBufTail != head) (this->*insert)(ringBuf[ringBufTail++]);
-  if (changed) bringIntoView();
+  if (newData) bringIntoView();
 }
 
-bool LCDBuffer::send(DisplayMode const mode, bool const forced) {
+void LCDBuffer::send(bool const forced) {
   // Update screen-buffer
-  update(mode); 
-  if (!changed && !forced) return false;
+  update(); 
+
+  // Check if the screen is claimed by a direct message
+  if (directTimeout && (millis() < directTimeout)) {
+    return;
+  }
+  directTimeout = 0;
+
+  // Check if it is necessary to update the screen
+  if (!changed && !forced) return;
 
   // Screen-buffer is now up-to-date -> send visible lines to screen
   for (uint8_t line = 0; line != VISIBLE_LINES; ++line) {
@@ -68,7 +68,7 @@ bool LCDBuffer::send(DisplayMode const mode, bool const forced) {
 
   // Reset changed flag and return
   changed = false;
-  return true;
+  return;
 }
 
 void LCDBuffer::insertAsHex(byte const c) {
@@ -135,15 +135,15 @@ void LCDBuffer::newLine() {
 }
 
 void LCDBuffer::scrollDown(uint8_t n) {
-  n = min(bottomLine - bottomVisibleLine, n);
+  n = min(normalize(bottomLine) - normalize(bottomVisibleLine), n);
   topVisibleLine = (topVisibleLine + n) % TOTAL_LINES;
   bottomVisibleLine = (bottomVisibleLine + n) % TOTAL_LINES;
   changed = true;
 }
 
 void LCDBuffer::scrollUp(uint8_t n) {
-  n = min(topVisibleLine - topLine, n);
-  topVisibleLine = (topVisibleLine - n + TOTAL_LINES) % TOTAL_LINES;  
+  n = min(normalize(topVisibleLine) - normalize(topLine), n);
+  topVisibleLine = (topVisibleLine - n + TOTAL_LINES) % TOTAL_LINES; // 
   bottomVisibleLine = (bottomVisibleLine - n + TOTAL_LINES) % TOTAL_LINES;
   changed = true;
 }
@@ -167,7 +167,7 @@ void LCDBuffer::clearLine(uint8_t const idx) {
   changed = true;
 }
 
-void LCDBuffer::reset() {
+void LCDBuffer::clear(char const *msg) {
   for (uint8_t i = 0; i != TOTAL_LINES; ++i) 
     clearLine(i);
 
@@ -177,9 +177,24 @@ void LCDBuffer::reset() {
   topLine = 0;
   bottomLine = TOTAL_LINES - 1;
   pos = 0;
+
+  if (msg) direct(DIRECT_MESSAGE_TIME, msg);
 }
 
 uint8_t LCDBuffer::normalize(uint8_t const line) const {
   // returns a line number between 0 and TOTAL_LINES - 1 as offset with repect to the top line.
   return (line - topLine + TOTAL_LINES) % TOTAL_LINES;
 }
+
+void LCDBuffer::nextMode(bool const prompt) {
+  mode = static_cast<DisplayMode>((mode + 1) % N_MODES);
+  if (prompt)
+    direct(DIRECT_MESSAGE_TIME, "Mode: ", displayModeString[mode]);
+}
+
+void LCDBuffer::previousMode(bool const prompt) {
+  mode = static_cast<DisplayMode>((mode - 1 + N_MODES) % N_MODES);
+  if (prompt)
+    direct(DIRECT_MESSAGE_TIME, "Mode: ", displayModeString[mode]);
+}
+
