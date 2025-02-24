@@ -1,5 +1,5 @@
-#include "keyboard.h"
 #include "settings.h"
+#include "keyboard.h"
 
 void Keyboard::begin() {
   kb.begin(KEYBOARD_DATA_PIN, KEYBOARD_CLOCK_INTERRUPT_PIN);

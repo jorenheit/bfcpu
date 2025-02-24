@@ -66,7 +66,12 @@ public:
   using Print::write;
 
 private:
-  void send(uint8_t const value, uint8_t const mode);
+  enum LCDDataMode {
+    COMMAND = 0,
+    WRITE = 1
+  };
+
+  void send(uint8_t const value, LCDDataMode const mode);
   void pulseEnable();
   void write4bits(uint8_t const value);
   void transfer() const;

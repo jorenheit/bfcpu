@@ -1,18 +1,14 @@
 #pragma once
 
-#include "settings.h"
-
-#if USE_FAST_LIQUIDCRYSTAL_LIBRARY
 #include "LiquidCrystal_74HC595.h"
-#define LiquidCrystalSerial LiquidCrystal_74HC595
-#else
-#include <LiquidCrystalSerial.h>
-#endif
+#include "settings.h"
+#include "staticstring.h"
+
 
 #define RING_BUF_CAPACITY 256 // Do not change
 
 class LCDBuffer {
-  LiquidCrystalSerial lcd;
+  LiquidCrystal_74HC595 lcd;
   
   char ringBuf[RING_BUF_CAPACITY];
   volatile uint8_t ringBufHead = 0;
@@ -27,6 +23,9 @@ class LCDBuffer {
   uint8_t bottomVisibleLine = VISIBLE_LINES - 1;
   
   bool changed = false;
+  unsigned long directTimeout = 0;
+
+  DisplayMode mode = ASCII;
 
   static_assert(TOTAL_LINES <= 128, "TOTAL_LINES cannot exceed 128.");
   static_assert(RING_BUF_CAPACITY == 256, "RING_BUF_CAPACITY should be 256 bytes.");
@@ -36,19 +35,35 @@ class LCDBuffer {
 public:
   LCDBuffer();
 
-  void begin(char const *msg = "");
+  void begin(char const *msg = 0);
   void push(byte const c);
   void push(char const *str);
-  bool send(DisplayMode const mode, bool const forced = false);
+  void send(bool const forced = false);
   void scrollDown(uint8_t n = 1);
   void scrollUp(uint8_t n = 1);
-  void reset();
+  void clear(char const *msg = 0);
+  void nextMode(bool const prompt);
+  void previousMode(bool const prompt);
+
+  template <typename ... Args>
+  void direct(int timeout, Args ... args) {
+    static_assert(sizeof ... (Args) <= VISIBLE_LINES, "Too many lines");
+    char const *lines[] = {args ...};
+    lcd.clear();
+    for (uint8_t idx = 0; idx != sizeof...(args); ++idx) {
+      lcd.setCursor(0, idx);
+      lcd.print(lines[idx]);
+    }
+    lcd.noCursor();
+    directTimeout = millis() + timeout;
+  }
+
   
 private:
   void insertAsAscii(byte const c);
   void insertAsHex(byte const c);
   void insertAsDecimal(byte const c);
-  void update(DisplayMode const mode);
+  void update();
   void clearLine(uint8_t const idx);
   void bringIntoView();
   void enter();

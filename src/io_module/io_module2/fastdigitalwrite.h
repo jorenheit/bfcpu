@@ -17,7 +17,6 @@ namespace FastDigitalWriteImpl_ {
   template <int Pin, int Port, bool State>
   struct Write;
 
-  // State known at compiletime
   template <int Pin>
   struct Write<Pin, PortB, LOW> {
     static inline __attribute__((always_inline)) void write() {

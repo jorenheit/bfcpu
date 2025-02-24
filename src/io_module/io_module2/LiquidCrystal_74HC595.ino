@@ -1,4 +1,3 @@
-#if USE_FAST_LIQUIDCRYSTAL_LIBRARY
 #include "LiquidCrystal_74HC595.h"
 
 LiquidCrystal_74HC595::LiquidCrystal_74HC595(uint8_t const cols, uint8_t const rows):
@@ -110,15 +109,15 @@ void LiquidCrystal_74HC595::setCursor(uint8_t const col, uint8_t const row) {
 }
 
 inline void LiquidCrystal_74HC595::command(uint8_t const value) {
-  send(value, 0);
+  send(value, COMMAND);
 }
 
 inline size_t LiquidCrystal_74HC595::write(uint8_t const value) {
-  send(value, 1);
+  send(value, WRITE);
   return 1;
 }
 
-void LiquidCrystal_74HC595::send(uint8_t const value, uint8_t const mode) {
+void LiquidCrystal_74HC595::send(uint8_t const value, LCDDataMode const mode) {
   bitWrite(_register, RS_595, mode);
   transfer();
   write4bits(value >> 4);
@@ -151,5 +150,3 @@ void LiquidCrystal_74HC595::transfer() const {
   shiftOut<DS, SH_CP, MSBFIRST>(_register);
   digitalWrite<ST_CP, HIGH>();
 }
-
-#endif //USE_FAST_LIQUIDCRYSTAL_LIBRARY
