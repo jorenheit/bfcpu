@@ -4,6 +4,11 @@
 	(generator_version "8.0")
 	(uuid "4f2cbb19-da40-47e5-886e-e8ca1fb58159")
 	(paper "A4")
+	(title_block
+		(date "2025")
+		(rev "1")
+		(company "J. Heit")
+	)
 	(lib_symbols
 		(symbol "74LS04_1"
 			(pin_numbers hide)
@@ -12545,7 +12550,7 @@
 			)
 		)
 		(property "Value" "74LS161"
-			(at 82.55 148.59 90)
+			(at 82.55 144.272 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12711,7 +12716,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "b1198aa5-d6a4-4fba-abc8-e21b3b037aab")
 		(property "Reference" "U10"
 			(at 230.5619 71.12 90)
@@ -12723,12 +12727,11 @@
 			)
 		)
 		(property "Value" "74LS161"
-			(at 233.1019 71.12 90)
+			(at 240.792 99.568 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(property "Footprint" ""
@@ -13115,7 +13118,7 @@
 			)
 		)
 		(property "Value" "74LS161"
-			(at 35.56 148.59 90)
+			(at 36.068 144.018 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13225,7 +13228,7 @@
 			)
 		)
 		(property "Value" "74LS161"
-			(at 177.8 148.59 90)
+			(at 177.292 144.018 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13335,7 +13338,7 @@
 			)
 		)
 		(property "Value" "74LS161"
-			(at 130.81 148.59 90)
+			(at 130.302 144.018 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13643,7 +13646,7 @@
 			)
 		)
 		(property "Value" "74LS161"
-			(at 240.03 50.8 0)
+			(at 240.538 51.816 0)
 			(effects
 				(font
 					(size 1.27 1.27)

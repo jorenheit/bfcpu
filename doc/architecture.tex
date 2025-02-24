@@ -10,9 +10,7 @@ In simple terms, a BF machine consists of an array of memory-cells, together wit
 \end{figure}
 
 
-The processor consists of three basic building blocks: registers, memory and a control unit. The ALU is missing from this list because the only operations that it needs to perform are addition and subtraction of the value 1, which can be done directly at the register-level when using up/down binary counters like the 74LS193 integrated circuit. The program (a sequence of BF instructions) is stored into Read Only Memory (ROM), whereas the data is stored in Random Access Memory (RAM). Instructions (4-bits) are loaded from ROM into the instruction register (I), together with some flags that encode the state of the machine. Depending on the state and current instruction, the Control Unit sets the appropriate control signals for each of the modules in order for the system to perform the next computation. Figure \ref{fig:architecture} shows how each of the modules is communicating with other modules. In the sections below, each of these connections will be clarified further. The actual implementation on the logic/hardware level is described in section \ref{sec:implementation}.
-
-
+The processor consists of three basic building blocks: registers, memory and a control unit. The ALU is missing from this list because the only operations that it needs to perform are addition and subtraction of the value 1, which can be done directly at the register-level when using up/down binary counters like the 74LS193 integrated circuit. The program (a sequence of BF instructions) is stored into Read Only Memory (ROM), whereas the data is stored in Random Access Memory (RAM). Instructions (4-bits) are fed from ROM into the control unit (CU) together with four flags (A, V, S and Z) that encode the state of the machine. Depending on the state and current instruction, the CU sets the appropriate control signals for each of the modules in order for the system to perform the next computation. Figure \ref{fig:architecture} shows how each of the modules is communicating with other modules. In the sections below, each of these connections will be clarified further. The actual implementation on the logic/hardware level is described in section \ref{sec:implementation}.
 
 \begin{figure}[H]
   \centering
@@ -38,16 +36,16 @@ The DP should be able to increment and decrement (corresponding to the \texttt{<
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em   
-\item DATA\_OUT - 16 bits, connected to the address bus when enabled (EN high).
+\item DP\_OUT - 16 bits, connected to the address bus when enabled (EN high).
 \end{itemize}
 
 \subsection{Data Register (D)} \label{sec:architecture:d}
-The data register hold a representation of the value currently pointed to by the DP and can be incremented and decremented (corresponding to \texttt{+} and \texttt{-}). The synchronization issue between D and RAM, that results from changing the value in D, is handled by the control unit, as described in section \ref{sec:sequences}.
+The data register holds a representation of the value currently pointed to by the DP and can be incremented and decremented (corresponding to \texttt{+} and \texttt{-}). This leads to a synchronization issue D and RAM, which is handled by the control unit as described in Section \ref{sec:sequences}. This register provides the Z flag to indicate that its current value is 0. Among other things, this flag can be used to determine whether or not to enter a loop.
 
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em   
-\item DATA\_IN - connected to the data bus;
+\item D\_IN - 8 bits - connected to the data bus;
 \item EN - Enable - when high, its value is sent to the data bus;
 \item LD - Load - when high, the data on the data bus is loaded into the register on the next clock cycle;
 \item INC - Increment - when high, the stored value is incremented on the next clock cycle;
@@ -57,18 +55,18 @@ The data register hold a representation of the value currently pointed to by the
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_OUT - 8 bits, connected to the data bus;
+\item D\_OUT - 8 bits - connected to the data bus;
 \item Z - Zero Flag - high when the register contains all zero's (0x00).
 \end{itemize}
 
 
 \subsection{Instruction Pointer Register (IP)} \label{sec:architecture:ip}
-The instruction pointer is a 16-bit value, kept in the IP register, which keeps track of the current instruction that is being executed. It points to a certain address in ROM (which stores the program) and is usually incremented after each instruction has finished executing, in order to move to the next instruction. However, when the processor encounters the \texttt{[}-instruction (and the loop is entered), it needs to store the current value of the IP somewhere in order to be able to jump back to this location. The value is then stored on the stack (the first part of RAM). When the matching \texttt{]}-instruction is encountered, this value is loaded back into the IP instead of simply incrementing the previous value. This has the effect of jumping back in the program, which is how loops are implemented in BF. It is therefore connected to the databus of the RAM in order to be able to store its value on the stack. Because this is not the only register connected to the databus (the other one being the D-register), it needs to be enabled or disabled depending on which of the registers needs access to RAM.
+The IP Register stores the instruction pointer (16-bits), which keeps track of the instruction that is currently being executed. It points to a certain address in ROM (which stores the program) and is usually incremented after each instruction has finished executing, in order to move to the next instruction. However, when the processor encounters the \texttt{[}-instruction (and a loop is entered), its value is stored in RAM at the location pointed to by the stack pointer (SP, see \ref{sec:architecture:sp}). When the matching \texttt{]}-instruction is encountered, this value can be loaded back into the IP in order to jump back to the start of the loop if needed.
 
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_IN - 16 bits - connected to the data bus (for loading a stored address off the stack);
+\item IP\_IN - 16 bits - connected to the data bus (for loading a stored address off the stack);
 \item EN - Enable - when high, its value is sent to the databus (for storing an address on the stack);
 \item LD - Load - when high, the value on the databus is loaded into the register on the next clock cycle;
 \item INC - Increment - when high, the stored value is incremented on the next clock cycle.
@@ -77,12 +75,12 @@ The instruction pointer is a 16-bit value, kept in the IP register, which keeps 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_OUT - 16 bits - connected to the databus of RAM and the address inputs of program-ROM;
+\item IP\_OUT - 16 bits - connected to the Data Bus and the address inputs of program-ROM;
 \end{itemize}
 
 
-\subsection{Stack Pointer Register (SP)} \label{sec:architecturehitecture:sp}
-The stack is the first part of RAM (addresses 0x0000 - 0x00ff) which is reserved to keep track of addresses that might need to be jumped to. The stack-pointer (SP) is incremented whenever a new value is stored on the stack and decremented whenever a value is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it the SP overflows (wraps around back to 0) and starts overwriting previous values. This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs. Although possible, it is very unlikely to happen for the simple programs we intend to run.
+\subsection{Stack Pointer Register (SP)} \label{sec:architecture:sp}
+The stack is the first part of RAM (addresses 0x0000 - 0x00ff) and is reserved to keep track of addresses that might need to be jumped to. The stack-pointer (SP) points to an address in this space; it is incremented whenever a new value is pushed to the stack and decremented whenever a value is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it the SP overflows (wraps around back to 0) and starts overwriting previous values. This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs. Although possible, it is very unlikely to happen for the simple programs we intend to run.
 
 \subsubsection*{Inputs}
 \begin{itemize}
@@ -95,11 +93,11 @@ The stack is the first part of RAM (addresses 0x0000 - 0x00ff) which is reserved
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_OUT - 8 bits - connected to the address bus of RAM.
+\item SP\_OUT - 8 bits - connected to the address bus of RAM.
 \end{itemize}
 
 \subsection{Loop Skip Register (LS)} \label{sec:architecture:ls}
-The Loop Skip (LS) register is a counter that indicates whether or not we're in the process of skipping a loop. In BF, a loop (\texttt{[}) is only entered when the value currently pointed to is nonzero. In the case that it is zero, execution resumes beyond its matching \texttt{]}. When it is determined (by the Control Unit) that a loop must be skipped (based on the Z-flag of the D-register), the LS register is incremented from 0 to 1. Subsequent instructions are then skipped until either another (nested) loop opening \texttt{[} or a closing \texttt{]} is encountered. On the former, the LS is incremented again while on the latter the LS is decremented. This has the effect that the LS becomes 0 again after the \texttt{]} that matches the original \texttt{[} which led to the skip. Normal execution occurs as soon as LS has become 0 again.
+The Loop Skip (LS) register is a counter that indicates whether or not we're in the process of skipping a loop. In BF, a loop (\texttt{[}) is only entered when the value currently pointed to is nonzero. In the case that it is zero, execution resumes beyond its matching \texttt{]}. When it is determined that a loop must be skipped (based on the Z-flag of the D-register), the LS register is incremented from 0 to 1 and the S-flag is set.. Subsequent instructions are then skipped until either another (nested) loop opening \texttt{[} or a closing \texttt{]} is encountered. On the former, the LS is incremented again while on the latter the LS is decremented. This has the effect that the LS becomes 0 again after the \texttt{]} that matches the original \texttt{[} which led to the skip. Normal execution occurs as soon as LS has become 0 again and the S-flag is reset back to 0.
 
 \subsubsection*{Inputs}
 \begin{itemize}
@@ -111,73 +109,84 @@ The Loop Skip (LS) register is a counter that indicates whether or not we're in 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item S - Skip flag - set when the stored data is nonzero. When high, the current instruction should be skipped ($S = \overline{Z}$).
+\item S - Skip flag - set when it value is nonzero.
 \end{itemize}
 
-\paragraph{Note on preprocessing:} The LS-register is solving a problem that can be avoided by preprocessing the BF code. We could have chosen to somehow include jump-locations in the program and render scanning during runtime (keeping track of the counter to determine when to resume execution) unnecessary. This would however introduce its own set of issues but would also require a fundamental modification to the BF instruction set. We therefore chose not to preprocess the program and require the computer to handle `vanilla' BF.
-
-\subsection{Flag Register (F)} \label{sec:architecture:f}
-The sole purpose of the flag register is to buffer the A and V flags, set by the control unit, in case the address or value has changed during the execution of the current instruction. When the next instruction is fetched, these flags are loaded into the instruction register (\ref{sec:architecture:i}). 
+\subsection{Flag Registers (FA and FB)} \label{sec:architecture:flags}
+The first flag register (FA) holds two flag values A and V which are used to indicate that either the address or value respecively has changed during one of the previous instructions. On the zeroth cycle of every instruction, these flags are latched into the FB register together with the Z and S flags (set by the D and LS registers) for a total of 4 flags.
 
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item SET\_A - Address-change-flag - from CU;
-\item SET\_V - Value-change-flag - from CU;
-\item LD - Load - when high, A and V are latched into the register.
+\item SETA - Sets the address-change-flag - set by the CU;
+\item SETV - Sets the value-change-flag - set by the CU;
+\item LD(FA) - Load A and V (if set by the CU) into FA.
+\item LD(FB) - Load A, V (previously buffered in FA), Z and S (from D and LS) into FB. 
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_OUT - 2 bits - sends the stored A and V flags to the instruction register (\ref{sec:architecture:i}).
+\item F\_OUT - 4 bits - connected to the CU (See \ref{sec:architecture:control_unit}).
 \end{itemize}
 
 
-\subsection{Instruction Register (I)} \label{sec:architecture:i}
-The instruction register is an 8-bit register that stores the current instruction, which was loaded from ROM according to the IP value. The BF-instruction itself is only 4 bits wide, which leaves another 4 bits for encoding the state of the machine, using its flags:  A, V, S and Z. Of these flags, S and Z are loaded directly from their corresponding register modules whereas A and V are loaded from the flag register where they are buffered by the control unit. The enire 8-bit word formed by the instruction- and flag-bits will serve as part of the address to the microcode ROM module to determine which control signals need to be set for the next clock cycle.
+\subsection{Cycle Counter (CC)} \label{sec:architecture:cc}
+Almost every BF instruction will require multiple cycles to complete. Therefore, in addition to the instuction and state, a cycle counter is used to determine the control signals that should be sent out.  This cycle counter is a 3-bit counting register (allowing for at most 8 cycles per instruction) that increments on every clock cycle and sends its output to the control unit. Its only control signal is the Cycle Reset (CR) signal which resets the count to prepare for the next instruction.
 
 \subsubsection*{Inputs}
 \begin{itemize}
-\itemsep0em 
-\item LD - Load - when high, the current instruction (pointed to by IP) is loaded from program-ROM;
-\item Z - Zero-flag - from D;
-\item S - Skip-flag - from LS;
-\item A - Address-change-flag - from F;
-\item V - Value-change-flag - from F.
+\itemsep0em
+\item CR - Cycle Reset - Reset the count to 0;
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
-\item DATA\_OUT - 8 bits - Sends the current instruction (including flags) to the control unit.
+\itemsep0em
+\item CC\_OUT - 3 bits - Current value of the register (0-8).
 \end{itemize}
 
-
-\subsection{Memory (RAM)}  \label{sec:architecture:ram}
-The RAM stores the data (tape) upon which the BF program is acting (addresses 0x1000 and on). Its second purpose is to provide a stack to store program-addresses on in order to implement conditional loops (0x0000 to 0x00ff). It is connected to both the databus (which in turn connects to D and IP) and to the address-bus (which in turn connects to SP and DP).
+\subsection{Data Memory (RAM)}  \label{sec:architecture:ram}
+The RAM is divided into two parts: stack and data. The first 256 bytes (0x0000 - 0x00ff) make up the stack and are indexed by the stack pointer (\ref{sec:architecture:sp}). The data (corresponding to the BF tape) is stored at addresses 0x0100 through 0xffff and are indexed by the data pointer (\ref{sec:architecture:dp}). 
 
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_IN - 16 bits - connected to the databus (same lines as DATA\_OUT);
-\item ADDR\_IN - 16 bits - connected tot the address-bus;
-\item OE - Output Enable - the value at the current address is sent to the databus;
-\item WE - Write Enable - the value on the databus is loaded into the current address.
+\item DATA\_IN - 16 bits - Connected to the data bus (same lines as DATA\_OUT);
+\item ADDR\_IN - 16 bits - Connected to the address bus;
+\item OE - Output Enable - The value at the current address is sent to the databus;
+\item WE - Write Enable - The value on the databus is loaded into the current address.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_OUT - 16 bits - connected tot the databus (same lines as DATA\_IN);
+\item DATA\_OUT - 16 bits - Connected tot the databus (same lines as DATA\_IN)
 \end{itemize}
+
+\subsection{Program Memory (ROM)} \label{sec:architecture:rom}
+The actual BF instructions are stored in Read-Only-Memory (ROM) and are addressed by the IP (\ref{sec:architecture:ip}). A 4-bit instruction is stored at the address pointed to by the IP. It is sent to the CU where it is used to determine the set of control signals, together with the flags and cycle counter.
+
+\subsubsection*{Inputs}
+\begin{itemize}
+\itemsep0em 
+\item ADDR\_IN - 16 bits - Connected to the IP.
+\end{itemize}
+
+\subsubsection*{Outputs}
+\begin{itemize}
+\itemsep0em 
+\item INS\_OUT - 4 bits - Connected to the CU;
+\end{itemize}
+
 
 \subsection{Screen (SCR)}  \label{sec:architecture:scr}
-The output module (which is assumed to be a screen) will be attached to the databus and will display whatever is on there when enabled using the EN signal.
+The output module (which is assumed to be a screen) will be attached to the data bus and will display whatever is on the bus  when enabled using the EN signal.
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_IN - 8 bits - connected to the databus;
-\item EN: Enable Output - Display the contents of DATA\_IN on the next clock pulse. The way output is displayed is could vary depending on the implementation of the output device.
+\item DATA\_IN - 8 bits - connected to the data bus;
+\item EN: Enable Output - Display the contents of the bus on the next clock pulse. The way output is displayed could vary depending on the implementation of the output device.
 \end{itemize}
 
 \subsubsection*{Outputs}
@@ -185,27 +194,25 @@ None.
 
 
 \subsection{Keyboard (KB)} \label{sec:architecture:kb}
-The input device to the computer is assumed to be a keyboard of some sort, which contains a buffer from which an 8-bit value can be read. Immediately, a design choice has to be made: what happens if the buffer is empty? Either the program continues to run (immediate mode) or the program waits for something to appear in the buffer (buffered mode). The former is convenient for instance when playing games, while the latter is convenient for programs that require user input in order to continue meaningfully. Rather than deciding on either of these modes, we can just implement both. In the microcode table (Table \ref{tab:microcode}, Section \ref{sec:architecture:sequences}) there are two variants of the \texttt{,} command listed (the other one denoted by \texttt{'}), each of which has a different binary representation. When assembling a BF program, we simply pick one or the other and the program should run in the appropriate mode: \texttt{,} for buffered and \texttt{'} for immediate mode.
-
-The buffer of the module should contain all zero's when nothing is present. When running in immediate mode, the programmer should programmatically determine if a value was read and how to act accordingly. In buffered-mode however, after reading from the buffer, the control unit will use the Z-flag to determine whether or not to continue. As long as the value loaded into D is zero, control flow will loop around, trying to get a value from the input buffer. The only control signal going in to the input-module should therefore be the enable-signal, which makes the contents of the buffer available to the databus.
+The input device to the computer is assumed to be a keyboard of some sort, which contains a buffer from which an 8-bit value can be read. Immediately, a design choice has to be made: what happens if the buffer is empty? Either the program continues to run (immediate mode) or the program waits for something to appear in the buffer (buffered mode). The former is convenient for instance when playing games, while the latter is convenient for programs that require user input in order to continue meaningfully. Rather than deciding on either of these modes, we will implement both. In the microcode table (Table \ref{tab:microcode}, Section \ref{sec:architecture:sequences}) there are two variants of the \texttt{,} command listed (the other one denoted by \texttt{'}), each of which has a different binary representation. The assembler (\texttt{bfasm}) will provide the option to assemble the BF program using either of these modes.
 
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item EN - Enable - sends the contents of the input buffer to the databus.
+\item EN - Enable - Make the contents of the input buffer available on the databus.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_OUT - 8 bits - connected to the databus.
+\item KB\_OUT - 8 bits - Connected to the databus.
 \end{itemize}
 
 \subsection{Control Unit} \label{sec:architecture:cu}
-Each of the aforementioned components/modules has one or more control inputs that determine what happens on the next clock cycle. For example, some register-modules can be told to either load a value from their input, increment or decrement the currently stored value, or do nothing at all. It is the Control Unit (CU) that supplies the appropriate control signals to each of the modules before the next clock pulse occurs, depending on the current instruction and state determined by the flags. The implementation details of how this is done in hardware are discussed in section \ref{sec:implementation}.
+Each of the aforementioned components/modules has one or more control inputs that determine what happens on the next clock cycle. For example, some register-modules can be told to load a value from their input, increment or decrement the currently stored value, or do nothing at all. It is the Control Unit (CU) that supplies the appropriate control signals to each of the modules before the next clock pulse occurs, depending on the current instruction and state determined by the flags and cycle counter. The implementation details of how this is done in hardware are discussed in section \ref{sec:implementation}.
 
 \subsubsection*{Register Driver} \label{sec:architecture:cu:driver}
-Rather that having a seperate signal for each of the INC/DEC-inputs of each register (e.g.~ INC\_D, INC\_LS, etc), a driver module was designed (see \ref{sec:implementation:driver}) to drive the register modules that supports modification of its contents. In addition to a universal INC/DEC signal, three Register Select (RS) bits are used to index the target-register. This approach has two advantages:
+Rather that having a seperate signal for each of the INC/DEC-inputs of each register (e.g.~ INC\_D, INC\_LS, etc), a driver module was designed (see \ref{sec:implementation:driver}) to drive register modules that supports modification of its contents. In addition to a universal INC/DEC signal, three Register Select (RS) bits are used to index the target-register. This approach has two advantages:
 \begin{enumerate}
 \item It decreases the amount of control signals needed;
 \item The logic needed to drive the counting registers (74LS193) only needs to be implemented once.
@@ -217,13 +224,13 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
   \centering
   \begin{tabular}{c|c|c|c|c|c|c}
     Register & \#Bits & EN  & LD  & INC  & DEC & RS \\ \hline 
-    D        & 8     & x & x & x & x & 001 \\
-    DP       & 16    & x &   & x & x & 010 \\ 
-    SP       & 8     & x &   & x & x & 011 \\ 
-    IP       & 16    & x & x & x &   & 100 \\ 
-    LS       & 8     &   &   & x & x & 101 \\ 
-    F        & 4     &   & x &   &   & -   \\ 
-    I        & 8     &   & x &   &   & -   \\
+    D        & 8      & x   & x   & x    & x   & 001 \\
+    DP       & 16     & x   &     & x    & x   & 010 \\ 
+    SP       & 8      & x   &     & x    & x   & 011 \\ 
+    IP       & 16     & x   & x   & x    &     & 100 \\ 
+    LS       & 8      &     &     & x    & x   & 101 \\ 
+    FA       & 4      &     & x   &      &     & -   \\ 
+    FB       & 4      &     & x   &      &     & -   \\
   \end{tabular}
   \caption{Control signals available to each of the registers. The F and I register are not connected to the register driver.}
   \label{tab:registers}
@@ -233,8 +240,9 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em
-\item DATA\_IN - 8 bits - current instruction from I;
-\item CR - Cycle reset - reset the internal cycle counter to 0 to prepare for the next instruction.
+\item CC\_IN - 3 bits - Current cycle count value (from the Cycle Counter)
+\item INS\_IN - 4 bits - Current instruction (from program ROM)
+\item FLAGS\_IN - 4 bits - Current flags (from FB)
 \end{itemize}
 
 \subsubsection*{Outputs}
@@ -246,22 +254,22 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
 \item RS2 - Register Select, bit 2
 \item INC - Increment selected register
 \item DEC - Decrement selected register
-\item DPR - Reset datapointer
+\item DPR - Reset DP
 \item EN\_SP- Enable SP to address bus \footnote{Note that there is no EN\_DP since this signal is mutally exclusive with EN\_SP; whenever one is set, the other is unset and vice versa.}
 \item OE\_RAM - Output Enable RAM
 \item WE\_RAM - Write Enable RAM
 \item EN\_IN - Enable input (keyboard) to databus
 \item EN\_OUT - Enable output device
-\item SET\_V - Set V flag in F
-\item SET\_A - Set A flag in F
-\item LD\_I - Load I
-\item LD\_F - Load F
+\item SET\_V - Set V flag in FA
+\item SET\_A - Set A flag in FA
+\item LD\_FB - Load FB
+\item LD\_FA - Load FA
 \item EN\_IP - Enable IP
 \item EN\_D - Enable D to databus
 \item LD\_D - Load D
 \item LD\_IP - Load IP
-\item CR - Cycle Reset (CU)
-\item ERR - Error Signal (CU)
+\item CR - Cycle Reset
+\item ERR - Error Signal
 \end{itemize}
 
 
