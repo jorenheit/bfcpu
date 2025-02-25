@@ -2,19 +2,13 @@
 
 #include "LiquidCrystal_74HC595.h"
 #include "settings.h"
-#include "staticstring.h"
-
-
-#define RING_BUF_CAPACITY 256 // Do not change
+#include "ringbuffer.h"
 
 class LCDBuffer {
   LiquidCrystal_74HC595 lcd;
-  
-  char ringBuf[RING_BUF_CAPACITY];
-  volatile uint8_t ringBufHead = 0;
-  uint8_t ringBufTail = 0;
-
+  RingBuffer<char, 256> ringBuf;
   char screenBuf[TOTAL_LINES][LINE_SIZE + 1];
+
   uint8_t pos = 0;
   uint8_t currentLine = 0;
   uint8_t topLine = 0;
@@ -26,11 +20,7 @@ class LCDBuffer {
   unsigned long directTimeout = 0;
 
   DisplayMode mode = ASCII;
-
   static_assert(TOTAL_LINES <= 128, "TOTAL_LINES cannot exceed 128.");
-  static_assert(RING_BUF_CAPACITY == 256, "RING_BUF_CAPACITY should be 256 bytes.");
-  static_assert(sizeof(ringBufHead) == 1, "sizeof(ringBufHead) should be 1 byte.");
-  static_assert(sizeof(ringBufTail) == 1, "sizeof(ringBufTail) should be 1 byte.");
 
 public:
   LCDBuffer();
