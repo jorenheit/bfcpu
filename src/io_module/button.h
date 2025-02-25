@@ -38,6 +38,10 @@ public:
 
     return currentState;
   }
+
+  ButtonState state() const {
+    return currentState;
+  }
 };
 
 template <int Pin>
@@ -53,20 +57,31 @@ private:
   }
 };
 
+struct ChangeState {
+  using ButtonBaseRef = ButtonBase &;
+};
+
+struct PeekState {
+  using ButtonBaseRef = ButtonBase const &;
+};
+
+template <typename StatePolicy>
 class ButtonPair: public ButtonBase {
-  ButtonBase *button1;
-  ButtonBase *button2;
+  using ButtonBaseRef = typename StatePolicy::ButtonBaseRef;
+  
+  ButtonBaseRef button1;
+  ButtonBaseRef button2;
 
 public:
-  ButtonPair(ButtonBase &b1, ButtonBase &b2):
-    button1(&b1),
-    button2(&b2)
+  ButtonPair(ButtonBaseRef b1, ButtonBaseRef b2):
+    button1(b1),
+    button2(b2)
   {}
 
 private:
   virtual bool read() {
-    ButtonState const s1 = button1->state();
-    ButtonState const s2 = button2->state();
+    ButtonState const s1 = button1.state();
+    ButtonState const s2 = button2.state();
 
     bool const b1High = (s1 == ButtonState::Rising) || (s1 == ButtonState::High);
     bool const b2High = (s2 == ButtonState::Rising) || (s2 == ButtonState::High);
