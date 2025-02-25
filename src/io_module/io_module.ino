@@ -8,7 +8,7 @@ LCDBuffer lcdBuffer;
 Keyboard keyboard;
 Button<SCROLL_UP_PIN>   scrollUpButton;
 Button<SCROLL_DOWN_PIN> scrollDownButton;
-ButtonPair modeChangeButton(scrollUpButton, scrollDownButton);
+ButtonPair<PeekState> modeChangeButton(scrollUpButton, scrollDownButton);
 
 void setup() {
   pinMode(SYSTEM_CLOCK_INTERRUPT_PIN, INPUT);
