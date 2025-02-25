@@ -1,11 +1,12 @@
 #include "settings.h"
 #include "common.h"
 #include "lcdbuffer.h"
-#include "keyboard.h"
+#include "keyboardbuffer.h"
 #include "button.h"
+#include "ringbuffer.h"
 
 LCDBuffer lcdBuffer;
-Keyboard keyboard;
+KeyboardBuffer kbBuffer;
 Button<SCROLL_UP_PIN>   scrollUpButton;
 Button<SCROLL_DOWN_PIN> scrollDownButton;
 ButtonPair<PeekState> modeChangeButton(scrollUpButton, scrollDownButton);
@@ -18,7 +19,7 @@ void setup() {
   
   scrollUpButton.begin();
   scrollDownButton.begin();
-  keyboard.begin();
+  kbBuffer.begin();
   lcdBuffer.begin("READY!");
 
   attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClock, RISING);
@@ -26,6 +27,7 @@ void setup() {
 
 void loop() {
   handleButtons();
+  kbBuffer.update();
   lcdBuffer.send();
 }
 
@@ -80,7 +82,7 @@ void onSystemClock() {
     switch (kb_state) {
       case IDLE: {
         setIOPinsToOutput();
-        writeByteToBus(keyboard.get());
+        writeByteToBus(kbBuffer.get());
         kb_state = WAIT;
         return;
       }

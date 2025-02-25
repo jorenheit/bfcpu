@@ -14,7 +14,8 @@ void LCDBuffer::begin(char const *msg) {
 }
 
 void LCDBuffer::push(byte const c) {
-  ringBuf[ringBufHead++] = c;
+  ringBuf.push(c);
+  // ignore failure; data is simply lost
 }
 
 void LCDBuffer::push(char const *str) {
@@ -30,10 +31,12 @@ void LCDBuffer::update() {
     (mode == DECIMAL)     ? &LCDBuffer::insertAsDecimal
                           : &LCDBuffer::insertAsHex;
 
-  // Update screen-buffer by pushing all new bytes from the ring-buffer into it. 
-  uint8_t const head = ringBufHead; // local copy, ringBufHead might be changed by interrupt
-  bool const newData = ringBufTail != head;
-  while (ringBufTail != head) (this->*insert)(ringBuf[ringBufTail++]);
+  // Copy new data from ringBuf into the screenBuf using the selected insert function.
+  bool newData = false;
+  while (ringBuf.available()) {
+    (this->*insert)(ringBuf.get().value);
+    newData = true;
+  }
   if (newData) bringIntoView();
 }
 

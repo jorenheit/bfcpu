@@ -72,3 +72,7 @@ static_assert((int)NUMBER_MODE == (int)HEXADECIMAL || (int)NUMBER_MODE == (int)D
 static_assert(NUMBER_SEPARATOR >= 32 && NUMBER_SEPARATOR <= 126, 
   "NUMBER_SEPARATOR must be printable (32 - 126).");
 
+enum KeyboardParams: int {
+  KEYBOARD_TIMEOUT = 250
+};
+
