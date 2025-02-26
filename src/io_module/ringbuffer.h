@@ -22,11 +22,11 @@ class RingBufferBase {
   volatile IndexType tail;
 
 public:
-  bool push(ValueType const &val) {
+  bool put(ValueType const &val) {
     IndexType const nextHead = Derived::next(head);
     if (nextHead != tail) {
       buffer[head] = val;
-      // Memory barrier agains race conditions with get()
+      // Memory barrier agains race conditions with get().
       // This makes sure that buffer[head] is updated BEFORE head 
       // is incremented. If not, get() could retrieve the old value
       // still stored at this location.
@@ -45,8 +45,8 @@ public:
   }
 
   Result peek() const {
-    if (head == tail) return Result{ValueType{}, false};
-    return Result{buffer[tail], true};
+    return (head == tail) ? Result{ValueType{}, false} 
+                          : Result{buffer[tail], true};
   }
 
   inline bool available() const {

@@ -14,7 +14,7 @@ void LCDBuffer::begin(char const *msg) {
 }
 
 void LCDBuffer::push(byte const c) {
-  ringBuf.push(c);
+  ringBuf.put(c);
   // ignore failure; data is simply lost
 }
 

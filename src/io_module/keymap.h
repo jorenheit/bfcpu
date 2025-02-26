@@ -1,3 +1,5 @@
+#define PS2_KEYMAP_SIZE 136
+
 static constexpr PROGMEM uint8_t noShiftKeymap[PS2_KEYMAP_SIZE] = {
 	0, PS2_F9, 0, PS2_F5, PS2_F3, PS2_F1, PS2_F2, PS2_F12,
 	0, PS2_F10, PS2_F8, PS2_F6, PS2_F4, PS2_TAB, '`', 0,
