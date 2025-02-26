@@ -1,11 +1,9 @@
 #pragma once
 
-#include "LiquidCrystal_74HC595.h"
 #include "settings.h"
 #include "ringbuffer.h"
 
 class LCDBuffer {
-  LiquidCrystal_74HC595 lcd;
   RingBuffer<char, 256> ringBuf;
   char screenBuf[TOTAL_LINES][LINE_SIZE + 1];
 
@@ -16,44 +14,40 @@ class LCDBuffer {
   uint8_t topVisibleLine = 0;
   uint8_t bottomVisibleLine = VISIBLE_LINES - 1;
   
-  bool changed = false;
-  unsigned long directTimeout = 0;
-
+  mutable bool changed = false;
   DisplayMode mode = ASCII;
-  static_assert(TOTAL_LINES <= 128, "TOTAL_LINES cannot exceed 128.");
+
+  static_assert(TOTAL_LINES <= 256, "TOTAL_LINES cannot exceed 256.");
 
 public:
   LCDBuffer();
 
-  void begin(char const *msg = 0);
-  void push(byte const c);
-  void push(char const *str);
-  void send(bool const forced = false);
+  void enqueue(byte const c);
+  void enqueue(char const *str);
+  void update();
+  
   void scrollDown(uint8_t n = 1);
   void scrollUp(uint8_t n = 1);
-  void clear(char const *msg = 0);
-  void nextMode(bool const prompt);
-  void previousMode(bool const prompt);
+  void clear();
 
-  template <typename ... Args>
-  void direct(int timeout, Args ... args) {
-    static_assert(sizeof ... (Args) <= VISIBLE_LINES, "Too many lines");
-    char const *lines[] = {args ...};
-    lcd.clear();
-    for (uint8_t idx = 0; idx != sizeof...(args); ++idx) {
-      lcd.setCursor(0, idx);
-      lcd.print(lines[idx]);
-    }
-    lcd.noCursor();
-    directTimeout = millis() + timeout;
-  }
+  DisplayMode setMode(DisplayMode const mode);
+  DisplayMode nextMode();
+  DisplayMode previousMode();
+  DisplayMode currentMode() const;
 
+  struct View {
+    char const *lines[VISIBLE_LINES];
+    uint8_t cursorRow;
+    uint8_t cursorCol;
+    size_t id;
+  };
+
+  View view() const;
   
 private:
   void insertAsAscii(byte const c);
   void insertAsHex(byte const c);
   void insertAsDecimal(byte const c);
-  void update();
   void clearLine(uint8_t const idx);
   void bringIntoView();
   void enter();

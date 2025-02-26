@@ -1,26 +1,18 @@
 #include "lcdbuffer.h"
 
-LCDBuffer::LCDBuffer():
-  lcd(LINE_SIZE, VISIBLE_LINES)
-{}
-
-void LCDBuffer::begin(char const *msg) {
-  lcd.begin();
-  lcd.cursor();
-  lcd.blink();
-  
+LCDBuffer::LCDBuffer()
+{
   clear();
-  if (msg) direct(DIRECT_MESSAGE_TIME, msg);
 }
 
-void LCDBuffer::push(byte const c) {
+void LCDBuffer::enqueue(byte const c) {
   ringBuf.put(c);
   // ignore failure; data is simply lost
 }
 
-void LCDBuffer::push(char const *str) {
+void LCDBuffer::enqueue(char const *str) {
   uint8_t idx = 0;
-  while (str[idx] != 0) push(str[idx++]);
+  while (str[idx] != 0) enqueue(str[idx++]);
 }
 
 void LCDBuffer::update() {
@@ -40,38 +32,19 @@ void LCDBuffer::update() {
   if (newData) bringIntoView();
 }
 
-void LCDBuffer::send(bool const forced) {
-  // Update screen-buffer
-  update(); 
+LCDBuffer::View LCDBuffer::view() const {
+  static size_t count = 0;
 
-  // Check if the screen is claimed by a direct message
-  if (directTimeout && (millis() < directTimeout)) {
-    return;
-  }
-  directTimeout = 0;
-
-  // Check if it is necessary to update the screen
-  if (!changed && !forced) return;
-
-  // Screen-buffer is now up-to-date -> send visible lines to screen
+  View view;
   for (uint8_t line = 0; line != VISIBLE_LINES; ++line) {
-    lcd.setCursor(0, line);
-    lcd.print(screenBuf[(topVisibleLine + line) % TOTAL_LINES]);
+    view.lines[line] = screenBuf[(topVisibleLine + line) % TOTAL_LINES];
   }
-  // Display cursor at the position where the next character will be printed (if in view).
-  int8_t const offset = normalize(currentLine) - normalize(topVisibleLine);
-  if (offset >= 0 && offset < VISIBLE_LINES) {
-    lcd.setCursor(pos, offset);
-    lcd.cursor();
-  }
-  else {
-    // Cursor not in view -> turn off
-    lcd.noCursor();
-  }
+  view.cursorRow = normalize(currentLine) - normalize(topVisibleLine); 
+  view.cursorCol = pos;
+  view.id = changed ? ++count : count;
 
-  // Reset changed flag and return
   changed = false;
-  return;
+  return view;
 }
 
 void LCDBuffer::insertAsHex(byte const c) {
@@ -170,7 +143,7 @@ void LCDBuffer::clearLine(uint8_t const idx) {
   changed = true;
 }
 
-void LCDBuffer::clear(char const *msg) {
+void LCDBuffer::clear() {
   for (uint8_t i = 0; i != TOTAL_LINES; ++i) 
     clearLine(i);
 
@@ -180,8 +153,6 @@ void LCDBuffer::clear(char const *msg) {
   topLine = 0;
   bottomLine = TOTAL_LINES - 1;
   pos = 0;
-
-  if (msg) direct(DIRECT_MESSAGE_TIME, msg);
 }
 
 uint8_t LCDBuffer::normalize(uint8_t const line) const {
@@ -189,15 +160,18 @@ uint8_t LCDBuffer::normalize(uint8_t const line) const {
   return (line - topLine + TOTAL_LINES) % TOTAL_LINES;
 }
 
-void LCDBuffer::nextMode(bool const prompt) {
-  mode = static_cast<DisplayMode>((mode + 1) % N_MODES);
-  if (prompt)
-    direct(DIRECT_MESSAGE_TIME, "Mode: ", displayModeString[mode]);
+DisplayMode LCDBuffer::nextMode() {
+  return mode = static_cast<DisplayMode>((mode + 1) % N_MODES);
 }
 
-void LCDBuffer::previousMode(bool const prompt) {
-  mode = static_cast<DisplayMode>((mode - 1 + N_MODES) % N_MODES);
-  if (prompt)
-    direct(DIRECT_MESSAGE_TIME, "Mode: ", displayModeString[mode]);
+DisplayMode LCDBuffer::previousMode() {
+  return mode = static_cast<DisplayMode>((mode - 1 + N_MODES) % N_MODES);
 }
 
+DisplayMode LCDBuffer::setMode(DisplayMode const mode_) {
+  return mode = static_cast<DisplayMode>(mode_ % N_MODES);
+}
+
+DisplayMode LCDBuffer:: currentMode() const {
+  return mode;
+}
