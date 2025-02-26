@@ -6,7 +6,7 @@ void KeyboardBuffer::begin() {
 
 void KeyboardBuffer::update() {
   while (kb.available()) {
-    ringBuf.push(kb.read());
+    ringBuf.put(kb.read());
   }
 }
 
