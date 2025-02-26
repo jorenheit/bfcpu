@@ -1,12 +1,15 @@
 #include "settings.h"
 #include "common.h"
 #include "lcdbuffer.h"
+#include "lcdscreen.h"
 #include "keyboardbuffer.h"
 #include "button.h"
 #include "ringbuffer.h"
 
 LCDBuffer lcdBuffer;
 KeyboardBuffer kbBuffer;
+LCDScreen lcdScreen;
+
 Button<SCROLL_UP_PIN>   scrollUpButton;
 Button<SCROLL_DOWN_PIN> scrollDownButton;
 ButtonPair<PeekState> modeChangeButton(scrollUpButton, scrollDownButton);
@@ -20,7 +23,7 @@ void setup() {
   scrollUpButton.begin();
   scrollDownButton.begin();
   kbBuffer.begin();
-  lcdBuffer.begin("READY!");
+  lcdScreen.begin("READY!");
 
   attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClock, RISING);
 }
@@ -28,7 +31,8 @@ void setup() {
 void loop() {
   handleButtons();
   kbBuffer.update();
-  lcdBuffer.send();
+  lcdBuffer.update();
+  lcdScreen.display(lcdBuffer.view());
 }
 
 void handleButtons() {
@@ -44,14 +48,16 @@ void handleButtons() {
   static bool clearingAllowed = false;
 
   if (modeChangeState == ButtonState::Rising) {
-    lcdBuffer.nextMode(true);
+    DisplayMode mode = lcdBuffer.nextMode();
+    lcdScreen.displayTemp(TEMP_MESSAGE_TIMEOUT, "Mode: ", displayModeString[mode]);
     holdToClearStartTime = currentTime;
     clearingAllowed = true;
   }
   else if (modeChangeState == ButtonState::High) {
     if (clearingAllowed && (currentTime - holdToClearStartTime) > HOLD_TO_CLEAR_TIME) {
-      lcdBuffer.clear("CLEAR!");
-      lcdBuffer.previousMode(false);
+      lcdBuffer.clear();
+      lcdBuffer.previousMode();
+      lcdScreen.displayTemp(TEMP_MESSAGE_TIMEOUT, "CLEAR!");
       clearingAllowed = false;
     }
   }
@@ -74,7 +80,7 @@ void onSystemClock() {
   static volatile KeyboardState kb_state = IDLE;
 
   if (kb_state == IDLE && digitalRead<DISPLAY_ENABLE_PIN>()) {
-    lcdBuffer.push(readByteFromBus());
+    lcdBuffer.enqueue(readByteFromBus());
     return;
   }
 
