@@ -3,16 +3,18 @@
 #include "lcdbuffer.h"
 #include "lcdscreen.h"
 #include "keyboardbuffer.h"
+#include "lcdmenu.h"
 #include "button.h"
 #include "ringbuffer.h"
 
 LCDBuffer lcdBuffer;
 KeyboardBuffer kbBuffer;
 LCDScreen lcdScreen;
+LCDMenu lcdMenu(lcdBuffer, lcdScreen);
 
 Button<SCROLL_UP_PIN>   scrollUpButton;
 Button<SCROLL_DOWN_PIN> scrollDownButton;
-ButtonPair<PeekState> modeChangeButton(scrollUpButton, scrollDownButton);
+ButtonPair<PeekState> menuButton(scrollUpButton, scrollDownButton);
 
 void setup() {
   pinMode(SYSTEM_CLOCK_INTERRUPT_PIN, INPUT);
@@ -23,6 +25,8 @@ void setup() {
   scrollUpButton.begin();
   scrollDownButton.begin();
   kbBuffer.begin();
+  lcdBuffer.begin();
+  lcdMenu.begin();
   lcdScreen.begin("READY!");
 
   attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClock, RISING);
@@ -38,30 +42,24 @@ void loop() {
 void handleButtons() {
   ButtonState const scrollUpState = scrollUpButton.state();
   ButtonState const scrollDownState = scrollDownButton.state();
-  ButtonState const modeChangeState = modeChangeButton.state();
+  ButtonState const menuButtonState = menuButton.state();
+
+  // Check if menu active. If so, forward button states to menu to handle
+  if (lcdMenu.active()) {
+    lcdMenu.handleButtons(scrollUpState, scrollDownState, menuButtonState);
+    return;
+  }
+  
+  if (menuButtonState == ButtonState::Rising) {
+    lcdMenu.enter();
+    return;
+  }
 
   unsigned long currentTime = millis();
   static unsigned long previousScrollTime = 0;
   bool const scrollingAllowed = (currentTime - previousScrollTime) > NO_SCROLL_DELAY;
-  
-  static unsigned long holdToClearStartTime = 0;
-  static bool clearingAllowed = false;
 
-  if (modeChangeState == ButtonState::Rising) {
-    DisplayMode mode = lcdBuffer.nextMode();
-    lcdScreen.displayTemp(TEMP_MESSAGE_TIMEOUT, "Mode: ", displayModeString[mode]);
-    holdToClearStartTime = currentTime;
-    clearingAllowed = true;
-  }
-  else if (modeChangeState == ButtonState::High) {
-    if (clearingAllowed && (currentTime - holdToClearStartTime) > HOLD_TO_CLEAR_TIME) {
-      lcdBuffer.clear();
-      lcdBuffer.previousMode();
-      lcdScreen.displayTemp(TEMP_MESSAGE_TIMEOUT, "CLEAR!");
-      clearingAllowed = false;
-    }
-  }
-  else if (scrollingAllowed && scrollUpState == ButtonState::High) {
+  if (scrollingAllowed && scrollUpState == ButtonState::High) {
     lcdBuffer.scrollUp();
     previousScrollTime = currentTime;
   }
@@ -88,7 +86,9 @@ void onSystemClock() {
     switch (kb_state) {
       case IDLE: {
         setIOPinsToOutput();
-        writeByteToBus(kbBuffer.get());
+        byte const val = kbBuffer.get();
+        writeByteToBus(val);
+        lcdBuffer.enqueueEcho(val);
         kb_state = WAIT;
         return;
       }

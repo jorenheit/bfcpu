@@ -20,7 +20,7 @@ protected:
 public:
   ButtonState state() {
     if (currentState == ButtonState::Rising) return (currentState = ButtonState::High);
-    else if (currentState == ButtonState::Falling) return currentState = ButtonState::Low;
+    else if (currentState == ButtonState::Falling) return (currentState = ButtonState::Low);
 
     unsigned long currentTime = millis();
     if (currentTime - lastStateChangeTime < BUTTON_DEBOUNCE_DELAY)

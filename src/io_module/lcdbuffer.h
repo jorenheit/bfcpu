@@ -16,15 +16,16 @@ class LCDBuffer {
   
   mutable bool changed = false;
   DisplayMode mode = ASCII;
+  bool autoScroll = true;
+  bool echoEnabled = false;
 
   static_assert(TOTAL_LINES <= 256, "TOTAL_LINES cannot exceed 256.");
 
 public:
-  LCDBuffer();
-
-  void enqueue(byte const c);
-  void enqueue(char const *str);
+  void begin();
   void update();
+  void enqueue(byte const c);
+  void enqueueEcho(byte const c);
   
   void scrollDown(uint8_t n = 1);
   void scrollUp(uint8_t n = 1);
@@ -34,6 +35,9 @@ public:
   DisplayMode nextMode();
   DisplayMode previousMode();
   DisplayMode currentMode() const;
+
+  void setAutoScroll(bool const val);
+  void setEchoEnabled(bool const val);
 
   struct View {
     char const *lines[VISIBLE_LINES];

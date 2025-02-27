@@ -1,18 +1,16 @@
 #include "lcdbuffer.h"
 
-LCDBuffer::LCDBuffer()
-{
+void LCDBuffer::begin() {
   clear();
 }
 
 void LCDBuffer::enqueue(byte const c) {
   ringBuf.put(c);
-  // ignore failure; data is simply lost
 }
 
-void LCDBuffer::enqueue(char const *str) {
-  uint8_t idx = 0;
-  while (str[idx] != 0) enqueue(str[idx++]);
+void LCDBuffer::enqueueEcho(byte const c) {
+  if (echoEnabled && c)
+    enqueue(c);
 }
 
 void LCDBuffer::update() {
@@ -29,7 +27,7 @@ void LCDBuffer::update() {
     (this->*insert)(ringBuf.get().value);
     newData = true;
   }
-  if (newData) bringIntoView();
+  if (newData && autoScroll) bringIntoView();
 }
 
 LCDBuffer::View LCDBuffer::view() const {
@@ -172,6 +170,14 @@ DisplayMode LCDBuffer::setMode(DisplayMode const mode_) {
   return mode = static_cast<DisplayMode>(mode_ % N_MODES);
 }
 
-DisplayMode LCDBuffer:: currentMode() const {
+DisplayMode LCDBuffer::currentMode() const {
   return mode;
+}
+
+void LCDBuffer::setAutoScroll(bool const val) {
+  autoScroll = val;
+}
+
+void LCDBuffer::setEchoEnabled(bool const val) {
+  echoEnabled = val;
 }
