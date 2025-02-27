@@ -3,17 +3,13 @@
 #include "button.h"
 #include "lcdbuffer.h"
 #include "lcdscreen.h"
-
-namespace MenuTree {
-  struct MenuItem;
-  extern MenuItem rootMenu;
-}
+struct MenuItem;
 
 class LCDMenu {
   unsigned long _lastActiveTime = 0;
   LCDBuffer &_buffer;
   LCDScreen &_screen;
-  MenuTree::MenuItem *_current = &MenuTree::rootMenu;
+  MenuItem *_current;
 
 public:
   LCDMenu(LCDBuffer &buf, LCDScreen &scr);
