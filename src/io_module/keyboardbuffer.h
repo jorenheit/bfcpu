@@ -11,4 +11,5 @@ public:
   void begin();
   void update();
   char get();
+  char peek() const;
 };

@@ -13,6 +13,7 @@ public:
   void begin(char const *msg = 0);
   void display(LCDBuffer::View const &view, bool forced = false); 
   void displayTemp(char const *lines[], uint8_t const n, size_t const timeout);
+  void clear();
 
   template <typename ... Args>
   void displayTemp(size_t const timeout, Args ... args) {

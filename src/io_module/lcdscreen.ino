@@ -58,3 +58,8 @@ void LCDScreen::displayTemp(char const *lines[], uint8_t const n, size_t const t
   lcd.noCursor();
   tempTimeout = millis() + timeout;
 }
+
+void LCDScreen::clear() {
+  lcd.clear();
+  tempTimeout = 0;
+}
