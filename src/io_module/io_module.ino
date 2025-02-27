@@ -44,7 +44,6 @@ void handleButtons() {
   ButtonState const scrollDownState = scrollDownButton.state();
   ButtonState const menuButtonState = menuButton.state();
 
-  // Check if menu active. If so, forward button states to menu to handle
   if (lcdMenu.active()) {
     lcdMenu.handleButtons(scrollUpState, scrollDownState, menuButtonState);
     return;
