@@ -4,7 +4,7 @@
 #include "ringbuffer.h"
 
 class LCDBuffer {
-  RingBuffer<char, 256> ringBuf;
+  RingBuffer<char, LCD_RING> ringBuf;
   char screenBuf[TOTAL_LINES][LINE_SIZE + 1];
 
   uint8_t pos = 0;
@@ -15,9 +15,12 @@ class LCDBuffer {
   uint8_t bottomVisibleLine = VISIBLE_LINES - 1;
   
   mutable bool changed = false;
+
+  // Settings
   DisplayMode mode = ASCII;
-  bool autoScroll = true;
+  bool autoscrollEnabled = true;
   bool echoEnabled = false;
+  char delimiter = '|';
 
   static_assert(TOTAL_LINES <= 256, "TOTAL_LINES cannot exceed 256.");
 
@@ -36,8 +39,9 @@ public:
   DisplayMode previousMode();
   DisplayMode currentMode() const;
 
-  void setAutoScroll(bool const val);
+  void setAutoscrollEnabled(bool const val);
   void setEchoEnabled(bool const val);
+  void setDelimiter(char const delim);
 
   struct View {
     char const *lines[VISIBLE_LINES];

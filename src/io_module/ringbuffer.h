@@ -1,5 +1,30 @@
 #pragma once
 
+namespace Helper {
+  template <int Bytes>
+  struct GetIndexTypeFromBytes;
+
+  template <>
+  struct GetIndexTypeFromBytes<1> {
+    using Type = uint8_t;
+  };
+
+  template <>
+  struct GetIndexTypeFromBytes<2> {
+    using Type = uint16_t;
+  };
+
+  template <>
+  struct GetIndexTypeFromBytes<4> {
+    using Type = uint32_t;
+  };
+  
+  template <typename ValueType> 
+  struct GetIndexType {
+    using Type = typename GetIndexTypeFromBytes<sizeof(ValueType)>::Type;
+  };
+}
+
 template <typename T>
 struct RingBufferResult {
   T value;
@@ -9,11 +34,12 @@ struct RingBufferResult {
   }
 };
 
-template <typename, size_t>
+template <typename, uint32_t>
 class RingBuffer;
 
-template <typename ValueType, size_t N, typename IndexType = size_t>
+template <typename ValueType, uint32_t N, typename IndexType = typename Helper::GetIndexType<ValueType>::Type>
 class RingBufferBase {
+  static_assert(N <= (1 << 8 * sizeof(IndexType)), "IndexType not big enough to index RingBuffer of N elements"); 
   using Derived = RingBuffer<ValueType, N>;
   using Result = RingBufferResult<ValueType>;
 
@@ -54,7 +80,7 @@ public:
   }
 };
 
-template <typename ValueType, size_t N>
+template <typename ValueType, uint32_t N>
 class RingBuffer: public RingBufferBase<ValueType, N> {
 public:
   inline static size_t next(size_t const index) {
@@ -63,7 +89,7 @@ public:
 };
 
 template <typename ValueType>
-class RingBuffer<ValueType, 256>: public RingBufferBase<ValueType, 256, uint8_t> {
+class RingBuffer<ValueType, (1UL << 8)>: public RingBufferBase<ValueType, (1UL << 8)> {
 public:
   inline static size_t next(size_t const index) {
     return index + 1;
@@ -71,7 +97,15 @@ public:
 };
 
 template <typename ValueType>
-class RingBuffer<ValueType, 65535>: public RingBufferBase<ValueType, 65535, uint16_t> {
+class RingBuffer<ValueType, (1UL << 16)>: public RingBufferBase<ValueType, (1UL << 16)> {
+public:
+  inline static size_t next(size_t const index) {
+    return index + 1;
+  }  
+};
+
+template <typename ValueType>
+class RingBuffer<ValueType, -1UL>: public RingBufferBase<ValueType, -1UL> {
 public:
   inline static size_t next(size_t const index) {
     return index + 1;
