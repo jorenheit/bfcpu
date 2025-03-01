@@ -1,6 +1,6 @@
 #pragma once
 
-#define LCD_COMMAND_EXECUTION_MICROS 40
+#define LCD_COMMAND_EXECUTION_MICROS 45
 
 enum LCDDriverPins: uint8_t {
   // Connections frp, Shift Register to Arduino
@@ -57,8 +57,6 @@ enum LCDParams: int {
   TOTAL_LINES = 20,
   LINE_SIZE = 16,
   TAB_WIDTH = 4,
-  NUMBER_MODE = HEXADECIMAL,
-  NUMBER_SEPARATOR = '|',
   BUTTON_DEBOUNCE_DELAY = 200,
   BOOT_MESSAGE_DELAY = 500,
   NO_SCROLL_DELAY = 200,
@@ -67,13 +65,13 @@ enum LCDParams: int {
   HOLD_TO_CLEAR_TIME = 2000
 };
 
-static_assert((int)NUMBER_MODE == (int)HEXADECIMAL || (int)NUMBER_MODE == (int)DECIMAL, 
-  "NUMBER_MODE must be either DECIMAL or HEXADECIMAL");
-
-static_assert(NUMBER_SEPARATOR >= 32 && NUMBER_SEPARATOR <= 126, 
-  "NUMBER_SEPARATOR must be printable (32 - 126).");
-
 enum KeyboardParams: int {
   KEYBOARD_TIMEOUT = 250
+};
+
+enum IOBuffers: uint8_t {
+  KB_RING1 = 128,
+  KB_RING2 = 128,
+  LCD_RING = 128
 };
 

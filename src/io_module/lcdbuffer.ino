@@ -27,7 +27,7 @@ void LCDBuffer::update() {
     (this->*insert)(ringBuf.get().value);
     newData = true;
   }
-  if (newData && autoScroll) bringIntoView();
+  if (newData && autoscrollEnabled) bringIntoView();
 }
 
 LCDBuffer::View LCDBuffer::view() const {
@@ -49,14 +49,14 @@ void LCDBuffer::insertAsHex(byte const c) {
   static char const hexChars[] = "0123456789ABCDEF";
   insertAsAscii(hexChars[(c >> 4) & 0x0f]); // high nibble
   insertAsAscii(hexChars[(c >> 0) & 0x0f]); // low nibble 
-  insertAsAscii(NUMBER_SEPARATOR);
+  insertAsAscii(delimiter);
 }
 
 void LCDBuffer::insertAsDecimal(byte const c) {
   insertAsAscii('0' + (c / 100));
   insertAsAscii('0' + (c % 100) / 10);
   insertAsAscii('0' + (c % 10));
-  insertAsAscii(NUMBER_SEPARATOR);
+  insertAsAscii(delimiter);
 }
 
 void LCDBuffer::insertAsAscii(byte const c) {
@@ -174,10 +174,14 @@ DisplayMode LCDBuffer::currentMode() const {
   return mode;
 }
 
-void LCDBuffer::setAutoScroll(bool const val) {
-  autoScroll = val;
+void LCDBuffer::setAutoscrollEnabled(bool const val) {
+  autoscrollEnabled = val;
 }
 
 void LCDBuffer::setEchoEnabled(bool const val) {
   echoEnabled = val;
+}
+
+void LCDBuffer::setDelimiter(char const delim) {
+  delimiter = delim;
 }

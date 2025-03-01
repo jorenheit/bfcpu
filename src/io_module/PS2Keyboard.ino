@@ -3,7 +3,7 @@
 namespace Impl {
   uint8_t CharBuffer = 0;
   uint8_t UTF8next = 0;
-  RingBuffer<uint8_t, 256> ringBuf;
+  RingBuffer<uint8_t, KB_RING1> ringBuf;
 
   void ps2interrupt()
   {

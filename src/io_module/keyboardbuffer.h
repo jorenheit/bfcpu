@@ -5,7 +5,7 @@
 class KeyboardBuffer {
   
   PS2Keyboard kb;
-  RingBuffer<char, 256> ringBuf;
+  RingBuffer<char, KB_RING2> ringBuf;
 
 public:
   void begin();

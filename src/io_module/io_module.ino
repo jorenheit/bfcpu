@@ -3,18 +3,17 @@
 #include "lcdbuffer.h"
 #include "lcdscreen.h"
 #include "keyboardbuffer.h"
-#include "lcdmenu.h"
 #include "button.h"
-#include "ringbuffer.h"
+#include "lcdmenu.h"
 
-LCDBuffer lcdBuffer;
 KeyboardBuffer kbBuffer;
-LCDScreen lcdScreen;
-LCDMenu lcdMenu(lcdBuffer, lcdScreen);
+LCDBuffer      lcdBuffer;
+LCDScreen      lcdScreen;
+LCDMenu        lcdMenu(lcdBuffer, lcdScreen);
 
 Button<SCROLL_UP_PIN>   scrollUpButton;
 Button<SCROLL_DOWN_PIN> scrollDownButton;
-ButtonPair<PeekState> menuButton(scrollUpButton, scrollDownButton);
+ButtonPair<PeekState>   menuButton(scrollUpButton, scrollDownButton);
 
 void setup() {
   pinMode(SYSTEM_CLOCK_INTERRUPT_PIN, INPUT);
@@ -26,7 +25,6 @@ void setup() {
   scrollDownButton.begin();
   kbBuffer.begin();
   lcdBuffer.begin();
-  lcdMenu.begin();
   lcdScreen.begin("READY!");
 
   attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClock, RISING);
