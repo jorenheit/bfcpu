@@ -1,5 +1,32 @@
 #pragma once
 
+extern volatile size_t tickCount;
+
+inline void tic() {
+  tickCount = 0;
+}
+
+inline size_t toc() {
+  return tickCount;
+}
+
+double measureFrequency() {
+  static double lastKnownFrequency = 0;
+  static unsigned long lastMeasured = 0;
+
+  unsigned long currentTime = millis();
+  if (lastMeasured && currentTime - lastMeasured < FREQUENCY_UPDATE_INTERVAL) {
+    return lastKnownFrequency;
+  }
+
+  tic();
+  while (millis() - currentTime < FREQUENCY_MEASUREMENT_TIME) {}
+  uint32_t const count = toc();
+
+  lastMeasured = currentTime + FREQUENCY_MEASUREMENT_TIME;
+  return (lastKnownFrequency = static_cast<double>(count) / FREQUENCY_MEASUREMENT_TIME);
+}
+
 inline __attribute__((always_inline)) 
 void setIOPinsToOutput() {
   DDRC |= B00000001;

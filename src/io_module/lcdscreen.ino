@@ -8,7 +8,7 @@ void LCDScreen::begin(char const *msg) {
   lcd.begin();
   lcd.cursor();
   lcd.blink();
-  if (msg) displayTemp(TEMP_MESSAGE_TIMEOUT, msg);
+  if (msg) displayTemp(TEMP_MESSAGE_TIMEOUT, true, msg);
 }
 
 void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
@@ -48,9 +48,9 @@ void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
   }
 }
 
-void LCDScreen::displayTemp(char const *lines[], uint8_t const n, size_t const timeout)
+void LCDScreen::displayTemp(char const *lines[], uint8_t const n, size_t const timeout, bool const clr)
 {
-  lcd.clear();
+  if (clr) lcd.clear();
   for (uint8_t idx = 0; idx != min(n, static_cast<uint8_t>(VISIBLE_LINES)); ++idx) {
     lcd.setCursor(0, idx);
     lcd.print(lines[idx]);
@@ -63,3 +63,21 @@ void LCDScreen::clear() {
   lcd.clear();
   tempTimeout = 0;
 }
+
+void LCDScreen::displayFrequency() {
+  char floatBuffer[LINE_SIZE + 1];
+  char stringBuffer[LINE_SIZE + 1];
+  
+  double kHz = measureFrequency();
+  dtostrf(kHz, LINE_SIZE - 4, FREQUENCY_DISPLAY_PRECISION, floatBuffer);
+  snprintf(stringBuffer, LINE_SIZE + 1, "%s kHz", floatBuffer);
+  displayTemp(FREQUENCY_TIMEOUT, false, "Clock Frequency", stringBuffer);
+}
+
+
+
+
+
+
+
+

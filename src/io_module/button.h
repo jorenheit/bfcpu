@@ -6,7 +6,8 @@ enum class ButtonState {
   Low,
   High,
   Rising,
-  Falling
+  Falling,
+  Hold
 };
 
 class ButtonBase {
@@ -35,7 +36,12 @@ public:
       currentState = ButtonState::Falling;
       lastStateChangeTime = currentTime;
     }
-
+    else if (currentState == ButtonState::High && pinState){
+      if (currentTime - lastStateChangeTime > BUTTON_HOLD_TIME) {
+        // currentState remains High, but return Hold to indicate it's been high a while
+        return ButtonState::Hold;
+      }
+    }
     return currentState;
   }
 

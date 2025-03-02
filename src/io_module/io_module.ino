@@ -20,7 +20,7 @@ void setup() {
   pinMode(DISPLAY_ENABLE_PIN, INPUT);
   pinMode(KEYBOARD_ENABLE_PIN, INPUT);
   setIOPinsToInput();
-  
+
   scrollUpButton.begin();
   scrollDownButton.begin();
   kbBuffer.begin();
@@ -31,43 +31,53 @@ void setup() {
 }
 
 void loop() {
-  handleButtons();
+  // Process raw data in the first ringbuffer of the keyboard. This
+  // data will become available as ASCII characters through kbBuffer.get().
   kbBuffer.update();
+
+  // Process raw data in the LCD ringbuffer and put it into the screen-buffer.
   lcdBuffer.update();
+
+  // Send the view (visible window of the screen-buffer) to the screen.
   lcdScreen.display(lcdBuffer.view());
+  
+  // Handle buttons for scrolling, accessing the menu or displaying the frequency.
+  handleButtons();
 }
 
 void handleButtons() {
-  ButtonState const scrollUpState = scrollUpButton.state();
+  ButtonState const scrollUpState   = scrollUpButton.state();
   ButtonState const scrollDownState = scrollDownButton.state();
   ButtonState const menuButtonState = menuButton.state();
 
-  if (lcdMenu.active()) {
-    lcdMenu.handleButtons(scrollUpState, scrollDownState, menuButtonState);
-    return;
-  }
-  
-  if (menuButtonState == ButtonState::Rising) {
-    lcdMenu.enter();
-    return;
-  }
+  if (lcdMenu.active())                       return lcdMenu.handleButtons(scrollUpState, scrollDownState, menuButtonState);
+  if (menuButtonState == ButtonState::Rising) return lcdMenu.enter();
+  if (menuButtonState == ButtonState::Hold)   return lcdScreen.displayFrequency();
 
+  // No menu or frequency stuff going on -> buttons are used for scrolling the buffer
+  scroll(scrollUpState, scrollDownState);
+}
+
+void scroll(ButtonState const up, ButtonState const down) {
   unsigned long currentTime = millis();
   static unsigned long previousScrollTime = 0;
   bool const scrollingAllowed = (currentTime - previousScrollTime) > NO_SCROLL_DELAY;
 
-  if (scrollingAllowed && scrollUpState == ButtonState::High) {
+  if (scrollingAllowed && up == ButtonState::High) {
     lcdBuffer.scrollUp();
     previousScrollTime = currentTime;
-  }
-  else if (scrollingAllowed && scrollDownState == ButtonState::High) {
+  } else if (scrollingAllowed && down == ButtonState::High) {
     lcdBuffer.scrollDown();
     previousScrollTime = currentTime;
   }
 }
 
-void onSystemClock() {  
-  enum KeyboardState: uint8_t {
+volatile size_t tickCount = 0;
+
+void onSystemClock() {
+  ++tickCount;
+
+  enum KeyboardState : uint8_t {
     IDLE,
     WAIT,
     RESET
@@ -81,26 +91,26 @@ void onSystemClock() {
 
   if (kb_state != IDLE || digitalRead<KEYBOARD_ENABLE_PIN>()) {
     switch (kb_state) {
-      case IDLE: {
-        setIOPinsToOutput();
-        byte const val = kbBuffer.get();
-        writeByteToBus(val);
-        lcdBuffer.enqueueEcho(val);
-        kb_state = WAIT;
-        return;
-      }
-      case WAIT: {
-        kb_state = RESET;
-        return;
-      }
-      case RESET: {
-        setIOPinsToInput();
-        kb_state = IDLE;
-        return;
-      }
+      case IDLE:
+        {
+          setIOPinsToOutput();
+          byte const val = kbBuffer.get();
+          writeByteToBus(val);
+          lcdBuffer.enqueueEcho(val);
+          kb_state = WAIT;
+          return;
+        }
+      case WAIT:
+        {
+          kb_state = RESET;
+          return;
+        }
+      case RESET:
+        {
+          setIOPinsToInput();
+          kb_state = IDLE;
+          return;
+        }
     }
   }
 }
-
-
-
