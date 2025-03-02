@@ -12,13 +12,14 @@ public:
 
   void begin(char const *msg = 0);
   void display(LCDBuffer::View const &view, bool forced = false); 
-  void displayTemp(char const *lines[], uint8_t const n, size_t const timeout);
+  void displayTemp(char const *lines[], uint8_t const n, size_t const timeout, bool const clear = true);
+  void displayFrequency();
   void clear();
 
   template <typename ... Args>
-  void displayTemp(size_t const timeout, Args ... args) {
+  void displayTemp(size_t const timeout, bool clr, Args ... args) {
     static_assert(sizeof ... (Args) <= VISIBLE_LINES, "Too many lines");
     char const *lines[] = {args ...};
-    displayTemp(lines, sizeof ... (args), timeout);
+    displayTemp(lines, sizeof ... (args), timeout, clr);
   }
 };

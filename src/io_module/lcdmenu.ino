@@ -6,8 +6,8 @@ LCDMenu::LCDMenu(LCDBuffer &buf, LCDScreen &scr):
 {}
 
 void LCDMenu::enter(){
-  _lastActiveTime = millis();
   _current = menu.getPointer();
+  _lastActiveTime = millis();
   display();
 }
 
@@ -16,16 +16,16 @@ bool LCDMenu::active() const{
 }
 
 void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, ButtonState const both){
+  if (_current == nullptr)        return exit();
+  if (both == ButtonState::Hold ) return exit();
+
+
   static bool bothReleased = true;
   if (bothReleased && both == ButtonState::Rising) {
     _lastActiveTime = millis();
     bothReleased = false;
     MenuItem *next = _current->highlighted()->select(_buffer);
-    if (next == nullptr) {
-      _screen.clear();
-      _lastActiveTime = 0;
-      return;
-    }
+    if (next == nullptr) return exit();
     _current = next;
     display();
   }
@@ -45,5 +45,11 @@ void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, Button
 }
 
 void LCDMenu::display(){
-  _screen.displayTemp(MENU_TIMEOUT, _current->getLabel(), _current->highlighted()->getNumberedLabel());
+  _screen.displayTemp(MENU_TIMEOUT, true, _current->getLabel(), _current->highlighted()->getNumberedLabel());
+}
+
+void LCDMenu::exit() {
+  _current = menu.getPointer();
+  _screen.clear();
+  _lastActiveTime = 0;
 }

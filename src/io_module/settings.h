@@ -1,9 +1,9 @@
 #pragma once
 
-#define LCD_COMMAND_EXECUTION_MICROS 45
+#define LCD_COMMAND_EXECUTION_MICROS 40
 
 enum LCDDriverPins: uint8_t {
-  // Connections frp, Shift Register to Arduino
+  // Connections from Shift Register to Arduino
   SH_CP = 6, // SRCLK
   DS    = 5, // SER
   ST_CP = 4, // RCLK
@@ -26,6 +26,8 @@ enum ModuleDriverPins: uint8_t {
   SCROLL_DOWN_PIN = A4,
   KEYBOARD_DATA_PIN = A5,
 
+/*
+  // Data Pins (not used directly but here for documentation purposes):
   D0 = 7,
   D1 = 8,
   D2 = 9,
@@ -34,9 +36,8 @@ enum ModuleDriverPins: uint8_t {
   D5 = 12,
   D6 = 13,
   D7 = A0
+*/
 };
-
-static constexpr uint8_t DATA_PINS[] = {D0, D1, D2, D3, D4, D5, D6, D7};
 
 enum DisplayMode: uint8_t {
   ASCII,
@@ -45,24 +46,28 @@ enum DisplayMode: uint8_t {
   N_MODES
 };
 
-static constexpr char const *displayModeString[N_MODES] = {
-  "Text",
-  "Decimal",
-  "Hexadecimal"
+enum ButtonPrams: int {
+  BUTTON_DEBOUNCE_DELAY = 200,
+  BUTTON_HOLD_TIME = 1000
 };
-
 
 enum LCDParams: int {
   VISIBLE_LINES = 2,
-  TOTAL_LINES = 20,
   LINE_SIZE = 16,
+  TOTAL_LINES = 20,
   TAB_WIDTH = 4,
-  BUTTON_DEBOUNCE_DELAY = 200,
-  BOOT_MESSAGE_DELAY = 500,
   NO_SCROLL_DELAY = 200,
-  TEMP_MESSAGE_TIMEOUT = 1000,
+  BOOT_MESSAGE_DELAY = 500,
   MENU_TIMEOUT = 5000,
-  HOLD_TO_CLEAR_TIME = 2000
+  TEMP_MESSAGE_TIMEOUT = 1000,
+};
+
+enum FrequencyParams: int { 
+  // Frequency Measurements
+  FREQUENCY_TIMEOUT = 1000,          // How many ms the frequency stays displayed after buttons released.
+  FREQUENCY_UPDATE_INTERVAL = 1000,  // How many ms have to pass before a new frequency is measured.
+  FREQUENCY_MEASUREMENT_TIME = 500,  // How many ms the ticks are sampled to calculate the frequency.
+  FREQUENCY_DISPLAY_PRECISION = 3    // Number of decimals used to display the frequency.
 };
 
 enum KeyboardParams: int {

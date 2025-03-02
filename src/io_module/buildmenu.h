@@ -5,7 +5,7 @@
 
   STEP 1: Define all the leaves (endpoints) and submenu's:
 
-    MenuLeaf(NAME, LABEL, RETURN, SELECT_CODE)
+    MenuLeaf(NAME, LABEL, RETURN, SELECT_CODE);
   
     * NAME:        The MenuLeaf macro defines a new type with a name equal to NAME. 
     * LABEL:       The label that will be displayed on-screen (string).
@@ -19,7 +19,7 @@
                    the corresponding settings are to be set to the LCDBuffer object.
 
 
-    SubMenu(NAME, LABEL, NUM_OPTS, IS_ROOT, SELECT_CODE)
+    SubMenu(NAME, LABEL, NUM_OPTS, IS_ROOT, SELECT_CODE);
 
       * NAME:        The SubMenu macro defines a new type with a name equal to NAME.
       * LABEL:       The label that will be displayed on-screen.

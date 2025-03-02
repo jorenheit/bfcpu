@@ -19,7 +19,7 @@ public:
   virtual MenuItem *highlighted() { return this; }
   virtual void up() {}
   virtual void down() {}
-  
+
   virtual MenuItem *back() { return parent ? parent : this; } // should be overridden by leaf-types
   MenuItem *stay() { return parent; };
   MenuItem *home() { return root; };
@@ -39,7 +39,6 @@ public:
         break;
       };
     }
-    //snprintf(buffer, LINE_SIZE + 1, "%d. %s", parentPos, getLabel()); 
     return buffer;
   }
 
