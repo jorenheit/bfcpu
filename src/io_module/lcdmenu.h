@@ -9,9 +9,9 @@
 class LCDMenu {
 
   class Actions {
-    LCDBuffer _buffer;
+    LCDBuffer &_buffer;
   public:
-    Actions(LCDBuffer &buffer):
+    explicit Actions(LCDBuffer &buffer):
       _buffer(buffer)
     {}
 
@@ -19,29 +19,32 @@ class LCDMenu {
     inline void setEchoEnabled(bool const val)       { _buffer.setEchoEnabled(val); }
     inline void setAutoscrollEnabled(bool const val) { _buffer.setAutoscrollEnabled(val); }
     inline void setMode(::DisplayMode const mode)    { _buffer.setMode(mode); }
-    inline void setDelimiter(char const delim)       { _buffer. setDelimiter(delim); }
+    inline void setDelimiter(char const delim)       { _buffer.setDelimiter(delim); }
   
   };
 
+  // Set actions available in the select-code blocks below
+  MenuActions(Actions);
+
   // Define leaf nodes
-  MenuLeaf(Clear,         "Clear",       self->exit(),   { buffer.clear(); });
-  MenuLeaf(EchoOn,        "On",          self->home(),   { buffer.setEchoEnabled(true); });
-  MenuLeaf(EchoOff,       "Off",         self->home(),   { buffer.setEchoEnabled(false); });
-  MenuLeaf(AutoscrollOn,  "On",          self->home(),   { buffer.setAutoscrollEnabled(true); });
-  MenuLeaf(AutoscrollOff, "Off",         self->home(),   { buffer.setAutoscrollEnabled(false); });
-  MenuLeaf(TextMode,      "Text",        self->home(),   { buffer.setMode(ASCII); });
-  MenuLeaf(BarDelim,      "|",           self->home(),   { buffer.setDelimiter('|'); });
-  MenuLeaf(CommaDelim,    ",",           self->home(),   { buffer.setDelimiter(','); });
-  MenuLeaf(SemiDelim,     ";",           self->home(),   { buffer.setDelimiter(';'); });
-  MenuLeaf(Exit,          "Exit",        self->exit(),   { /* No action on select */ });
+  MenuLeaf(Clear,         "Clear",       item.exit(),   { actions.clear(); });
+  MenuLeaf(EchoOn,        "On",          item.home(),   { actions.setEchoEnabled(true); });
+  MenuLeaf(EchoOff,       "Off",         item.home(),   { actions.setEchoEnabled(false); });
+  MenuLeaf(AutoscrollOn,  "On",          item.home(),   { actions.setAutoscrollEnabled(true); });
+  MenuLeaf(AutoscrollOff, "Off",         item.home(),   { actions.setAutoscrollEnabled(false); });
+  MenuLeaf(TextMode,      "Text",        item.home(),   { actions.setMode(ASCII); });
+  MenuLeaf(BarDelim,      "|",           item.home(),   { actions.setDelimiter('|'); });
+  MenuLeaf(CommaDelim,    ",",           item.home(),   { actions.setDelimiter(','); });
+  MenuLeaf(SemiDelim,     ";",           item.home(),   { actions.setDelimiter(';'); });
+  MenuLeaf(Exit,          "Exit",        item.exit(),   { /* No action on select */ });
 
   // Define submenu nodes
   SubMenu(MainMenu,    "Main Menu",     5, true,  { /* No action on select */    });  // will be the root node
   SubMenu(Echo,        "Echo",          2, false, { /* No action on select */    });
   SubMenu(Autoscroll,  "Autoscroll",    2, false, { /* No action on select */    });
   SubMenu(DisplayMode, "Display Mode",  3, false, { /* No action on select */    });
-  SubMenu(DecMode,     "Decimal",       3, false, { buffer.setMode(DECIMAL);     });
-  SubMenu(HexMode,     "Hexadecimal",   3, false, { buffer.setMode(HEXADECIMAL); });
+  SubMenu(DecMode,     "Decimal",       3, false, { actions.setMode(DECIMAL);    });
+  SubMenu(HexMode,     "Hexadecimal",   3, false, { actions.setMode(HEXADECIMAL);});
 
   // Build the final menu:
   using Menu = MainMenu <
@@ -70,10 +73,12 @@ class LCDMenu {
       Exit
     >;
 
-  Menu menu;
+  Menu _menu;
+  Menu::BasePtr _current;
+
   LCDBuffer &_buffer;
   LCDScreen &_screen;
-  MenuItem *_current;
+  Actions _actions;
   unsigned long _lastActiveTime = 0;
 
 public:
@@ -83,11 +88,5 @@ public:
   void handleButtons(ButtonState const up, ButtonState const down, ButtonState const both);
   void display();
   void exit();
-
-// self -> item
-// no buffer object to items, but reference to LCDMenu object -> provide available actions as members
-// and keep track of the settings. Need to store default settings in settings.h (and set accordingly in LCDBuffer).
-// Active settings are starred?
-
 
 };

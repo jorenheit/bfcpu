@@ -1,12 +1,13 @@
 #pragma once 
 
 namespace Helpers {
-  template <typename, typename ...>
+  template <typename, typename, typename ...>
   struct MenuItemImpl;
 }
 
+template <typename Actions>
 class MenuItem {
-  template <typename Impl, typename ... Children>
+  template <typename, typename, typename ...>
   friend struct Helpers::MenuItemImpl;
 
   MenuItem *root = 0;
@@ -14,8 +15,10 @@ class MenuItem {
   uint8_t parentPos = 0;
 
 public:
+  using BasePtr = MenuItem<Actions>*;
+
   virtual char const *getLabel() = 0;
-  virtual MenuItem *select(LCDBuffer &) = 0;
+  virtual MenuItem *select(Actions &) = 0;
   virtual MenuItem *highlighted() { return this; }
   virtual void up() {}
   virtual void down() {}
@@ -71,15 +74,17 @@ namespace Helpers {
 
   template <>
   struct ChildTuple<> {
-    void storePointers(MenuItem **) {}
+    template <typename T>
+    void storePointers(T **) {}
   };
 
   template <typename First, typename... Rest>
   class ChildTuple<First, Rest...>: public ChildTuple<Rest...> {
+    using BasePtr = typename First::BasePtr;
     First value;
 
   public:
-    void storePointers(MenuItem *dest[]) {
+    void storePointers(BasePtr dest[]) {
       dest[0] = value.getPointer();
       ChildTuple<Rest ...>::storePointers(dest + 1);
     }
@@ -104,10 +109,12 @@ namespace Helpers {
   };
 
 
-  template <typename Impl>
-  struct MenuItemImplBase: public MenuItem
+  template <typename Actions, typename Impl>
+  struct MenuItemImplBase: public MenuItem<Actions>
   {
-    MenuItem *getPointer() {
+    using BasePtr = typename MenuItem<Actions>::BasePtr;
+
+    BasePtr getPointer() {
       return this;
     }
 
@@ -115,16 +122,20 @@ namespace Helpers {
       return Impl::getLabel();
     };
 
-    virtual MenuItem *select(LCDBuffer &buffer) override final {
-      return Impl::select(this, buffer);
+    virtual BasePtr select(Actions &actions) override final {
+      return Impl::select(*this, actions);
     };
   };
 
-  template <typename Impl, typename ... Children> 
-  class MenuItemImpl: public MenuItemImplBase<Impl> {
+  template <typename Actions, typename Impl, typename ... Children> 
+  class MenuItemImpl: public MenuItemImplBase<Actions, Impl> {
+  public:
+    using BasePtr = typename MenuItemImplBase<Actions, Impl>::BasePtr;
+  
+  private:
     static constexpr uint8_t numChildren = (sizeof ... (Children));
     ChildTuple<Children ...> children;
-    MenuItem *childPointers[numChildren];
+    BasePtr childPointers[numChildren];
     uint8_t highlightedIndex = 0;
 
   public:
@@ -136,7 +147,7 @@ namespace Helpers {
       if (IsRoot<Impl>::value) this->setRoot(this);
     }
 
-    virtual MenuItem *highlighted() override final {
+    virtual BasePtr highlighted() override final {
       return childPointers[highlightedIndex];
     }
 
@@ -149,24 +160,24 @@ namespace Helpers {
     }
 
   private:
-    virtual void setRootForChildren(MenuItem *root) {
+    virtual void setRootForChildren(BasePtr root) {
       for (uint8_t idx = 0; idx != numChildren; ++idx) {
         childPointers[idx]->setRoot(root);
       }
     }
   };
 
-  template <typename Impl> 
-  struct MenuItemImpl<Impl>: public MenuItemImplBase<Impl> {
+  template <typename Actions, typename Impl> 
+  class MenuItemImpl<Actions, Impl>: public MenuItemImplBase<Actions, Impl> {
     static constexpr uint8_t numChildren = 0;
 
   public:
+    using BasePtr = typename MenuItemImplBase<Actions, Impl>::BasePtr;
     MenuItemImpl() {
-      if (IsRoot<Impl>::value) 
-        MenuItemImplBase<Impl>::setRoot(this);
+      if (IsRoot<Impl>::value) this->setRoot(this);
     }
 
-    virtual MenuItem *back() override final {
+    virtual BasePtr back() override final {
       return this->getParent()->getParent();
     }
   };

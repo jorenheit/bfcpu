@@ -3,7 +3,23 @@
 /* 
   To build a menu-tree, follow these steps:
 
-  STEP 1: Define all the leaves (endpoints) and submenu's:
+  STEP 1: Define a type with the functions that perform actions you would like
+          to be available from the menu:
+
+    Example:
+
+    struct Actions {
+      void setEchoEnabled(bool val);
+      ...
+    };
+
+  STEP 2: Set this type as the MenuAction type using the MenuAction macro
+
+    Example:
+    
+    MenuAction(Actions);
+
+  STEP 3: Define all the leaves (endpoints) and submenu's:
 
     MenuLeaf(NAME, LABEL, RETURN, SELECT_CODE);
   
@@ -11,13 +27,12 @@
     * LABEL:       The label that will be displayed on-screen (string).
     * RETURN:      A pointer to the submenu that will be returned to after select.
                    This can be one of:
-                     * self->home() to return to the root menu
-                     * self->stay() to stay within the same menu
-                     * self->back() to go to the previous menu
-                     * self->exit() to exit from the menu
-    * SELECT_CODE: A code-block acting on "buffer" (type LCDBuffer). In this block
-                   the corresponding settings are to be set to the LCDBuffer object.
-
+                     * item.home() to return to the root menu
+                     * item.stay() to stay within the same menu
+                     * item.back() to go to the previous menu
+                     * item.exit() to exit from the menu
+    * SELECT_CODE: A code-block acting on "actions". In this block the actions as
+                   defined in the MenuAction type are available from the actions-object.
 
     SubMenu(NAME, LABEL, NUM_OPTS, IS_ROOT, SELECT_CODE);
 
@@ -26,17 +41,16 @@
       * NUM_OPTS:    The number of options of the submenu (<= 9).
       * IS_ROOT:     true if this is the root-menu, false otherwise.
       * SELECT_CODE: A code-block that is executed when entering this menu. Like 
-                     with the MenuLeaf code-block, this code should act on the 
-                     "buffer" object.
+                     with the MenuLeaf code-block, this code acts on the action-object.
 
     Example:
 
     SubMenu(Main, "Main Menu", 2, true,  {}); // No action on select.
     SubMenu(Echo, "Echo",      2, false, {}); // No action on select.
 
-    MenuLeaf(EchoOn, "On",   self->home(), { buffer.setEchoEnabled(true); })
-    MenuLeaf(EchoOn, "Off",  self->home(), { buffer.setEchoEnabled(true); })
-    MenuLeaf(Exit,   "Exit", self->exit(), {}); // no code executed  
+    MenuLeaf(EchoOn, "On",   item.home(), { action.setEchoEnabled(true); })
+    MenuLeaf(EchoOn, "Off",  item.home(), { action.setEchoEnabled(true); })
+    MenuLeaf(Exit,   "Exit", item.exit(), {}); // no code executed  
 
   STEP 2: Build the tree by creating a typedef with the "using" directive.
           Make sure that the root-menu is actually at the root of the definition.
@@ -76,25 +90,29 @@
 #define GET_TYPENAME_LIST(N) TYPENAME_LIST_##N
 #define GET_OPT_LIST(N) OPT_LIST_##N
 
+#define MenuActions(ACTIONS)      \
+using Actions_ = ACTIONS;         \
+using Item_ = MenuItem<ACTIONS>;
+
 #define MenuLeaf(NAME, LABEL, RETURN, SELECT_CODE)                          \
 struct NAME##_ {                                                            \
   static constexpr char const* getLabel() { return LABEL; }                 \
-  static MenuItem* select(MenuItem*self, LCDBuffer &buffer) {               \
-      (void)self; (void)buffer;                                             \
+  static Item_ *select(Item_ &item, Actions_ &actions) {                    \
+      (void)item; (void)actions;                                            \
       SELECT_CODE                                                           \
       return RETURN;                                                        \
   }                                                                         \
 };                                                                          \
-using NAME = Helpers::MenuItemImpl<NAME##_>;
+using NAME = Helpers::MenuItemImpl<Actions_, NAME##_>;
 
 #define SubMenu(NAME, LABEL, NUM_OPTS, IS_ROOT, SELECT_CODE)                \
 struct NAME##_ : Helpers::SubMenu_<IS_ROOT> {                               \
   static constexpr char const* getLabel() { return LABEL; }                 \
-  static MenuItem* select(MenuItem*self, LCDBuffer &buffer) {               \
-      (void)self; (void)buffer;                                             \
+  static Item_ *select(Item_ &item, Actions_ &actions) {                    \
+      (void)item; (void)actions;                                            \
       SELECT_CODE                                                           \
-      return self;                                                          \
+      return &item;                                                         \
   }                                                                         \
 };                                                                          \
 template <GET_TYPENAME_LIST(NUM_OPTS)>                                      \
-using NAME = Helpers::MenuItemImpl<NAME##_, GET_OPT_LIST(NUM_OPTS)>;
+using NAME = Helpers::MenuItemImpl<Actions_, NAME##_, GET_OPT_LIST(NUM_OPTS)>;
