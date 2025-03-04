@@ -64,31 +64,32 @@
         >,
         Exit
       >;  
+
+  STEP 3: Instantiate the menu and call begin().
+          This will set the root node such that submenu's know where to go when home() is called.
+
+    Example:
+
+    Menu menu;
+    Menu::BasePtr current = menu.begin();
 */
 
-#define MenuActions(ACTIONS)      \
-using Actions_ = ACTIONS;         \
-using Item_ = MenuItem<ACTIONS>;
+#define MenuItem_(NAME, LABEL, RETURN, SELECT_CODE)                               \
+struct NAME##_ {                                                                  \
+  static constexpr char const* getLabel() { return LABEL; }                       \
+  template <typename Actions>                                                     \
+  static MenuItem<Actions>*  select(MenuItem<Actions> &item, Actions &actions){   \
+      (void)item; (void)actions;                                                  \
+      SELECT_CODE                                                                 \
+      return RETURN;                                                              \
+  }                                                                               \
+};                                                                          
 
-#define MenuLeaf(NAME, LABEL, RETURN, SELECT_CODE)                          \
-struct NAME##_ {                                                            \
-  static constexpr char const* getLabel() { return LABEL; }                 \
-  static Item_ *select(Item_ &item, Actions_ &actions) {                    \
-      (void)item; (void)actions;                                            \
-      SELECT_CODE                                                           \
-      return RETURN;                                                        \
-  }                                                                         \
-};                                                                          \
+#define MenuActions(ACTIONS) using Actions_ = ACTIONS;         
+
+#define MenuLeaf(NAME, LABEL, RETURN, SELECT_CODE) MenuItem_(NAME, LABEL, RETURN, SELECT_CODE); \
 using NAME = Helpers::MenuItemImpl<Actions_, NAME##_>;
 
-#define SubMenu(NAME, LABEL, IS_ROOT, SELECT_CODE)                          \
-struct NAME##_ : Helpers::SubMenu_<IS_ROOT> {                               \
-  static constexpr char const* getLabel() { return LABEL; }                 \
-  static Item_ *select(Item_ &item, Actions_ &actions) {                    \
-      (void)item; (void)actions;                                            \
-      SELECT_CODE                                                           \
-      return &item;                                                         \
-  }                                                                         \
-};                                                                          \
-template <typename ... Children>                                            \
-using NAME = Helpers::MenuItemImpl<Actions_, NAME##_, Children...>;
+#define SubMenu(NAME, LABEL, SELECT_CODE) MenuItem_(NAME, LABEL, &item, SELECT_CODE); \
+template <typename First, typename ... Rest>                                          \
+using NAME = Helpers::MenuItemImpl<Actions_, NAME##_, First, Rest...>;
