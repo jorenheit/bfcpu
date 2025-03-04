@@ -34,19 +34,18 @@
     * SELECT_CODE: A code-block acting on "actions". In this block the actions as
                    defined in the MenuAction type are available from the actions-object.
 
-    SubMenu(NAME, LABEL, NUM_OPTS, IS_ROOT, SELECT_CODE);
+    SubMenu(NAME, LABEL, IS_ROOT, SELECT_CODE);
 
       * NAME:        The SubMenu macro defines a new type with a name equal to NAME.
       * LABEL:       The label that will be displayed on-screen.
-      * NUM_OPTS:    The number of options of the submenu (<= 9).
       * IS_ROOT:     true if this is the root-menu, false otherwise.
       * SELECT_CODE: A code-block that is executed when entering this menu. Like 
                      with the MenuLeaf code-block, this code acts on the action-object.
 
     Example:
 
-    SubMenu(Main, "Main Menu", 2, true,  {}); // No action on select.
-    SubMenu(Echo, "Echo",      2, false, {}); // No action on select.
+    SubMenu(Main, "Main Menu", true,  {}); // No action on select.
+    SubMenu(Echo, "Echo",      false, {}); // No action on select.
 
     MenuLeaf(EchoOn, "On",   item.home(), { action.setEchoEnabled(true); })
     MenuLeaf(EchoOn, "Off",  item.home(), { action.setEchoEnabled(true); })
@@ -67,29 +66,6 @@
       >;  
 */
 
-#define TYPENAME_LIST_1  typename Opt1
-#define TYPENAME_LIST_2  typename Opt1, typename Opt2
-#define TYPENAME_LIST_3  typename Opt1, typename Opt2, typename Opt3
-#define TYPENAME_LIST_4  typename Opt1, typename Opt2, typename Opt3, typename Opt4
-#define TYPENAME_LIST_5  typename Opt1, typename Opt2, typename Opt3, typename Opt4, typename Opt5
-#define TYPENAME_LIST_6  typename Opt1, typename Opt2, typename Opt3, typename Opt4, typename Opt5, typename Opt6
-#define TYPENAME_LIST_7  typename Opt1, typename Opt2, typename Opt3, typename Opt4, typename Opt5, typename Opt6, typename Opt7
-#define TYPENAME_LIST_8  typename Opt1, typename Opt2, typename Opt3, typename Opt4, typename Opt5, typename Opt6, typename Opt7, typename Opt8
-#define TYPENAME_LIST_9  typename Opt1, typename Opt2, typename Opt3, typename Opt4, typename Opt5, typename Opt6, typename Opt7, typename Opt8, typename Opt9
-
-#define OPT_LIST_1  Opt1
-#define OPT_LIST_2  Opt1, Opt2
-#define OPT_LIST_3  Opt1, Opt2, Opt3
-#define OPT_LIST_4  Opt1, Opt2, Opt3, Opt4
-#define OPT_LIST_5  Opt1, Opt2, Opt3, Opt4, Opt5
-#define OPT_LIST_6  Opt1, Opt2, Opt3, Opt4, Opt5, Opt6
-#define OPT_LIST_7  Opt1, Opt2, Opt3, Opt4, Opt5, Opt6, Opt7
-#define OPT_LIST_8  Opt1, Opt2, Opt3, Opt4, Opt5, Opt6, Opt7, Opt8
-#define OPT_LIST_9  Opt1, Opt2, Opt3, Opt4, Opt5, Opt6, Opt7, Opt8, Opt9
-
-#define GET_TYPENAME_LIST(N) TYPENAME_LIST_##N
-#define GET_OPT_LIST(N) OPT_LIST_##N
-
 #define MenuActions(ACTIONS)      \
 using Actions_ = ACTIONS;         \
 using Item_ = MenuItem<ACTIONS>;
@@ -105,7 +81,7 @@ struct NAME##_ {                                                            \
 };                                                                          \
 using NAME = Helpers::MenuItemImpl<Actions_, NAME##_>;
 
-#define SubMenu(NAME, LABEL, NUM_OPTS, IS_ROOT, SELECT_CODE)                \
+#define SubMenu(NAME, LABEL, IS_ROOT, SELECT_CODE)                          \
 struct NAME##_ : Helpers::SubMenu_<IS_ROOT> {                               \
   static constexpr char const* getLabel() { return LABEL; }                 \
   static Item_ *select(Item_ &item, Actions_ &actions) {                    \
@@ -114,5 +90,5 @@ struct NAME##_ : Helpers::SubMenu_<IS_ROOT> {                               \
       return &item;                                                         \
   }                                                                         \
 };                                                                          \
-template <GET_TYPENAME_LIST(NUM_OPTS)>                                      \
-using NAME = Helpers::MenuItemImpl<Actions_, NAME##_, GET_OPT_LIST(NUM_OPTS)>;
+template <typename ... Children>                                            \
+using NAME = Helpers::MenuItemImpl<Actions_, NAME##_, Children...>;

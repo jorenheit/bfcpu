@@ -25,6 +25,7 @@ void setup() {
   scrollDownButton.begin();
   kbBuffer.begin();
   lcdBuffer.begin();
+  lcdMenu.loadSettings();
   lcdScreen.begin("READY!");
 
   attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClock, RISING);

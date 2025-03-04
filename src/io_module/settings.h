@@ -60,6 +60,11 @@ enum LCDParams: int {
   BOOT_MESSAGE_DELAY = 500,
   MENU_TIMEOUT = 5000,
   TEMP_MESSAGE_TIMEOUT = 1000,
+
+  AUTOSCROLL_DEFAULT_SETTING = false,
+  ECHO_DEFAULT_SETTING = false,
+  DISPLAY_MODE_DEFAULT_SETTING = ASCII,
+  DELIMITER_DEFAULT_SETTING = '|'
 };
 
 enum FrequencyParams: int { 
@@ -78,5 +83,11 @@ enum IOBuffers: uint8_t {
   KB_RING1 = 128,
   KB_RING2 = 128,
   LCD_RING = 128
+};
+
+enum EEPROMStorageParams: uint8_t {
+  EEPROM_VALID_FLAG_VALUE = 0xab,
+  EEPROM_VALID_FLAG_ADDRESS = 0,
+  EEPROM_SETTINGS_ADDRESS = 1
 };
 
