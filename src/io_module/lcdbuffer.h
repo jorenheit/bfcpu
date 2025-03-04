@@ -15,14 +15,20 @@ class LCDBuffer {
   uint8_t bottomVisibleLine = VISIBLE_LINES - 1;
   
   mutable bool changed = false;
-
-  // Settings
-  DisplayMode mode = ASCII;
-  bool autoscrollEnabled = true;
-  bool echoEnabled = false;
-  char delimiter = '|';
-
   static_assert(TOTAL_LINES <= 256, "TOTAL_LINES cannot exceed 256.");
+
+public:
+  struct Settings {
+    DisplayMode mode = static_cast<DisplayMode>(DISPLAY_MODE_DEFAULT_SETTING);
+    bool autoscrollEnabled = AUTOSCROLL_DEFAULT_SETTING;
+    bool echoEnabled = ECHO_DEFAULT_SETTING;
+    char delimiter = DELIMITER_DEFAULT_SETTING;
+    bool operator==(Settings const &other) const;
+    bool operator!=(Settings const &other) const;
+  };
+
+private:
+  Settings settings;
 
 public:
   void begin();
@@ -34,14 +40,13 @@ public:
   void scrollUp(uint8_t n = 1);
   void clear();
 
-  DisplayMode setMode(DisplayMode const mode);
-  DisplayMode nextMode();
-  DisplayMode previousMode();
-  DisplayMode currentMode() const;
-
+  void setMode(DisplayMode const mode);
   void setAutoscrollEnabled(bool const val);
   void setEchoEnabled(bool const val);
   void setDelimiter(char const delim);
+
+  void setSettings(Settings const &set);
+  Settings const &getSettings() const;
 
   struct View {
     char const *lines[VISIBLE_LINES];
@@ -51,6 +56,8 @@ public:
   };
 
   View view() const;
+
+
   
 private:
   void insertAsAscii(byte const c);

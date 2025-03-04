@@ -9,7 +9,7 @@ void LCDBuffer::enqueue(byte const c) {
 }
 
 void LCDBuffer::enqueueEcho(byte const c) {
-  if (echoEnabled && c)
+  if (settings.echoEnabled && c)
     enqueue(c);
 }
 
@@ -17,9 +17,9 @@ void LCDBuffer::update() {
   // Select the insertion function
   using InsertFuncPtr = void (LCDBuffer::*)(byte const);
   InsertFuncPtr const insert = 
-    (mode == ASCII)       ? &LCDBuffer::insertAsAscii   :
-    (mode == DECIMAL)     ? &LCDBuffer::insertAsDecimal
-                          : &LCDBuffer::insertAsHex;
+    (settings.mode == ASCII)    ? &LCDBuffer::insertAsAscii   :
+    (settings.mode == DECIMAL)  ? &LCDBuffer::insertAsDecimal
+                                : &LCDBuffer::insertAsHex;
 
   // Copy new data from ringBuf into the screenBuf using the selected insert function.
   bool newData = false;
@@ -27,7 +27,7 @@ void LCDBuffer::update() {
     (this->*insert)(ringBuf.get().value);
     newData = true;
   }
-  if (newData && autoscrollEnabled) bringIntoView();
+  if (newData && settings.autoscrollEnabled) bringIntoView();
 }
 
 LCDBuffer::View LCDBuffer::view() const {
@@ -49,14 +49,14 @@ void LCDBuffer::insertAsHex(byte const c) {
   static char const hexChars[] = "0123456789ABCDEF";
   insertAsAscii(hexChars[(c >> 4) & 0x0f]); // high nibble
   insertAsAscii(hexChars[(c >> 0) & 0x0f]); // low nibble 
-  insertAsAscii(delimiter);
+  insertAsAscii(settings.delimiter);
 }
 
 void LCDBuffer::insertAsDecimal(byte const c) {
   insertAsAscii('0' + (c / 100));
   insertAsAscii('0' + (c % 100) / 10);
   insertAsAscii('0' + (c % 10));
-  insertAsAscii(delimiter);
+  insertAsAscii(settings.delimiter);
 }
 
 void LCDBuffer::insertAsAscii(byte const c) {
@@ -158,30 +158,37 @@ uint8_t LCDBuffer::normalize(uint8_t const line) const {
   return (line - topLine + TOTAL_LINES) % TOTAL_LINES;
 }
 
-DisplayMode LCDBuffer::nextMode() {
-  return mode = static_cast<DisplayMode>((mode + 1) % N_MODES);
-}
-
-DisplayMode LCDBuffer::previousMode() {
-  return mode = static_cast<DisplayMode>((mode - 1 + N_MODES) % N_MODES);
-}
-
-DisplayMode LCDBuffer::setMode(DisplayMode const mode_) {
-  return mode = static_cast<DisplayMode>(mode_ % N_MODES);
-}
-
-DisplayMode LCDBuffer::currentMode() const {
-  return mode;
+void LCDBuffer::setMode(DisplayMode const mode_) {
+  settings.mode = static_cast<DisplayMode>(mode_ % N_MODES);
 }
 
 void LCDBuffer::setAutoscrollEnabled(bool const val) {
-  autoscrollEnabled = val;
+  settings.autoscrollEnabled = val;
 }
 
+
 void LCDBuffer::setEchoEnabled(bool const val) {
-  echoEnabled = val;
+  settings.echoEnabled = val;
 }
 
 void LCDBuffer::setDelimiter(char const delim) {
-  delimiter = delim;
+  settings.delimiter = delim;
+}
+
+void LCDBuffer::setSettings(Settings const &set) {
+  settings = set;
+} 
+
+LCDBuffer::Settings const &LCDBuffer::getSettings() const {
+  return settings;
+}
+
+bool LCDBuffer::Settings::operator==(Settings const &other) const {
+  return (mode == other.mode) &&
+         (autoscrollEnabled == other.autoscrollEnabled) &&
+         (echoEnabled == other.echoEnabled) &&
+         (delimiter == other.delimiter);
+}
+bool LCDBuffer::Settings::operator!=(Settings const &other) const {
+  return !(*this == other);
 }
