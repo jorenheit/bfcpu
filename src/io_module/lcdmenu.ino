@@ -5,10 +5,11 @@ LCDMenu::LCDMenu(LCDBuffer &buf, LCDScreen &scr):
   _buffer(buf), 
   _screen(scr),
   _actions(buf)
-{}
+{
+  _current = _menu.begin();
+}
 
 void LCDMenu::enter(){
-  _current = _menu.home();
   _lastActiveTime = millis();
   display();
 }
@@ -92,9 +93,9 @@ void LCDMenu::loadSettings() {
 }
 
 void LCDMenu::saveSettings() {
-  EEPROMSettings set = _buffer.getSettings();
+  EEPROMSettings const set = _buffer.getSettings();
   for (uint8_t idx = 0; idx != sizeof(set); ++idx) {
-    EEPROM.update(EEPROM_SETTINGS_ADDRESS + idx, reinterpret_cast<byte*>(&set)[idx]);
+    EEPROM.update(EEPROM_SETTINGS_ADDRESS + idx, reinterpret_cast<byte const*>(&set)[idx]);
   }
   EEPROM.update(EEPROM_VALID_FLAG_ADDRESS, EEPROM_VALID_FLAG_VALUE);
 }

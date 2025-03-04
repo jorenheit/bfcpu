@@ -45,6 +45,11 @@ public:
     return buffer;
   }
 
+  MenuItem *begin() {
+    setRoot(this);
+    return this;
+  }
+
   MenuItem *getRoot() {
     return root;
   }
@@ -90,25 +95,6 @@ namespace Helpers {
     }
   };
 
-  template <typename T, typename = void>
-  struct IsRoot {
-    static constexpr bool value = false;
-  };
-
-  template <typename T>
-  struct IsRoot<T, decltype((void)T::is_root, void())> {
-    static constexpr bool value = true;
-  };
-
-  template <bool Root = false>
-  struct SubMenu_ {};
-
-  template <>
-  struct SubMenu_<true>: SubMenu_<false> {
-    static constexpr bool is_root = true; 
-  };
-
-
   template <typename Actions, typename Impl>
   struct MenuItemImplBase: public MenuItem<Actions>
   {
@@ -144,7 +130,6 @@ namespace Helpers {
       for (uint8_t idx = 0; idx != numChildren; ++idx) {
         childPointers[idx]->setParent(this, idx + 1);
       }
-      if (IsRoot<Impl>::value) this->setRoot(this);
     }
 
     virtual BasePtr highlighted() override final {
@@ -173,9 +158,6 @@ namespace Helpers {
 
   public:
     using BasePtr = typename MenuItemImplBase<Actions, Impl>::BasePtr;
-    MenuItemImpl() {
-      if (IsRoot<Impl>::value) this->setRoot(this);
-    }
 
     virtual BasePtr back() override final {
       return this->getParent()->getParent();
