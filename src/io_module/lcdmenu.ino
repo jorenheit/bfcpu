@@ -28,7 +28,7 @@ void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, Button
     _lastActiveTime = millis();
     bothReleased = false;
     LCDBuffer::Settings const oldSettings = _buffer.getSettings();
-    Menu::BasePtr next = _current->highlighted()->select(_actions);
+    Menu::Pointer next = _current->highlighted()->select(_actions);
     if (_buffer.getSettings() != oldSettings) saveSettings();
     if (next == _menu.exit()) return exit();
     _current = next;

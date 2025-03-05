@@ -74,22 +74,22 @@
     Menu::BasePtr current = menu.begin();
 */
 
-#define MenuItem_(NAME, LABEL, RETURN, SELECT_CODE)                               \
-struct NAME##_ {                                                                  \
-  static constexpr char const* getLabel() { return LABEL; }                       \
-  template <typename Actions>                                                     \
-  static MenuItem<Actions>*  select(MenuItem<Actions> &item, Actions &actions){   \
-      (void)item; (void)actions;                                                  \
-      SELECT_CODE                                                                 \
-      return RETURN;                                                              \
-  }                                                                               \
+#define DEFINE_MENU_ITEM(NAME, LABEL, RETURN, ACTION_CODE)                                   \
+struct NAME##_ {                                                                             \
+  static constexpr char const* getLabel() { return LABEL; }                                  \
+  template <typename Actions>                                                                \
+  static Menu::MenuItem<Actions>* select(Menu::MenuItem<Actions> &item, Actions &actions){   \
+      (void)item; (void)actions;                                                             \
+      ACTION_CODE                                                                            \
+      return RETURN;                                                                         \
+  }                                                                                          \
 };                                                                          
 
 #define MenuActions(ACTIONS) using Actions_ = ACTIONS;         
 
-#define MenuLeaf(NAME, LABEL, RETURN, SELECT_CODE) MenuItem_(NAME, LABEL, RETURN, SELECT_CODE); \
-using NAME = Helpers::MenuItemImpl<Actions_, NAME##_>;
+#define MenuLeaf(NAME, LABEL, RETURN, ACTION_CODE) DEFINE_MENU_ITEM(NAME, LABEL, RETURN, ACTION_CODE); \
+using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_>;
 
-#define SubMenu(NAME, LABEL, SELECT_CODE) MenuItem_(NAME, LABEL, &item, SELECT_CODE); \
+#define SubMenu(NAME, LABEL, ACTION_CODE) DEFINE_MENU_ITEM(NAME, LABEL, &item, ACTION_CODE); \
 template <typename First, typename ... Rest>                                          \
-using NAME = Helpers::MenuItemImpl<Actions_, NAME##_, First, Rest...>;
+using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_, First, Rest...>;

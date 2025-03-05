@@ -1,5 +1,7 @@
 #pragma once 
 
+namespace Menu {
+
 namespace Helpers {
   template <typename, typename, typename ...>
   struct MenuItemImpl;
@@ -15,9 +17,9 @@ class MenuItem {
   uint8_t parentPos = 0;
 
 public:
-  using BasePtr = MenuItem<Actions>*;
+  using Pointer = MenuItem<Actions>*;
 
-  virtual char const *getLabel() = 0;
+  virtual char const *getLabel() const = 0;
   virtual MenuItem *select(Actions &) = 0;
   virtual MenuItem *highlighted() { return this; }
   virtual void up() {}
@@ -28,19 +30,17 @@ public:
   MenuItem *home() { return root; };
   MenuItem *exit() { return nullptr; };
   
-  char const *getNumberedLabel() {
+  char const *getNumberedLabel() const {
     static char buffer[LINE_SIZE + 1]; // shared buffer between all items, filled on demand
     buffer[0] = '0' + parentPos;
     buffer[1] = '.';
     buffer[2] = ' ';
-
-    for (uint8_t idx = 3; idx != LINE_SIZE + 1; ++idx) {
+    buffer[LINE_SIZE] = '\0';
+    
+    for (uint8_t idx = 3; idx != LINE_SIZE; ++idx) {
       char const c = getLabel()[idx - 3];
-      if (c) buffer[idx] = c;
-      else {
-        buffer[idx] = 0;
-        break;
-      };
+      buffer[idx] = c;
+      if (!c) break;
     }
     return buffer;
   }
@@ -58,7 +58,7 @@ public:
     return parent;
   }
   
-private:
+protected:
   void setParent(MenuItem *par, uint8_t const pos) {
     parent = par;
     parentPos = pos;
@@ -85,12 +85,12 @@ namespace Helpers {
 
   template <typename First, typename... Rest>
   class ChildTuple<First, Rest...>: public ChildTuple<Rest...> {
-    using BasePtr = typename First::BasePtr;
-    First value;
+    using Pointer = typename First::Pointer;
+    First child;
 
   public:
-    void storePointers(BasePtr dest[]) {
-      dest[0] = value.getPointer();
+    void storePointers(Pointer dest[]) {
+      dest[0] = child.getPointer();
       ChildTuple<Rest ...>::storePointers(dest + 1);
     }
   };
@@ -98,17 +98,17 @@ namespace Helpers {
   template <typename Actions, typename Impl>
   struct MenuItemImplBase: public MenuItem<Actions>
   {
-    using BasePtr = typename MenuItem<Actions>::BasePtr;
+    using Pointer = typename MenuItem<Actions>::Pointer;
 
-    BasePtr getPointer() {
+    Pointer getPointer() {
       return this;
     }
 
-    virtual char const *getLabel() override final {
+    virtual char const *getLabel() const override final {
       return Impl::getLabel();
     };
 
-    virtual BasePtr select(Actions &actions) override final {
+    virtual Pointer select(Actions &actions) override final {
       return Impl::select(*this, actions);
     };
   };
@@ -116,12 +116,12 @@ namespace Helpers {
   template <typename Actions, typename Impl, typename ... Children> 
   class MenuItemImpl: public MenuItemImplBase<Actions, Impl> {
   public:
-    using BasePtr = typename MenuItemImplBase<Actions, Impl>::BasePtr;
+    using Pointer = typename MenuItemImplBase<Actions, Impl>::Pointer;
   
   private:
     static constexpr uint8_t numChildren = (sizeof ... (Children));
     ChildTuple<Children ...> children;
-    BasePtr childPointers[numChildren];
+    Pointer childPointers[numChildren];
     uint8_t highlightedIndex = 0;
 
   public:
@@ -132,7 +132,7 @@ namespace Helpers {
       }
     }
 
-    virtual BasePtr highlighted() override final {
+    virtual Pointer highlighted() override final {
       return childPointers[highlightedIndex];
     }
 
@@ -145,7 +145,7 @@ namespace Helpers {
     }
 
   private:
-    virtual void setRootForChildren(BasePtr root) {
+    virtual void setRootForChildren(Pointer root) override final {
       for (uint8_t idx = 0; idx != numChildren; ++idx) {
         childPointers[idx]->setRoot(root);
       }
@@ -157,10 +157,12 @@ namespace Helpers {
     static constexpr uint8_t numChildren = 0;
 
   public:
-    using BasePtr = typename MenuItemImplBase<Actions, Impl>::BasePtr;
+    using Pointer = typename MenuItemImplBase<Actions, Impl>::Pointer;
 
-    virtual BasePtr back() override final {
+    virtual Pointer back() override final {
       return this->getParent()->getParent();
     }
   };
+}
+
 }

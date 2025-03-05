@@ -4,7 +4,7 @@
 #include "button.h"
 #include "lcdbuffer.h"
 #include "lcdscreen.h"
-#include "buildmenu.h"
+#include "menu.h"
 
 class LCDMenu {
 
@@ -44,9 +44,10 @@ class LCDMenu {
   MenuLeaf(BarDelim,      "|",           item.home(),   { actions.setDelimiter('|');           });
   MenuLeaf(CommaDelim,    ",",           item.home(),   { actions.setDelimiter(',');           });
   MenuLeaf(SemiDelim,     ";",           item.home(),   { actions.setDelimiter(';');           });
-  MenuLeaf(Defaults,      "Defaults",    item.exit(),   { actions.restoreDefaults();           })
+  MenuLeaf(SpaceDelim,    "[SPACE]",     item.home(),   { actions.setDelimiter(' ');           });
+  MenuLeaf(Defaults,      "Defaults",    item.exit(),   { actions.restoreDefaults();           });
   MenuLeaf(Exit,          "Exit",        item.exit(),   { /* No action on select */            });
-
+  
   // Build the final menu-type:
   using Menu = MainMenu <
     Clear,
@@ -68,7 +69,8 @@ class LCDMenu {
       HexMode<
         BarDelim,
         CommaDelim,
-        SemiDelim
+        SemiDelim,
+        SpaceDelim
       >
     >,
     Defaults,
@@ -76,7 +78,7 @@ class LCDMenu {
   >;
 
   Menu _menu;
-  Menu::BasePtr _current = nullptr;
+  Menu::Pointer _current = nullptr;
 
   LCDBuffer &_buffer;
   LCDScreen &_screen;
