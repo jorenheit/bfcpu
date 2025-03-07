@@ -89,6 +89,7 @@ void LCDMenu::loadSettings() {
     EEPROMSettings set = {};
     EEPROM.get(EEPROM_SETTINGS_ADDRESS, set);
     if (set.valid()) _buffer.setSettings(set.settings);
+    else EEPROM.write(EEPROM_VALID_FLAG_ADDRESS, false);
   }
 }
 
