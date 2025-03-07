@@ -34,11 +34,10 @@
     * SELECT_CODE: A code-block acting on "actions". In this block the actions as
                    defined in the MenuAction type are available from the actions-object.
 
-    SubMenu(NAME, LABEL, IS_ROOT, SELECT_CODE);
+    SubMenu(NAME, LABEL, SELECT_CODE);
 
       * NAME:        The SubMenu macro defines a new type with a name equal to NAME.
       * LABEL:       The label that will be displayed on-screen.
-      * IS_ROOT:     true if this is the root-menu, false otherwise.
       * SELECT_CODE: A code-block that is executed when entering this menu. Like 
                      with the MenuLeaf code-block, this code acts on the action-object.
 

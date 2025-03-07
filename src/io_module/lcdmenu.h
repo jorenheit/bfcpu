@@ -47,7 +47,7 @@ class LCDMenu {
   MenuLeaf(SpaceDelim,    "[SPACE]",     item.home(),   { actions.setDelimiter(' ');           });
   MenuLeaf(Defaults,      "Defaults",    item.exit(),   { actions.restoreDefaults();           });
   MenuLeaf(Exit,          "Exit",        item.exit(),   { /* No action on select */            });
-  
+
   // Build the final menu-type:
   using Menu = MainMenu <
     Clear,
@@ -64,7 +64,8 @@ class LCDMenu {
       DecMode <
         BarDelim,
         CommaDelim,
-        SemiDelim
+        SemiDelim,
+        SpaceDelim
       >,
       HexMode<
         BarDelim,

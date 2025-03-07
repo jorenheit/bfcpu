@@ -19,6 +19,19 @@ class MenuItem {
 public:
   using Pointer = MenuItem<Actions>*;
 
+  MenuItem *begin() {
+    setRoot(this);
+    return this;
+  }
+
+  MenuItem *getRoot() {
+    return root;
+  }
+
+  MenuItem *getParent() {
+    return parent;
+  }
+  
   virtual char const *getLabel() const = 0;
   virtual MenuItem *select(Actions &) = 0;
   virtual MenuItem *highlighted() { return this; }
@@ -45,19 +58,6 @@ public:
     return buffer;
   }
 
-  MenuItem *begin() {
-    setRoot(this);
-    return this;
-  }
-
-  MenuItem *getRoot() {
-    return root;
-  }
-
-  MenuItem *getParent() {
-    return parent;
-  }
-  
 protected:
   void setParent(MenuItem *par, uint8_t const pos) {
     parent = par;
@@ -74,24 +74,37 @@ protected:
 
 
 namespace Helpers {
+
   template <typename... Args>
   struct ChildTuple;
 
   template <>
   struct ChildTuple<> {
-    template <typename T>
-    void storePointers(T **) {}
+    template <int Index, typename T, int N>
+    void storePointers(T (&)[N]) {
+      static_assert(Index == N, "Destination array size does not match the number of children");
+    }
   };
 
   template <typename First, typename... Rest>
   class ChildTuple<First, Rest...>: public ChildTuple<Rest...> {
+    template <typename ...> friend struct ChildTuple;
+
     using Pointer = typename First::Pointer;
     First child;
 
+    template <int Index, int N>
+    void storePointers(Pointer (&dest)[N]) {
+      static_assert(Index + sizeof...(Rest) < N, "Destination array not large enough for all children");
+
+      dest[Index] = &child;
+      ChildTuple<Rest...>::template storePointers<Index + 1>(dest);
+    }
+
   public:
-    void storePointers(Pointer dest[]) {
-      dest[0] = child.getPointer();
-      ChildTuple<Rest ...>::storePointers(dest + 1);
+    template <int N>
+    void storePointers(Pointer (&dest)[N]) {
+      storePointers<0>(dest);
     }
   };
 
@@ -99,10 +112,6 @@ namespace Helpers {
   struct MenuItemImplBase: public MenuItem<Actions>
   {
     using Pointer = typename MenuItem<Actions>::Pointer;
-
-    Pointer getPointer() {
-      return this;
-    }
 
     virtual char const *getLabel() const override final {
       return Impl::getLabel();
