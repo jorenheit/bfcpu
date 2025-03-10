@@ -37,7 +37,22 @@ The frequency of the astable 555 is halved by sending it through a JK flip-flop 
 \end{figure}
 
 \subsubsection{Frequency Control}
-Details about the frequency control system here.
+The frequency of the master clock can be set using dip switches to select the capacitor-value and a 10K potentiometer to select the resistance of the RC circuit connected to the 555 timer. The capacitor, in conjunction with a fixed 2K resistor, sets a broad range (lower capacitance corresponding to higher frequencies) while the potentiometer is used finegrained selection of the frequency within this range. This potentiometer is wired in series with a 1K resistor to enure stability when the potentiometer resistance drops toward zero. Table \ref{tab:frequencycontrol} should the frequency-ranges available for each of the currently selected capacitors. These values have been measured \emph{after} the flip-flop (so the actual frequency of the 555 timer is around double the frequencies displayed in table \ref{tab:frequencycontrol}).
+
+\begin{table}
+  \centering
+  \begin{tabular}{c|r|r}
+    Capacitance (F) & $f_{min}$ (Hz) & $f_{max}$ (Hz) \\ \hline
+    $10^{-5}$  & 5 & 15 \\
+    $10^{-6}$  & 40 & 140 \\
+    $10^{-7}$  & 500 & 1,500 \\
+    $10^{-8}$  & 5,000 & 14,000 \\
+    $10^{-9}$  & 19,000 & 55,000 \\
+    $10^{-10}$ & 38,000 & 108,000  
+  \end{tabular}
+  \caption{Frequency ranges for each of the capacitors (approximate).}
+  \label{tab:frequencycontrol}
+\end{table}
 
 \subsubsection{Frequency Display}
 Details about the frequency display here.
@@ -51,7 +66,7 @@ The Resume button needs more sophisticated debounce circuitry due to the followi
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/resumedebounce}
-  \caption{Timing diagram for the resume debouncer.}
+  \caption{Timing diagram for the resume debouncer. The output of Monostable 1 is connected to the reset of the register that stores the HLT signal.}
   \label{fig:resumedebounce}
 \end{figure}
 
@@ -71,6 +86,8 @@ A full schematic is provided on the next page.
 \end{figure}
 The register driver is responsible for sending the correct signals to the counting input of the D, DP, SP, IP and LS registers. All of these are based around the 74LS193, which has a U and D input and requires one of them to be pulsed low in order to execute the corresponding action. For example, to decrement this register, a low pulse must be sent to the D input while U is kept high. As explained in section \ref{sec:architecture:controlunit}, we used a centralized driver to limit the number of logic IC's necessary to drive the registers and the total number of control signals necessary.
 
+The driver module makes use of a pair of 74LS138 decoders. This chip takes 3 bits (A, B and C, connected to the register-select signals RS0, RS1 and RS2) to address one of its outputs and two gating inputs G1 and G2. When both gates are active, a low signal will be provided on the output pin determined by the address set on A, B and C. By letting the module-clock (M\_CLK) pulse one of the gates, a low pulse is created on the output selected by the values present at A, B, and C and routed to the corresponding counting module. We use the first '138 for generating the U signal and the second '138 for the D signal. The INC and DEC signals are connected to the other gates to determine which of the decoders is generating the pulse.
+
 \subsubsection{Schematic}
 A full schematic is provided on the next page.
 \includepdf[landscape=true]{schematics/registerdriver.pdf}
@@ -85,12 +102,11 @@ A full schematic is provided on the next page.
   \label{fig:dpregcloseup}
 \end{figure}
 
-The datapointer register contains the address of the cell currently being operated on. It is a 16 bit value kept in four 74LS193 IC's because of the requirement that is should be able to be incremented and decremented. Their outputs are connected to the address bus through a pair of tristate buffers to prevent bus contention with the stack pointer. Because the first 256 bytes are reserved as the stack (where instruction pointer values can be stored to implement loops), the reset value of this register should be set to 0x0100. This is achieved by resetting all IC's except for the one containing the 3rd nibble, which is reset to one by hardcoding 0x1 to its inputs and connecting the reset line (through an inverter) to the load-pin instead.
+The datapointer register contains the address of the cell currently being operated on. It is a 16 bit value kept in four 74LS193 IC's because of the requirement that is should be able to be incremented and decremented. Their outputs are connected to the address bus through a pair of tristate buffers to prevent bus contention with the stack pointer. Because the first 256 bytes are reserved as the stack (where instruction pointer values can be stored to implement loops), the reset value of this register should be set to 0x0100. This is achieved by resetting all IC's except for the one containing the 3rd nibble, which is reset to one by hardcoding 0x1 to its inputs and connecting the reset line (through an inverter) to the load-pin instead (and clock for synchronization).
 
-This register is special in the sense that it is the only register that should be able to be reset at runtime seperately from all the other modules (through the DPR signal). This allowes it to be reset to its starting value after initializing the computer when power is first applied (see also Sections \ref{sec:sequences:init} and \ref{sec:sequences:home}). The RESET signal is therefor fed into an OR gate together with the DPR signal before going to the reset pins of the IC's.
+This register is special in the sense that it is the only register that should be able to be reset at runtime and without resetting any of the other modules (through the DPR signal). This allows it to be reset to its starting value after initializing the computer when power is first applied (see also Sections \ref{sec:sequences:init} and \ref{sec:sequences:home}). The RESET signal is therefor fed into an OR gate together with the DPR signal before going to the reset pins of the IC's.
 
 Perhaps somewhat confusingly, the schematic (see next page) shows that the SP\_EN signal is used to enable the buffers. Since the bus is shared only between the stack pointer and data pointer, the same signal can be used to enable and disable their respective buffers: when the stack pointer is enabled, the data pointer should be disabled and vice versa. Since the output enable pin of the 74LS245 is active low, the SP\_EN can be fed directly into it. On the side of the stack pointer, the same signal goes through an inverter before going into the buffer. By default, when the stack pointer is not enabled, the datapointer will provide the address to the RAM. The RAM address input lines will never be floating which means that the contents of the current memory cell (in RAM) will always be visible in the computer.
-
 
 
 \subsubsection{Schematic}
@@ -156,53 +172,53 @@ A full schematic is provided on the next page.
 \includepdf[landscape=true]{schematics/stackpointerregister.pdf}
 
 
+%%%%%%% RAM Module
+
+\subsection{RAM Module}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \caption{Close up of the RAM Module.}
+  \label{fig:ramcloseup}
+\end{figure}
+
+\subsubsection{SRAM}
+The RAM module is mainly used to store the 8-bit data of the BF memory-tape. However its secondary purpose is to also store the instruction-pointer values when loops are handled, which are 16-bit in size. Therefore the RAM module contains two 512K x 8-bit SRAM chips (AS6C4008) for a total of 512K 16-bit memory-cells. The second chip is therefor only used to store the high-byte of the IP's stored on the stack (at most 256 values). The remainder of the capacity of this chip is not used at all, since the datavalues are only 8 bits in size.
+
+\subsubsection{Buffering}
+The AS6C4008 already provides a Chip Enable input which is supposed to be used when the data is connected to a databus. When this input is inactive, its outputs are in a high impedance state to avoid bus contention with other devices. However, in this project we need the data currently pointed to to be visible on an array of LED's, which means that the chip should be enabled basically at all times (except when writing to it). Additional logic is used in conjunction with a pair of 74LS245 tristate buffers to intercept the outputs before making them available on the bus through the buffers. The truthtable for this logic is incorporated in the schematics below. The LED's are not shown in the schematic, but can be connected directly to the datalines of the RAM in this configuration. 
+
+\subsubsection{Schematic}
+A full schematic is provided on the next page.
+\includepdf[landscape=true]{schematics/rammodule.pdf}
+
+
 %%%%%%% CONTROL UNIT
 
 \subsection{Control Unit}
 \subsubsection{Partitioning}
-The control unit is responsible for sending the appropriate signals to each of the modules. The general idea is that the current instruction pointed to by the IP (4 bits) together with the state flags (another 4 bits: A, V, S and Z) and the cycle count (3 bits) combine together to form an (11 bit) address into an EEPROM chip (AT28C64B) which contains the signal configuration for this state. The problem with this approach however is that the control unit needs to be able to drive 22 different control signals (for a complete list, see \ref{sec:architecture:cu}) or the schematic below), which cannot all be stored at a single 8-bit address in the EEPROM. There are two solutions to this problem:
-\begin{enumerate}
-\item Use 3 EEPROM chips, each containing a set of 8 signals (maximum). This allows for 24 different signals to be stored and retrieved efficiently in the same clock cycle.
-\item Use 1 EEPROM chip and partition its memory space using its two unused address bits (the EEPROM has 13 address lines of which we so far needed only 11 to encode the state of the computer). In this case, additional logic and additional read-cycles are needed to gather the different parts of the control signal configuration.
-\end{enumerate}
+The control unit is responsible for sending the appropriate signals to each of the modules. The general idea is that the current instruction pointed to by the IP (4 bits) together with the state flags (another 4 bits: A, V, S and Z) and the cycle count (3 bits) combine together to form an (11 bit) address into a set of three EEPROM chips (AT28C64B), each of which contains part the signal configuration corresponding to that combination of state and instruction. When clocked by the decoder-clock (D\_CLK), the values currently at this address are loaded into the registers (74LS173) and asserted onto their respective modules, which will act upon them on the next pulse of the M\_CLK signal.
 
-At the time of designing this processor, the AT28C64B was in very short supply and we were only able to find a single chip for use in the prototype. This forced us to implement method 2 at the cost of burning additional clock cycles to retrieve each of the three parts of the signal configuration. Even though this approach results in a significantly slower computer, it is an elegant solution in the sense that all of the microcode information is stored in a single place. It also somewhat simplified the testing process because we only had to reprogram a single EEPROM every time the microcode table turned out to contain an error, rather than 3 different chips (see \ref{sec:implementation:programmer} for details on how these chips are programmed).
-
-Based on the physical layout of the board, the following configuration was used to partition the EEPROM:
+Based on the physical layout of the board, the following configuration was used to construct an address into the EEPROMs.
 \\
 \begin{center}
 \begin{tabular}{r|ll} 
   Address Bits & \\ \hline
   0-2  & Cycle count & ($000_2$ - $111_2$) \\
-  3-4  & Partition number & ($00_2$ - $11_2$) \\
-  5-8  & Instruction & ($0000_2$ - $1111_2$) \\
-  9-12 & Flags & ($0000_2$ - $1111_2$) \\
+  3-7  & Instruction & ($0000_2$ - $1111_2$) \\
+  8-11 & Flags & ($0000_2$ - $1111_2$) \\
+  12-13 & Unused & 
 \end{tabular}
 \end{center}
 
-\subsubsection{Clock Divider}
-Due to the partitioning strategy, the master clock needs to be divided into 4 subclocks. On the first 3 subclock pulses, each of the control signal configuration parts is loaded into an 8-bit partition register, connecting to the modules that expect the corresponding signals. A pulse from the fourth subclock is then sent to all of the modules to execute their functions. 
-
-To implement the clock divider, a single 4-bit counting register (74LS161) is connected to address bits 3 and 4 of the EEPROM and to demultiplexer (74LS138). The first 3 outputs of the demultiplexer produce the first 3 subcycle pulses which are sent to 3 sets of two 4-bit registers (also 74LS161 with counting disabled), which will store each of the configuration parts. A '161 will load the value at its input reliably when the load-pin is active before receiving a pulse from the clock. This is why the outputs of the '138 are directly connected to the load-pins but also negated and AND'ed with the clock to produce a pulse offset by a half-cycle on the clock pins of the '161s (Figure \ref{fig:partitioning}). The fourth output of the demux is used as the clock signal for all the other modules (CLK) and to reset the count of the '161 that is responsible for keeping track of the partition numbers to make it loop back to 0, restarting the process for the next instruction.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.8\textwidth]{img/partitioning}
-  \caption{Timing diagram of the signals going from the clock divider to the load and clock pins of the partition registers (load pins are active low on the 74LS161).}
-  \label{fig:partitioning}
-\end{figure}
-
 \subsubsection{Program ROM}
 The actual BF program is stored in another 8K EEPROM chip (AT28C64) and is addressed by the instruction pointer as mentioned before. Since each BF instruction only needs 4 bits to be encoded (there are less than 16 different instructions), we can store up to 16K instruction in the chip by packing 2 consecutive instructions together in a single byte (handled by the assembler). Rather than using bit 0 from the IP directly as address bit 0 on the EEPROM, it is used as the data-select signal to a 74LS157 multiplexer. This multiplexer takes 1 select-bit and two sets of 4 databits. Depending on the value of the select-bit, one of the sets of 4-bit data is sent to its outputs. This allowes us to select either the low or high nibble of the data in the EEPROM, effectively doubling the amount of instructions that can be stored and retrieved.
-
-\subsubsection{Instruction and Flag Register}
-The instruction register acts as a buffer to store the current state of the system (current instruction + flags). It is connected to the output of the '157 described above, to the S and Z flags produced by the D and LS registers, and finally to the outputs of the flag register. The flag register gets its inputs directly from the control signals in order to buffer the A and V flag, which may be set at any cycle of an instruction and must be remembered until the next instruction (only 2 of its 4 bits are used).
-
+ 
 \subsubsection{Cycle Counter}
-The cycle counter is another 74LS161 that simply counts up and sends its outputs (bits 0-2) to address lines 0-2 of the microcode EEPROM. It is reset when it receives the CR signal. Rather than using a regular inverter, a Schmitt Trigger was used on its clock input to stabilize counting.
+The cycle counter is another 74LS161 that simply counts up and sends its outputs (bits 0-2) to address lines 0-2 of the microcode EEPROM chips. It is reset when it receives the CR signal (which becomes active when an instruction has completed).
 
 
 \subsubsection{Schematic}
-Full schematics are provided on the next pages (divided into 2 parts).
-\includepdf[landscape=true]{schematics/controlunit1.pdf}
-\includepdf[landscape=true]{schematics/controlunit2.pdf}
+A full schematic is provided on the next page.
+\includepdf[landscape=true]{schematics/controlunit.pdf}
+
