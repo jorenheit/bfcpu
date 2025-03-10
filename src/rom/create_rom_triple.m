@@ -54,7 +54,6 @@ function create_rom_triple(filebase)
 	   {"OUT", 2, "x10x"}, {"EN_OUT", "EN_D", "INC", "RS2", "CR"};
 	   {"OUT", 1, "xx1x"}, {"INC", "RS2", "CR"};
 
-	   %% TODO: load data from KB on subsequent cycle after the initial EN_IN signal
 	   {"IN_BUF", 1, "xx0x"}, {"EN_IN"};
 	   {"IN_BUF", 2, "xx0x"}, {"LD_D"};
 	   {"IN_BUF", 3, "xx0x"}, {"LD_FB"};
@@ -62,20 +61,10 @@ function create_rom_triple(filebase)
 	   {"IN_BUF", 4, "0x01"}, {"CR"};
 	   {"IN_BUF", 1, "xx1x"}, {"INC", "RS2",  "CR"};
 
-	   %% {"IN_BUF", 1, "xx0x"}, {"EN_IN", "LD_D"};
-	   %% {"IN_BUF", 2, "xx0x"}, {"LD_FB"};
-	   %% {"IN_BUF", 3, "xx00"}, {"VE", "LD_FA", "INC", "RS2", "CR"};
-	   %% {"IN_BUF", 3, "0x01"}, {"CR"};
-	   %% {"IN_BUF", 1, "xx1x"}, {"INC", "RS2",  "CR"};
-
 	   {"IN_IM", 1, "xx0x"}, {"EN_IN"};
 	   {"IN_IM", 2, "xx0x"}, {"LD_D", "VE", "LD_FA"};
 	   {"IN_IM", 3, "xx0x"}, {"INC", "RS2", "CR"};
 	   {"IN_IM", 1, "xx1x"}, {"INC", "RS2", "CR"};
-
-	   %% {"IN_IM", 1, "xx0x"}, {"EN_IN", "LD_D", "VE", "LD_FA"};
-	   %% {"IN_IM", 2, "xx0x"}, {"INC", "RS2", "CR"};
-	   %% {"IN_IM", 1, "xx1x"}, {"INC", "RS2", "CR"};
 
 	   {"NOP", 1, "xxxx"}, {"INC", "RS2",  "CR"};
 	   {"HALT", 1, "xxxx"}, {"HLT"};
