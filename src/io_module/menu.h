@@ -70,7 +70,7 @@
     Example:
 
     Menu menu;
-    Menu::BasePtr current = menu.begin();
+    Menu::Pointer current = menu.begin();
 */
 
 #define DEFINE_MENU_ITEM(NAME, LABEL, RETURN, ACTION_CODE)                                   \
@@ -90,5 +90,5 @@ struct NAME##_ {                                                                
 using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_>;
 
 #define SubMenu(NAME, LABEL, ACTION_CODE) DEFINE_MENU_ITEM(NAME, LABEL, &item, ACTION_CODE); \
-template <typename First, typename ... Rest>                                          \
+template <typename First, typename ... Rest>                                                 \
 using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_, First, Rest...>;

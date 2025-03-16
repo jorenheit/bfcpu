@@ -1,27 +1,23 @@
 #pragma once
 
 namespace Helper {
-  template <int Bytes>
-  struct GetIndexTypeFromBytes;
 
-  template <>
-  struct GetIndexTypeFromBytes<1> {
-    using Type = uint8_t;
+  template <bool Condition, typename IfTrue, typename IfFalse>
+  struct PickType;
+
+  template <typename IfTrue, typename IfFalse>
+  struct PickType<true, IfTrue, IfFalse> {
+    using Type = IfTrue;
   };
 
-  template <>
-  struct GetIndexTypeFromBytes<2> {
-    using Type = uint16_t;
+  template <typename IfTrue, typename IfFalse>
+  struct PickType<false, IfTrue, IfFalse> {
+    using Type = IfFalse;
   };
 
-  template <>
-  struct GetIndexTypeFromBytes<4> {
-    using Type = uint32_t;
-  };
-  
-  template <typename ValueType> 
+  template <uint32_t N> 
   struct GetIndexType {
-    using Type = typename GetIndexTypeFromBytes<sizeof(ValueType)>::Type;
+    using Type = typename PickType<(N <= (1UL << 8)), uint8_t, typename PickType<(N < (1UL << 16)), uint16_t, uint32_t>::Type>::Type;
   };
 }
 
@@ -37,15 +33,18 @@ struct RingBufferResult {
 template <typename, uint32_t>
 class RingBuffer;
 
-template <typename ValueType, uint32_t N, typename IndexType = typename Helper::GetIndexType<ValueType>::Type>
+template <typename ValueType, uint32_t N, typename IndexType_ = typename Helper::GetIndexType<N>::Type>
 class RingBufferBase {
+protected:
+  using IndexType = IndexType_;
+private:
   static_assert(N <= (1 << 8 * sizeof(IndexType)), "IndexType not big enough to index RingBuffer of N elements"); 
   using Derived = RingBuffer<ValueType, N>;
   using Result = RingBufferResult<ValueType>;
 
   volatile ValueType buffer[N]{};
-  volatile IndexType head;
-  volatile IndexType tail;
+  volatile IndexType head = 0;
+  volatile IndexType tail = 0;
 
 public:
   bool put(ValueType const &val) {
@@ -82,32 +81,36 @@ public:
 
 template <typename ValueType, uint32_t N>
 class RingBuffer: public RingBufferBase<ValueType, N> {
+  using IndexType = typename RingBufferBase<ValueType, N>::IndexType;
 public:
-  inline static size_t next(size_t const index) {
-    return (index + 1) % N;
+  inline static IndexType next(IndexType const index) {
+    return (index + 1) % static_cast<IndexType>(N);
   }  
 };
 
 template <typename ValueType>
 class RingBuffer<ValueType, (1UL << 8)>: public RingBufferBase<ValueType, (1UL << 8)> {
+  using IndexType = typename RingBufferBase<ValueType, (1UL << 8)>::IndexType;
 public:
-  inline static size_t next(size_t const index) {
+  inline static IndexType next(IndexType const index) {
     return index + 1;
   }  
 };
 
 template <typename ValueType>
 class RingBuffer<ValueType, (1UL << 16)>: public RingBufferBase<ValueType, (1UL << 16)> {
+  using IndexType = typename RingBufferBase<ValueType, (1UL << 16)>::IndexType;
 public:
-  inline static size_t next(size_t const index) {
+  inline static IndexType next(IndexType const index) {
     return index + 1;
   }  
 };
 
 template <typename ValueType>
 class RingBuffer<ValueType, -1UL>: public RingBufferBase<ValueType, -1UL> {
+  using IndexType = typename RingBufferBase<ValueType, -1UL>::IndexType;
 public:
-  inline static size_t next(size_t const index) {
+  inline static IndexType next(IndexType const index) {
     return index + 1;
   }  
 };

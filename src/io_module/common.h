@@ -27,6 +27,12 @@ double measureFrequency() {
   return (lastKnownFrequency = static_cast<double>(count) / FREQUENCY_MEASUREMENT_TIME);
 }
 
+template <unsigned long(TimeFunc)() = millis>
+void interruptable_delay(size_t const t) {
+  unsigned long now = TimeFunc();
+  while (TimeFunc() - now < t) {}
+}
+
 inline __attribute__((always_inline)) 
 void setIOPinsToOutput() {
   DDRC |= B00000001;
