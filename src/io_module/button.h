@@ -16,7 +16,7 @@ private:
   unsigned long lastStateChangeTime = 0;
 
 protected:
-  virtual bool read() = 0;
+  virtual bool isPressed() = 0;
 
 public:
   ButtonState state() {
@@ -27,16 +27,16 @@ public:
     if (currentTime - lastStateChangeTime < BUTTON_DEBOUNCE_DELAY)
       return currentState;
 
-    bool const pinState = this->read();
-    if (currentState == ButtonState::Low && pinState) {
+    bool const pressed = this->isPressed();
+    if (currentState == ButtonState::Low && pressed) {
       currentState = ButtonState::Rising;
       lastStateChangeTime = currentTime;
     }
-    else if (currentState == ButtonState::High && !pinState) {
+    else if (currentState == ButtonState::High && !pressed) {
       currentState = ButtonState::Falling;
       lastStateChangeTime = currentTime;
     }
-    else if (currentState == ButtonState::High && pinState){
+    else if (currentState == ButtonState::High && pressed){
       if (currentTime - lastStateChangeTime > BUTTON_HOLD_TIME) {
         // currentState remains High, but return Hold to indicate it's been high a while
         return ButtonState::Hold;
@@ -50,7 +50,7 @@ public:
   }
 };
 
-template <int Pin>
+template <int Pin, bool PressedLevel = HIGH>
 class Button: public ButtonBase {
 public:
   void begin() {
@@ -58,8 +58,8 @@ public:
   }
 
 private:
-  virtual bool read() {
-    return digitalRead<Pin>();
+  virtual bool isPressed() {
+    return digitalRead<Pin>() == PressedLevel;
   }
 };
 
@@ -85,7 +85,7 @@ public:
   {}
 
 private:
-  virtual bool read() {
+  virtual bool isPressed() {
     ButtonState const s1 = button1.state();
     ButtonState const s2 = button2.state();
 

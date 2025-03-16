@@ -64,10 +64,10 @@ void scroll(ButtonState const up, ButtonState const down) {
   static unsigned long previousScrollTime = 0;
   bool const scrollingAllowed = (currentTime - previousScrollTime) > NO_SCROLL_DELAY;
 
-  if (scrollingAllowed && up == ButtonState::High) {
+  if (scrollingAllowed && (up == ButtonState::High || up == ButtonState::Hold)) {
     lcdBuffer.scrollUp();
     previousScrollTime = currentTime;
-  } else if (scrollingAllowed && down == ButtonState::High) {
+  } else if (scrollingAllowed && (down == ButtonState::High || down == ButtonState::Hold)) {
     lcdBuffer.scrollDown();
     previousScrollTime = currentTime;
   }
