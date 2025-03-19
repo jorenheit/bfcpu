@@ -24,19 +24,16 @@ namespace Helper {
 template <typename T>
 struct RingBufferResult {
   T value;
-  bool ok;
-  operator bool() const {
-    return ok; 
-  }
+  bool good;
 };
 
 template <typename, uint32_t>
 class RingBuffer;
 
-template <typename ValueType, uint32_t N, typename IndexType_ = typename Helper::GetIndexType<N>::Type>
+template <typename ValueType, uint32_t N>
 class RingBufferBase {
 protected:
-  using IndexType = IndexType_;
+  using IndexType = typename Helper::GetIndexType<N>::Type;
 private:
   static_assert(N <= (1 << 8 * sizeof(IndexType)), "IndexType not big enough to index RingBuffer of N elements"); 
   using Derived = RingBuffer<ValueType, N>;

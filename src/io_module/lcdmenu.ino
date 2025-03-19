@@ -19,12 +19,11 @@ bool LCDMenu::active() const{
 }
 
 void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, ButtonState const both){
-  if (_current == _menu.exit())   return exit();
-  if (both == ButtonState::Hold ) return exit();
-
+  if (_current == _menu.exit())  return exit();
+  if (both == ButtonState::Hold) return exit();
 
   static bool bothReleased = true;
-  if (bothReleased && both == ButtonState::Rising) {
+  if (bothReleased && both == ButtonState::JustPressed) {
     _lastActiveTime = millis();
     bothReleased = false;
     LCDBuffer::Settings const oldSettings = _buffer.getSettings();
@@ -34,15 +33,15 @@ void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, Button
     _current = next;
     display();
   }
-  else if (!bothReleased && both == ButtonState::Low) {
+  else if (!bothReleased && both == ButtonState::Released) {
     bothReleased = true;
   }
-  else if (up == ButtonState::Falling) {
+  else if (up == ButtonState::JustReleased) {
     _lastActiveTime = millis();
     _current->up();
     display();  
   }
-  else if (down == ButtonState::Falling) {
+  else if (down == ButtonState::JustReleased) {
     _lastActiveTime = millis();
     _current->down();
     display();  
