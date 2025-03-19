@@ -62,12 +62,11 @@ void LCDBuffer::insertAsDecimal(byte const c) {
 void LCDBuffer::insertAsAscii(byte const c) {
   changed = true;
   switch (c) {
-    case '\n':
-    case PS2_ENTER: {
+    case '\n': {
       enter();
       return;
     }
-    case PS2_TAB: {
+    case '\t': {
 	    tab();
       return;
     }

@@ -11,23 +11,31 @@ LCDBuffer      lcdBuffer;
 LCDScreen      lcdScreen;
 LCDMenu        lcdMenu(lcdBuffer, lcdScreen);
 
-Button<SCROLL_UP_PIN>   scrollUpButton;
-Button<SCROLL_DOWN_PIN> scrollDownButton;
-ButtonPair<PeekState>   menuButton(scrollUpButton, scrollDownButton);
+auto scrollUpButton   = Button::create<SCROLL_UP_PIN>();
+auto scrollDownButton = Button::create<SCROLL_DOWN_PIN>();
+auto menuButton       = ButtonPair::create(scrollUpButton, scrollDownButton);
 
 void setup() {
+  // Setup for the pins
   pinMode(SYSTEM_CLOCK_INTERRUPT_PIN, INPUT);
   pinMode(DISPLAY_ENABLE_PIN, INPUT);
   pinMode(KEYBOARD_ENABLE_PIN, INPUT);
   setIOPinsToInput();
 
+  // Initialize buttons
   scrollUpButton.begin();
   scrollDownButton.begin();
+  menuButton.begin();
+
+  // Initialize buffers
   kbBuffer.begin();
   lcdBuffer.begin();
+  
+  // Load settings and initialize screen
   lcdMenu.loadSettings();
   lcdScreen.begin("READY!");
 
+  // Start listening for incoming clocks
   attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClock, RISING);
 }
 
@@ -47,27 +55,33 @@ void loop() {
 }
 
 void handleButtons() {
-  ButtonState const scrollUpState   = scrollUpButton.state();
-  ButtonState const scrollDownState = scrollDownButton.state();
-  ButtonState const menuButtonState = menuButton.state();
+  // Update button-states
+  scrollUpButton.update();
+  scrollDownButton.update();
+  menuButton.update();
 
-  if (lcdMenu.active())                       return lcdMenu.handleButtons(scrollUpState, scrollDownState, menuButtonState);
-  if (menuButtonState == ButtonState::Rising) return lcdMenu.enter();
-  if (menuButtonState == ButtonState::Hold)   return lcdScreen.displayFrequency();
+  // If in the menu, forward button-states to the menu
+  if (lcdMenu.active()) return lcdMenu.handleButtons(scrollUpButton.state(), 
+                                                     scrollDownButton.state(), 
+                                                     menuButton.state());
+  
+  if (menuButton.isJustPressed()) return lcdMenu.enter();
+  if (menuButton.isHold())        return lcdScreen.displayFrequency();
 
   // No menu or frequency stuff going on -> buttons are used for scrolling the buffer
-  scroll(scrollUpState, scrollDownState);
+  scroll();
 }
 
-void scroll(ButtonState const up, ButtonState const down) {
+void scroll() {
+  // assumes buttons have been updated recently
   unsigned long currentTime = millis();
   static unsigned long previousScrollTime = 0;
   bool const scrollingAllowed = (currentTime - previousScrollTime) > NO_SCROLL_DELAY;
 
-  if (scrollingAllowed && (up == ButtonState::High || up == ButtonState::Hold)) {
+  if (scrollingAllowed && scrollUpButton.isDown()) {
     lcdBuffer.scrollUp();
     previousScrollTime = currentTime;
-  } else if (scrollingAllowed && (down == ButtonState::High || down == ButtonState::Hold)) {
+  } else if (scrollingAllowed && scrollDownButton.isDown()) {
     lcdBuffer.scrollDown();
     previousScrollTime = currentTime;
   }

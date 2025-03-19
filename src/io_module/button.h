@@ -3,94 +3,118 @@
 #include "common.h"
 
 enum class ButtonState {
-  Low,
-  High,
-  Rising,
-  Falling,
+  Pressed,
+  Released,
+  JustPressed,
+  JustReleased,
   Hold
 };
 
-class ButtonBase {
-private:
-  ButtonState currentState = ButtonState::Low;
+template <typename Derived>
+class ButtonBase_ {
+  ButtonState currentState = ButtonState::Released;
   unsigned long lastStateChangeTime = 0;
 
-protected:
-  virtual bool isPressed() = 0;
-
 public:
-  ButtonState state() {
-    if (currentState == ButtonState::Rising) return (currentState = ButtonState::High);
-    else if (currentState == ButtonState::Falling) return (currentState = ButtonState::Low);
+  inline void begin() {
+    static_cast<Derived*>(this)->begin_();
+  }
+
+  ButtonState update() {
+    if (currentState == ButtonState::JustPressed) return (currentState = ButtonState::Pressed);
+    else if (currentState == ButtonState::JustReleased) return (currentState = ButtonState::Released);
 
     unsigned long currentTime = millis();
     if (currentTime - lastStateChangeTime < BUTTON_DEBOUNCE_DELAY)
       return currentState;
 
-    bool const pressed = this->isPressed();
-    if (currentState == ButtonState::Low && pressed) {
-      currentState = ButtonState::Rising;
+    bool const buttonDown = static_cast<Derived*>(this)->active();
+    if (!isDown() && buttonDown) {
       lastStateChangeTime = currentTime;
+      return (currentState = ButtonState::JustPressed);
     }
-    else if (currentState == ButtonState::High && !pressed) {
-      currentState = ButtonState::Falling;
+    else if (isDown() && !buttonDown) {
       lastStateChangeTime = currentTime;
+      return (currentState = ButtonState::JustReleased);
     }
-    else if (currentState == ButtonState::High && pressed){
-      if (currentTime - lastStateChangeTime > BUTTON_HOLD_TIME) {
-        // currentState remains High, but return Hold to indicate it's been high a while
-        return ButtonState::Hold;
-      }
+    else if (isDown() && buttonDown && (currentTime - lastStateChangeTime > BUTTON_HOLD_TIME)) {
+      return (currentState = ButtonState::Hold);
     }
+    else return currentState;
+  }
+
+  inline ButtonState state() const {
     return currentState;
   }
 
-  ButtonState state() const {
-    return currentState;
+  inline bool isDown() const {
+    return currentState == ButtonState::JustPressed || currentState == ButtonState::Pressed || currentState == ButtonState::Hold;
+  }
+
+  inline bool isJustPressed() const {
+    return currentState == ButtonState::JustPressed;
+  }
+
+  inline bool isJustReleased() const {
+    return currentState == ButtonState::JustReleased;
+  }
+
+  inline bool isHold() const {
+    return currentState == ButtonState::Hold;
   }
 };
 
-template <int Pin, bool PressedLevel = HIGH>
-class Button: public ButtonBase {
-public:
-  void begin() {
-    pinMode(Pin, INPUT);
+namespace Button {
+  template <int Pin, bool ActiveLevel>
+  class Button_;
+
+  template <int Pin, bool ActiveLevel = HIGH>
+  inline Button_<Pin, ActiveLevel> create() {
+    return {};
   }
 
-private:
-  virtual bool isPressed() {
-    return digitalRead<Pin>() == PressedLevel;
+  template <int Pin, bool ActiveLevel>
+  class Button_: public ButtonBase_<Button_<Pin, ActiveLevel>> {
+    friend class ButtonBase_<Button_<Pin, ActiveLevel>>;
+    friend Button_ create<Pin, ActiveLevel>();
+
+    Button_() = default;
+    inline void begin_() {
+      pinMode(Pin, INPUT);
+    }
+
+    inline bool active() const {
+      return digitalRead<Pin>() == ActiveLevel;
+    }
+  };
+}
+
+namespace ButtonPair {
+  template <typename Button1, typename Button2>
+  class ButtonPair_;
+
+  template <typename Button1, typename Button2>
+  inline ButtonPair_<Button1, Button2> create(Button1 const &b1, Button2 const &b2) {
+    return ButtonPair_<Button1, Button2>{b1, b2};
   }
-};
 
-struct ChangeState {
-  using ButtonBaseRef = ButtonBase &;
-};
+  template <typename Button1, typename Button2>
+  class ButtonPair_: public ButtonBase_<ButtonPair_<Button1, Button2>> {
+    friend class ButtonBase_<ButtonPair_<Button1, Button2>>;
+    friend ButtonPair_ create<Button1, Button2>(Button1 const &, Button2 const &);
 
-struct PeekState {
-  using ButtonBaseRef = ButtonBase const &;
-};
+    Button1 const &button1;
+    Button2 const &button2;
 
-template <typename StatePolicy>
-class ButtonPair: public ButtonBase {
-  using ButtonBaseRef = typename StatePolicy::ButtonBaseRef;
-  
-  ButtonBaseRef button1;
-  ButtonBaseRef button2;
+    ButtonPair_(Button1 const &b1, Button2 const &b2):
+      button1(b1),
+      button2(b2)
+    {}
 
-public:
-  ButtonPair(ButtonBaseRef b1, ButtonBaseRef b2):
-    button1(b1),
-    button2(b2)
-  {}
+    inline void begin_() {}
 
-private:
-  virtual bool isPressed() {
-    ButtonState const s1 = button1.state();
-    ButtonState const s2 = button2.state();
-
-    bool const b1High = (s1 == ButtonState::Rising) || (s1 == ButtonState::High);
-    bool const b2High = (s2 == ButtonState::Rising) || (s2 == ButtonState::High);
-    return b1High && b2High;
-  }
-};
+    inline bool active() const {
+      return button1.isDown() && button2.isDown();
+    }
+  };
+}

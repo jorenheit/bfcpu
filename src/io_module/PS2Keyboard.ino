@@ -33,7 +33,7 @@ namespace Impl {
   uint8_t get_scan_code()
   {
     auto const result = ringBuf.get();
-    return result.ok ? result.value : 0;
+    return result.good ? result.value : 0;
   }
 
   #include "keymap.h"
