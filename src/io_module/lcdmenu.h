@@ -41,9 +41,9 @@ class LCDMenu {
   MenuLeaf(AutoscrollOn,  "On",          item.home(),   { actions.setAutoscrollEnabled(true);  });
   MenuLeaf(AutoscrollOff, "Off",         item.home(),   { actions.setAutoscrollEnabled(false); });
   MenuLeaf(TextMode,      "Text",        item.home(),   { actions.setMode(ASCII);              });
-  MenuLeaf(BarDelim,      "|",           item.home(),   { actions.setDelimiter('|');           });
   MenuLeaf(CommaDelim,    ",",           item.home(),   { actions.setDelimiter(',');           });
   MenuLeaf(SemiDelim,     ";",           item.home(),   { actions.setDelimiter(';');           });
+  MenuLeaf(BarDelim,      "|",           item.home(),   { actions.setDelimiter('|');           });
   MenuLeaf(SpaceDelim,    "[SPACE]",     item.home(),   { actions.setDelimiter(' ');           });
   MenuLeaf(Defaults,      "Defaults",    item.exit(),   { actions.restoreDefaults();           });
   MenuLeaf(Exit,          "Exit",        item.exit(),   { /* No action on select */            });
@@ -52,8 +52,8 @@ class LCDMenu {
   using Menu = MainMenu <
     Clear,
     Echo<
-      EchoOff,
-      EchoOn
+      EchoOn,
+      EchoOff
     >,
     Autoscroll<
       AutoscrollOn,
@@ -62,15 +62,15 @@ class LCDMenu {
     DisplayMode<
       TextMode,
       DecMode <
-        BarDelim,
         CommaDelim,
         SemiDelim,
+        BarDelim,
         SpaceDelim
       >,
       HexMode<
-        BarDelim,
         CommaDelim,
         SemiDelim,
+        BarDelim,
         SpaceDelim
       >
     >,

@@ -62,9 +62,9 @@ enum LCDParams: int {
   TEMP_MESSAGE_TIMEOUT = 1000,
 
   AUTOSCROLL_DEFAULT_SETTING = true,
-  ECHO_DEFAULT_SETTING = false,
+  ECHO_DEFAULT_SETTING = true,
   DISPLAY_MODE_DEFAULT_SETTING = ASCII,
-  DELIMITER_DEFAULT_SETTING = '|'
+  DELIMITER_DEFAULT_SETTING = ','
 };
 
 enum FrequencyParams: int { 
@@ -80,8 +80,8 @@ enum KeyboardParams: int {
 };
 
 enum IOBuffers: uint8_t {
-  KB_RING1 = 40,
-  KB_RING2 = 40,
+  KB_RING1 = 32,
+  KB_RING2 = 32,
   LCD_RING = 128
 };
 

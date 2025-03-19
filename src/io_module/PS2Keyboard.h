@@ -5,8 +5,8 @@
 // keystroke.  These configure what byte will be returned
 // for each "special" key.  To ignore a key, use zero.
 
-#define PS2_TAB          '\t'
-#define PS2_ENTER        '\n'
+#define PS2_TAB          9
+#define PS2_ENTER        10
 #define PS2_BACKSPACE    0
 #define PS2_ESC          0
 #define PS2_INSERT       0
