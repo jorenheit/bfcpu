@@ -8,7 +8,17 @@ void LCDScreen::begin(char const *msg) {
   lcd.begin();
   lcd.cursor();
   lcd.blink();
-  if (msg) displayTemp(TEMP_MESSAGE_TIMEOUT, true, msg);
+
+  char line[LINE_SIZE + 1];
+  uint8_t const msgLen = strlen(msg);
+  uint8_t const padLeft = (LINE_SIZE - msgLen) / 2;
+  uint8_t const padRight = LINE_SIZE - msgLen - padLeft;
+  for (uint8_t i = 0; i != padLeft;  ++i) line[i] = ' ';
+  for (uint8_t i = 0; i != msgLen;   ++i) line[padLeft + i] = msg[i];
+  for (uint8_t i = 0; i != padRight; ++i) line[padLeft + msgLen + i] = ' ';
+  line[LINE_SIZE] = 0;
+
+  if (msg) displayTemp(TEMP_MESSAGE_TIMEOUT, true, line);
 }
 
 void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
