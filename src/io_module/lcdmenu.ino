@@ -1,10 +1,11 @@
 #include "lcdmenu.h"
 #include <EEPROM.h>
 
-LCDMenu::LCDMenu(LCDBuffer &buf, LCDScreen &scr):
+LCDMenu::LCDMenu(Settings &s, LCDBuffer &buf, LCDScreen &scr):
+  _settings(s),
   _buffer(buf), 
   _screen(scr),
-  _actions(buf)
+  _actions(s, buf)
 {
   _current = _menu.begin();
 }
@@ -26,9 +27,9 @@ void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, Button
   if (bothReleased && both == ButtonState::JustPressed) {
     _lastActiveTime = millis();
     bothReleased = false;
-    LCDBuffer::Settings const oldSettings = _buffer.getSettings();
+    Settings const oldSettings = _settings;
     Menu::Pointer next = _current->highlighted()->select(_actions);
-    if (_buffer.getSettings() != oldSettings) saveSettings();
+    if (_settings != oldSettings) saveSettings();
     if (next == _menu.exit()) return exit();
     _current = next;
     display();
@@ -60,10 +61,10 @@ void LCDMenu::exit() {
 
 
 struct EEPROMSettings {
-  LCDBuffer::Settings settings;
+  Settings settings;
   uint8_t checksum;
   EEPROMSettings() = default;
-  EEPROMSettings(LCDBuffer::Settings const &set):
+  EEPROMSettings(Settings const &set):
     settings(set),
     checksum(computeChecksum())
   {}
@@ -87,13 +88,13 @@ void LCDMenu::loadSettings() {
   if (validFlag == EEPROM_VALID_FLAG_VALUE) {
     EEPROMSettings set = {};
     EEPROM.get(EEPROM_SETTINGS_ADDRESS, set);
-    if (set.valid()) _buffer.setSettings(set.settings);
+    if (set.valid()) _settings = set.settings;
     else EEPROM.write(EEPROM_VALID_FLAG_ADDRESS, false);
   }
 }
 
 void LCDMenu::saveSettings() {
-  EEPROMSettings const set = _buffer.getSettings();
+  EEPROMSettings const set = _settings;
   for (uint8_t idx = 0; idx != sizeof(set); ++idx) {
     EEPROM.update(EEPROM_SETTINGS_ADDRESS + idx, reinterpret_cast<byte const*>(&set)[idx]);
   }

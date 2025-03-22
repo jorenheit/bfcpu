@@ -10,18 +10,20 @@ class LCDMenu {
 
   // Actions contains the functions that are available from within the menu-nodes.
   class Actions {
+    Settings &_settings;
     LCDBuffer &_buffer;
   public:
-    Actions(LCDBuffer &buffer):
-      _buffer(buffer)
+    Actions(Settings &s, LCDBuffer &buf):
+      _settings(s),
+      _buffer(buf)
     {}
 
     inline void clear()                              { _buffer.clear();}
-    inline void setEchoEnabled(bool const val)       { _buffer.setEchoEnabled(val); }
-    inline void setAutoscrollEnabled(bool const val) { _buffer.setAutoscrollEnabled(val); }
-    inline void setMode(::DisplayMode const mode)    { _buffer.setMode(mode); }
-    inline void setDelimiter(char const delim)       { _buffer.setDelimiter(delim); }
-    inline void restoreDefaults()                    { _buffer.setSettings({}); }
+    inline void setEchoEnabled(bool const val)       { _settings.echoEnabled = val; }
+    inline void setAutoscrollEnabled(bool const val) { _settings.autoscrollEnabled = val; }
+    inline void setMode(::DisplayMode const mode)    { _settings.mode = mode; }
+    inline void setDelimiter(char const delim)       { _settings.delimiter = delim; }
+    inline void restoreDefaults()                    { _settings = {}; }
   };
 
   MenuActions(Actions);
@@ -81,13 +83,14 @@ class LCDMenu {
   Menu _menu;
   Menu::Pointer _current = nullptr;
 
+  Settings &_settings;
   LCDBuffer &_buffer;
   LCDScreen &_screen;
   Actions _actions;
   unsigned long _lastActiveTime = 0;
 
 public:
-  LCDMenu(LCDBuffer &buf, LCDScreen &scr);
+  LCDMenu(Settings &s, LCDBuffer &buf, LCDScreen &scr);
   void enter();
   bool active() const;
   void handleButtons(ButtonState const up, ButtonState const down, ButtonState const both);

@@ -1,6 +1,7 @@
 #include "lcdscreen.h"
 
-LCDScreen::LCDScreen():
+LCDScreen::LCDScreen(Settings const &s):
+  settings(s),
   lcd(LINE_SIZE, VISIBLE_LINES)
 {}
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#define LCD_COMMAND_EXECUTION_MICROS 40
+// ============================  Static Settings ================================= //
 
 enum LCDDriverPins: uint8_t {
   // Connections from Shift Register to Arduino
@@ -60,6 +60,7 @@ enum LCDParams: int {
   BOOT_MESSAGE_DELAY = 500,
   MENU_TIMEOUT = 5000,
   TEMP_MESSAGE_TIMEOUT = 1000,
+  LCD_COMMAND_EXECUTION_MICROS = 40,
 
   AUTOSCROLL_DEFAULT_SETTING = true,
   ECHO_DEFAULT_SETTING = true,
@@ -91,3 +92,23 @@ enum EEPROMStorageParams: uint8_t {
   EEPROM_SETTINGS_ADDRESS = 1
 };
 
+
+// ============================  Dynamic Settings ================================= //
+
+struct Settings {
+  DisplayMode mode = static_cast<DisplayMode>(DISPLAY_MODE_DEFAULT_SETTING);
+  bool autoscrollEnabled = AUTOSCROLL_DEFAULT_SETTING;
+  bool echoEnabled = ECHO_DEFAULT_SETTING;
+  char delimiter = DELIMITER_DEFAULT_SETTING;
+
+  bool operator==(Settings const &other) const {
+    return (mode == other.mode) &&
+          (autoscrollEnabled == other.autoscrollEnabled) &&
+          (echoEnabled == other.echoEnabled) &&
+          (delimiter == other.delimiter);
+  }
+
+  bool operator!=(Settings const &other) const {
+    return !(*this == other);
+  }
+};

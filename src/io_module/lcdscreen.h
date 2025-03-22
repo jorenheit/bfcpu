@@ -4,11 +4,12 @@
 #include "settings.h"
 
 class LCDScreen {
+  Settings settings;
   LiquidCrystal_74HC595 lcd;
   unsigned long tempTimeout = 0;
 
 public:
-  LCDScreen();
+  LCDScreen(Settings const &s);
 
   void begin(char const *msg = 0);
   void display(LCDBuffer::View const &view, bool forced = false); 
