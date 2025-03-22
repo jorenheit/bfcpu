@@ -6,7 +6,9 @@ void KeyboardBuffer::begin() {
 
 void KeyboardBuffer::update() {
   while (kb.available()) {
-    ringBuf.put(kb.read());
+    char const c = kb.read();
+    ringBuf.put(c);
+    if (settings.echoEnabled) echo(c);
   }
 }
 

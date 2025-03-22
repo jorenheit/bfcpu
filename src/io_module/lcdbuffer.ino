@@ -8,11 +8,6 @@ void LCDBuffer::enqueue(byte const c) {
   ringBuf.put(c);
 }
 
-void LCDBuffer::enqueueEcho(byte const c) {
-  if (settings.echoEnabled && c)
-    enqueue(c);
-}
-
 void LCDBuffer::update() {
   // Select the insertion function
   using InsertFuncPtr = void (LCDBuffer::*)(byte const);
@@ -155,39 +150,4 @@ void LCDBuffer::clear() {
 uint8_t LCDBuffer::normalize(uint8_t const line) const {
   // returns a line number between 0 and TOTAL_LINES - 1 as offset with repect to the top line.
   return (line - topLine + TOTAL_LINES) % TOTAL_LINES;
-}
-
-void LCDBuffer::setMode(DisplayMode const mode_) {
-  settings.mode = static_cast<DisplayMode>(mode_ % N_MODES);
-}
-
-void LCDBuffer::setAutoscrollEnabled(bool const val) {
-  settings.autoscrollEnabled = val;
-}
-
-
-void LCDBuffer::setEchoEnabled(bool const val) {
-  settings.echoEnabled = val;
-}
-
-void LCDBuffer::setDelimiter(char const delim) {
-  settings.delimiter = delim;
-}
-
-void LCDBuffer::setSettings(Settings const &set) {
-  settings = set;
-} 
-
-LCDBuffer::Settings const &LCDBuffer::getSettings() const {
-  return settings;
-}
-
-bool LCDBuffer::Settings::operator==(Settings const &other) const {
-  return (mode == other.mode) &&
-         (autoscrollEnabled == other.autoscrollEnabled) &&
-         (echoEnabled == other.echoEnabled) &&
-         (delimiter == other.delimiter);
-}
-bool LCDBuffer::Settings::operator!=(Settings const &other) const {
-  return !(*this == other);
 }

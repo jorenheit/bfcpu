@@ -6,10 +6,12 @@
 #include "button.h"
 #include "lcdmenu.h"
 
-KeyboardBuffer kbBuffer;
-LCDBuffer      lcdBuffer;
-LCDScreen      lcdScreen;
-LCDMenu        lcdMenu(lcdBuffer, lcdScreen);
+// Global objects
+Settings       settings;
+KeyboardBuffer kbBuffer(settings);
+LCDBuffer      lcdBuffer(settings);
+LCDScreen      lcdScreen(settings);
+LCDMenu        lcdMenu(settings, lcdBuffer, lcdScreen);
 
 auto scrollUpButton   = Button::create<SCROLL_UP_PIN>();
 auto scrollDownButton = Button::create<SCROLL_DOWN_PIN>();
@@ -30,7 +32,7 @@ void setup() {
   // Initialize buffers
   kbBuffer.begin();
   lcdBuffer.begin();
-  
+
   // Load settings and initialize screen
   lcdMenu.loadSettings();
   lcdScreen.begin("READY!");
@@ -52,6 +54,10 @@ void loop() {
   
   // Handle buttons for scrolling, accessing the menu or displaying the frequency.
   handleButtons();
+}
+
+void echo(char const c) {
+  lcdBuffer.enqueue(c);
 }
 
 void handleButtons() {
@@ -109,9 +115,7 @@ void onSystemClock() {
       case IDLE:
         {
           setIOPinsToOutput();
-          byte const val = kbBuffer.get();
-          writeByteToBus(val);
-          lcdBuffer.enqueueEcho(val);
+          writeByteToBus(kbBuffer.get());
           kb_state = WAIT;
           return;
         }
