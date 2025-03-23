@@ -2,8 +2,6 @@
 #include "settings.h"
 #include "PS2Keyboard.h"
 
-// Make sure echo is defined somewhere!
-void echo(char const);
 
 class KeyboardBuffer {   
   PS2Keyboard kb;
@@ -18,5 +16,6 @@ public:
   void begin();
   void update();
   char get();
+  void clear();
   char peek() const;
 };

@@ -71,6 +71,11 @@ public:
                           : Result{buffer[tail], true};
   }
 
+  void clear() {
+    head = 0;
+    tail = 0;
+  }
+
   inline bool available() const {
     return (head != tail);
   }

@@ -34,29 +34,15 @@ public:
   
   virtual char const *getLabel() const = 0;
   virtual MenuItem *select(Actions &) = 0;
-  virtual MenuItem *highlighted() { return this; }
-  virtual void up() {}
-  virtual void down() {}
+  virtual MenuItem *highlighted(int8_t const = 0) { return this; }
+  virtual uint8_t count() const { return 0; }
+  virtual bool up()   { return false; }
+  virtual bool down() { return false; }
 
   virtual MenuItem *back() { return parent ? parent : this; } // should be overridden by leaf-types
   MenuItem *stay() { return parent; };
   MenuItem *home() { return root; };
   MenuItem *exit() { return nullptr; };
-  
-  char const *getNumberedLabel() const {
-    static char buffer[LINE_SIZE + 1]; // shared buffer between all items, filled on demand
-    buffer[0] = '0' + parentPos;
-    buffer[1] = '.';
-    buffer[2] = ' ';
-    buffer[LINE_SIZE] = '\0';
-    
-    for (uint8_t idx = 3; idx != LINE_SIZE; ++idx) {
-      char const c = getLabel()[idx - 3];
-      buffer[idx] = c;
-      if (!c) break;
-    }
-    return buffer;
-  }
 
 protected:
   void setParent(MenuItem *par, uint8_t const pos) {
@@ -141,17 +127,24 @@ namespace Helpers {
       }
     }
 
-    virtual Pointer highlighted() override final {
-      return childPointers[highlightedIndex];
+    virtual Pointer highlighted(int8_t const offset) override final {
+      int8_t const index = highlightedIndex + offset;
+      return (index < 0 || index >= numChildren) ? nullptr : childPointers[index]; 
     }
 
-    virtual void up() override final {
+    virtual bool up() override final {
       highlightedIndex = (highlightedIndex + numChildren - 1) % numChildren;
+      return highlightedIndex == (numChildren - 1);
     }
 
-    virtual void down() override final {
+    virtual bool down() override final {
       highlightedIndex = (highlightedIndex + 1) % numChildren;
+      return (highlightedIndex == 0);
     }
+
+    virtual uint8_t count() const override final {
+      return numChildren;
+    } 
 
   private:
     virtual void setRootForChildren(Pointer root) override final {

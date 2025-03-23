@@ -11,7 +11,7 @@ Settings       settings;
 KeyboardBuffer kbBuffer(settings);
 LCDBuffer      lcdBuffer(settings);
 LCDScreen      lcdScreen(settings);
-LCDMenu        lcdMenu(settings, lcdBuffer, lcdScreen);
+LCDMenu        lcdMenu(lcdScreen, settings, lcdBuffer, kbBuffer);
 
 auto scrollUpButton   = Button::create<SCROLL_UP_PIN>();
 auto scrollDownButton = Button::create<SCROLL_DOWN_PIN>();
