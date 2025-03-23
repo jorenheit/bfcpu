@@ -1,5 +1,7 @@
 #include "keyboardbuffer.h"
 
+void echo(char const);
+
 void KeyboardBuffer::begin() {
   kb.begin();
 }
@@ -10,6 +12,10 @@ void KeyboardBuffer::update() {
     ringBuf.put(c);
     if (settings.echoEnabled) echo(c);
   }
+}
+
+void KeyboardBuffer::clear() {
+  ringBuf.clear();
 }
 
 char KeyboardBuffer::get() {

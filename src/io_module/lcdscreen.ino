@@ -7,8 +7,6 @@ LCDScreen::LCDScreen(Settings const &s):
 
 void LCDScreen::begin(char const *msg) {
   lcd.begin();
-  lcd.cursor();
-  lcd.blink();
 
   char line[LINE_SIZE + 1];
   uint8_t const msgLen = strlen(msg);
@@ -19,7 +17,7 @@ void LCDScreen::begin(char const *msg) {
   for (uint8_t i = 0; i != padRight; ++i) line[padLeft + msgLen + i] = ' ';
   line[LINE_SIZE] = 0;
 
-  if (msg) displayTemp(TEMP_MESSAGE_TIMEOUT, true, line);
+  if (msg) displayTemp(TEMP_MESSAGE_TIMEOUT, line);
 }
 
 void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
@@ -51,27 +49,33 @@ void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
   // Display cursor at the position where the next character will be printed (if in view).
   if (view.cursorRow < VISIBLE_LINES) {
     lcd.setCursor(view.cursorCol, view.cursorRow);
-    lcd.cursor(); 
+    enableCursor();
   }
   else {
     // Cursor not in view -> turn off
-    lcd.noCursor();
+    disableCursor();
   }
 }
 
-void LCDScreen::displayTemp(char const *lines[], uint8_t const n, size_t const timeout, bool const clr)
+void LCDScreen::displayTemp(char const *lines[], uint8_t const n, size_t const timeout)
 {
-  if (clr) lcd.clear();
-  for (uint8_t idx = 0; idx != min(n, static_cast<uint8_t>(VISIBLE_LINES)); ++idx) {
+  static char emptyLine[LINE_SIZE + 1];
+  static bool initialized = false;
+  if (!initialized) {
+    memset(emptyLine, ' ', LINE_SIZE);
+    emptyLine[LINE_SIZE] = 0;
+    initialized = true;
+  } 
+
+  for (uint8_t idx = 0; idx != VISIBLE_LINES; ++idx) {
     lcd.setCursor(0, idx);
-    lcd.print(lines[idx]);
+    lcd.print(idx < n ? lines[idx] : emptyLine);
   }
-  lcd.noCursor();
+  disableCursor();
   tempTimeout = millis() + timeout;
 }
 
-void LCDScreen::clear() {
-  lcd.clear();
+void LCDScreen::abortTemp() {
   tempTimeout = 0;
 }
 
@@ -82,7 +86,17 @@ void LCDScreen::displayFrequency() {
   double kHz = measureFrequency();
   dtostrf(kHz, LINE_SIZE - 4, FREQUENCY_DISPLAY_PRECISION, floatBuffer);
   snprintf(stringBuffer, LINE_SIZE + 1, "%s kHz", floatBuffer);
-  displayTemp(FREQUENCY_TIMEOUT, false, "Clock Frequency", stringBuffer);
+  displayTemp(FREQUENCY_TIMEOUT, "Clock Frequency", stringBuffer);
+}
+
+void LCDScreen::enableCursor() {
+  lcd.cursor();
+  lcd.blink();
+}
+
+void LCDScreen::disableCursor() {
+  lcd.noCursor();
+  lcd.noBlink();
 }
 
 

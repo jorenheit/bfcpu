@@ -111,7 +111,7 @@ void LCDBuffer::scrollDown(uint8_t n) {
 
 void LCDBuffer::scrollUp(uint8_t n) {
   n = min(normalize(topVisibleLine) - normalize(topLine), n);
-  topVisibleLine = (topVisibleLine - n + TOTAL_LINES) % TOTAL_LINES; // 
+  topVisibleLine = (topVisibleLine - n + TOTAL_LINES) % TOTAL_LINES; 
   bottomVisibleLine = (bottomVisibleLine - n + TOTAL_LINES) % TOTAL_LINES;
   changed = true;
 }
@@ -145,6 +145,7 @@ void LCDBuffer::clear() {
   topLine = 0;
   bottomLine = TOTAL_LINES - 1;
   pos = 0;
+  ringBuf.clear();
 }
 
 uint8_t LCDBuffer::normalize(uint8_t const line) const {

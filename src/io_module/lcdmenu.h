@@ -11,14 +11,16 @@ class LCDMenu {
   // Actions contains the functions that are available from within the menu-nodes.
   class Actions {
     Settings &_settings;
-    LCDBuffer &_buffer;
+    LCDBuffer &_lcdBuf;
+    KeyboardBuffer &_kbBuf;
   public:
-    Actions(Settings &s, LCDBuffer &buf):
+    Actions(Settings &s, LCDBuffer &buf1, KeyboardBuffer &buf2):
       _settings(s),
-      _buffer(buf)
+      _lcdBuf(buf1),
+      _kbBuf(buf2)
     {}
 
-    inline void clear()                              { _buffer.clear();}
+    inline void clear()                              { _lcdBuf.clear(); _kbBuf.clear(); }
     inline void setEchoEnabled(bool const val)       { _settings.echoEnabled = val; }
     inline void setAutoscrollEnabled(bool const val) { _settings.autoscrollEnabled = val; }
     inline void setMode(::DisplayMode const mode)    { _settings.mode = mode; }
@@ -29,7 +31,7 @@ class LCDMenu {
   MenuActions(Actions);
 
   // Define submenu nodes
-  SubMenu(MainMenu,    "Main Menu",     { /* No action on select */    });
+  SubMenu(MainMenu,    "Settings",      { /* No action on select */    });
   SubMenu(Echo,        "Echo",          { /* No action on select */    });
   SubMenu(Autoscroll,  "Autoscroll",    { /* No action on select */    });
   SubMenu(DisplayMode, "Display Mode",  { /* No action on select */    });
@@ -37,18 +39,18 @@ class LCDMenu {
   SubMenu(HexMode,     "Hexadecimal",   { actions.setMode(HEXADECIMAL);});
 
   // Define leaf nodes
-  MenuLeaf(Clear,         "Clear",       item.exit(),   { actions.clear();                     });
-  MenuLeaf(EchoOn,        "On",          item.home(),   { actions.setEchoEnabled(true);        });
-  MenuLeaf(EchoOff,       "Off",         item.home(),   { actions.setEchoEnabled(false);       });
-  MenuLeaf(AutoscrollOn,  "On",          item.home(),   { actions.setAutoscrollEnabled(true);  });
-  MenuLeaf(AutoscrollOff, "Off",         item.home(),   { actions.setAutoscrollEnabled(false); });
-  MenuLeaf(TextMode,      "Text",        item.home(),   { actions.setMode(ASCII);              });
-  MenuLeaf(CommaDelim,    ",",           item.home(),   { actions.setDelimiter(',');           });
-  MenuLeaf(SemiDelim,     ";",           item.home(),   { actions.setDelimiter(';');           });
-  MenuLeaf(BarDelim,      "|",           item.home(),   { actions.setDelimiter('|');           });
-  MenuLeaf(SpaceDelim,    "[SPACE]",     item.home(),   { actions.setDelimiter(' ');           });
-  MenuLeaf(Defaults,      "Defaults",    item.exit(),   { actions.restoreDefaults();           });
-  MenuLeaf(Exit,          "Exit",        item.exit(),   { /* No action on select */            });
+  MenuLeaf(Clear,         "Clear Buffers", item.exit(),   { actions.clear();                     });
+  MenuLeaf(EchoOn,        "On",            item.home(),   { actions.setEchoEnabled(true);        });
+  MenuLeaf(EchoOff,       "Off",           item.home(),   { actions.setEchoEnabled(false);       });
+  MenuLeaf(AutoscrollOn,  "On",            item.home(),   { actions.setAutoscrollEnabled(true);  });
+  MenuLeaf(AutoscrollOff, "Off",           item.home(),   { actions.setAutoscrollEnabled(false); });
+  MenuLeaf(TextMode,      "Text",          item.home(),   { actions.setMode(ASCII);              });
+  MenuLeaf(CommaDelim,    ",",             item.home(),   { actions.setDelimiter(',');           });
+  MenuLeaf(SemiDelim,     ";",             item.home(),   { actions.setDelimiter(';');           });
+  MenuLeaf(BarDelim,      "|",             item.home(),   { actions.setDelimiter('|');           });
+  MenuLeaf(SpaceDelim,    "[SPACE]",       item.home(),   { actions.setDelimiter(' ');           });
+  MenuLeaf(Defaults,      "Defaults",      item.exit(),   { actions.restoreDefaults();           });
+  MenuLeaf(Exit,          "Exit",          item.exit(),   { /* No action on select */            });
 
   // Build the final menu-type:
   using Menu = MainMenu <
@@ -82,15 +84,15 @@ class LCDMenu {
 
   Menu _menu;
   Menu::Pointer _current = nullptr;
+  uint8_t _selectedLine = 1;
 
   Settings &_settings;
-  LCDBuffer &_buffer;
   LCDScreen &_screen;
   Actions _actions;
   unsigned long _lastActiveTime = 0;
 
 public:
-  LCDMenu(Settings &s, LCDBuffer &buf, LCDScreen &scr);
+  LCDMenu(LCDScreen &scr, Settings &s, LCDBuffer &lcdBuf, KeyboardBuffer &kbBuf);
   void enter();
   bool active() const;
   void handleButtons(ButtonState const up, ButtonState const down, ButtonState const both);
