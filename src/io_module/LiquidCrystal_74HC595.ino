@@ -104,6 +104,14 @@ void LiquidCrystal_74HC595::noAutoscroll() {
   command(LCD_ENTRYMODESET | _displayMode);
 }
 
+void LiquidCrystal_74HC595::createChar(uint8_t location, uint8_t charmap[]) {
+  location &= 0x7; // we only have 8 locations 0-7
+  command(LCD_SETCGRAMADDR | (location << 3));
+  for (uint8_t i = 0; i < 8; ++i) {
+    write(charmap[i]);
+  }
+}
+
 void LiquidCrystal_74HC595::setCursor(uint8_t const col, uint8_t const row) {
   command(LCD_SETDDRAMADDR | (col + _row_offsets[min(row, _rows - 1)]));
 }
