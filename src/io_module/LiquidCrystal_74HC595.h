@@ -60,6 +60,7 @@ public:
   void rightToLeft();
   void autoscroll();
   void noAutoscroll();
+  void createChar(uint8_t location, uint8_t charmap[]);
   void setCursor(uint8_t const col, uint8_t const row);
   void command(uint8_t const value);
   virtual size_t write(uint8_t const value);

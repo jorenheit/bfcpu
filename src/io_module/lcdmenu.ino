@@ -85,7 +85,7 @@ void LCDMenu::display(){
       Menu::Pointer item = _current->highlighted(line - _selectedLine);
       if (item) copyToBuffer(&buffer[line][OFFSET], item->getLabel());
     }
-    buffer[_selectedLine][0] = '*';
+    buffer[_selectedLine][0] = MENU_SELECT_CHARACTER;
   }
 
   _screen.displayTemp(ptrs, (uint8_t)VISIBLE_LINES, (size_t)MENU_TIMEOUT);
