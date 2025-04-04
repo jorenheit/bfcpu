@@ -95,6 +95,7 @@ void scroll() {
 
 volatile size_t tickCount = 0;
 
+//----------isr_begin----------
 void onSystemClock() {
   ++tickCount;
 
@@ -133,3 +134,5 @@ void onSystemClock() {
     }
   }
 }
+//----------isr_end----------
+

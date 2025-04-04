@@ -3,9 +3,9 @@
 [rom] { 8192 x 8 }
 
 [address] {
-  cycle:  3
-  opcode: 4
-  flags:  4
+  cycle:   3
+  opcode:  4
+  flags:   4
 }
 
 [signals] {
@@ -21,8 +21,8 @@
   WE_RAM
   EN_IN
   EN_OUT
-  VE
-  AE
+  SET_V
+  SET_A
   LD_FB
   LD_FA
   EN_IP
@@ -53,22 +53,22 @@
 [microcode] {
   x:0:xxxx		-> LD_FB
   
-  PLUS:1:x00x		-> INC, RS0, VE, LD_FA
+  PLUS:1:x00x		-> INC, RS0, SET_V, LD_FA
   PLUS:2:x00x		-> INC, RS2, CR
   PLUS:1:x10x		-> LD_D, OE_RAM, LD_FA, CR
   PLUS:1:xx1x		-> INC, RS2, CR
 
-  MINUS:1:x00x		-> DEC, RS0, VE, LD_FA
+  MINUS:1:x00x		-> DEC, RS0, SET_V, LD_FA
   MINUS:2:x00x		-> INC, RS2, CR
   MINUS:1:x10x		-> LD_D, OE_RAM, LD_FA, CR
   MINUS:1:xx1x		-> INC, RS2, CR
 
-  LEFT:1:0x0x		-> DEC, RS1, AE, LD_FA
+  LEFT:1:0x0x		-> DEC, RS1, SET_A, LD_FA
   LEFT:2:0x0x		-> INC, RS2, CR
   LEFT:1:1x0x		-> EN_D, WE_RAM, LD_FA, CR
   LEFT:1:xx1x		-> INC, RS2, CR
 
-  RIGHT:1:0x0x		-> INC, RS1, AE, LD_FA
+  RIGHT:1:0x0x		-> INC, RS1, SET_A, LD_FA
   RIGHT:2:0x0x		-> INC, RS2, CR
   RIGHT:1:1x0x		-> EN_D, WE_RAM, LD_FA, CR
   RIGHT:1:xx1x		-> INC, RS2, CR
@@ -79,7 +79,7 @@
   LOOP_START:2:x000	-> WE_RAM, EN_SP, EN_IP
   LOOP_START:3:x000	-> INC, RS2, CR
   LOOP_START:1:x10x	-> LD_D, OE_RAM, LD_FA
-  LOOP_START:2:x10x	-> CR
+  LOOP_START:2:x10x	-> CR # could be in cycle 1?
   LOOP_START:1:xx1x	-> INC, RS0, RS2
   LOOP_START:2:xx1x	-> INC, RS2, CR
 
@@ -88,7 +88,7 @@
   LOOP_END:1:x000	-> EN_SP, OE_RAM, LD_IP
   LOOP_END:2:x000	-> INC, RS2, CR
   LOOP_END:1:x10x	-> OE_RAM, LD_D, LD_FA
-  LOOP_END:2:x10x	-> CR
+  LOOP_END:2:x10x	-> CR # could be in cycle 1?
   LOOP_END:1:xx1x	-> DEC, RS0, RS2
   LOOP_END:2:xx1x	-> INC, RS2, CR
 
@@ -100,12 +100,12 @@
   IN_BUF:1:xx0x		-> EN_IN
   IN_BUF:2:xx0x		-> LD_D
   IN_BUF:3:xx0x		-> LD_FB
-  IN_BUF:4:xx00		-> VE, LD_FA, INC, RS2, CR
+  IN_BUF:4:xx00		-> SET_V, LD_FA, INC, RS2, CR
   IN_BUF:4:0x01		-> CR
   IN_BUF:1:xx1x		-> INC, RS2, CR
 
   IN_IM:1:xx0x		-> EN_IN
-  IN_IM:2:xx0x		-> LD_D, VE, LD_FA
+  IN_IM:2:xx0x		-> LD_D, SET_V, LD_FA
   IN_IM:3:xx0x		-> INC, RS2, CR
   IN_IM:1:xx1x		-> INC, RS2, CR
 

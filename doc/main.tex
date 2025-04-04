@@ -14,6 +14,7 @@
 \usepackage{pdfpages}
 \usepackage{amsmath}
 \usepackage{multicol}
+\usepackage{url}
 
 \usepackage[margin=1in]{geometry}
 
@@ -43,7 +44,9 @@
   showspaces=false,                
   showstringspaces=false,
   showtabs=false,                  
-  tabsize=4
+  tabsize=4,
+  rangeprefix=//----------,
+  rangesuffix=----------
 }
 
 \newfloat{lstfloat}{htbp}{lop}
@@ -80,7 +83,7 @@
 \include{architecture}
 \include{control_sequences}
 \include{implementation}
-\include{performance}
+\include{utilities}
 \include{references}
 
 \end{document}
