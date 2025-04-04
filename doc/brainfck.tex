@@ -21,13 +21,22 @@ The commands then modify the contents of memory and the pointer as follows:
 \end{itemize}
 Although this might seem like a very limited set of instructions, it has been proven to be sufficient for performing any possible computation or program, also known as Turing-completeness \cite{esolang}. The catch is that this requires an unbounded (or infinite) amount of memory, which is obviously impossible. However, the same caveat holds for traditional (von Neumann architecture) systems, so we should be safe to assume that BF is Turing complete for all practical purposes.
 
-To run a BF program, one usually feeds these commands into an interpreter written in a more common language. These interpreters are very straightforward to write. Listing \ref{lst:bfint} shows a very simple implementation (about 40 lines) of such a program in C. This implementation initialized a block of memory to zero and defines a pointer to its first element. This pointer can be incremented or decremented to move along the array or have the value it's pointing to being incremented, decremented or printed to standard output. The most complexity is embedded in the handling of the loop-operatores. When an opening brace is encountered, the index of this instruction is stored in a jump-table. When the matching closing brace is encountered and it is determined that flow should loop back, this stored index is reloaded. When a loop is being skipped, all commands within it are being skipped until the matching closing brace is found.
+To run a BF program, one usually feeds these commands into an interpreter written in a more common language. These interpreters are very straightforward to write. Listing \ref{lst:bfint} shows a very simple implementation (about 40 lines) of such a program in C. This implementation initializes a block of memory to zero and defines a pointer to its first element. This pointer can be incremented or decremented to move along the array, increment/decrement value it's pointing or print it to standard output. The most complexity is embedded in the handling of the loop-operatores. When an opening bracket is encountered, the index of this instruction is stored in a jump-table. When the matching closing bracket is encountered and it is determined that flow should loop back, this stored index is reloaded. When a loop is being skipped, all commands within it are being skipped until the matching closing brace is found.
+
+When the Hello World program from Wikipedia \cite{bfwiki} is fed into this program, it prints out the string \texttt{Hello World!}, as expected.
+\begin{lstlisting}
+  $ ./bfint "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-] \
+  >>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+Hello World!
+\end{lstlisting}
+
 
 \begin{lstfloat}[H]
-\lstinputlisting[firstline=19,lastline=58, language=C]{../src/simple_int/bfint.c}  
+  \lstinputlisting[linerange={bfint\_begin-bfint\_end}, language=C]{../src/simple_int/bfint.c}  
 \caption{Very basic implementation of a BF interpreter in C.}
 \label{lst:bfint}
 \end{lstfloat}
+
 
 
 \subsection{Architectures}
@@ -55,5 +64,3 @@ The architecture assumed by the BF language is similar to the Harvard architectu
 \subsection{BF as an Instruction Set}
 Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above. An instruction set of size 8 is truly tiny compared to more traditional instruction sets such as those implemented by modern processors or even microcontrollers and older 8-bit systems. Broadly speaking, Complex Instruction Set Computers (CISC) are designed to do as much work as possible in the least number of clock cycles, whereas Reduced Instruction Set Computers (RISC) focus on having a small instruction set with basic operations. For comparison, the x86 instruction set is massive with over 1500 instructions implemented in hardware, whereas RISC processors only need to implement 50 to 100 instuctions. Even compared to RISC, the BF instruction set (BFISC from hereon) is tiny even compared to the smallest instruction sets in use today. This isn't necessarily a good thing; a smaller number of instructions simply means you need more of them to perform meaningful computations, which is reflected by the fact that complex BF programs are typically very large in size.
 
-\subsection{Brainfix}
-In 2013, one of the authors wrote a compiler, Brainfix, that takes a human-readable programming language (also called Brainfix) and compiles this into BF. This project was then abandoned and rebooted in late 2021 with a complete rewrite of the compiler. While working on this project, the idea to build an actual computer to go along with the compiler arose. The Github project page holds an extensive manual to the Brainfix language and compiler; see \cite{brainfix}. Chapter \ref{section:algorithms} goes into detail about some of the BF algorithms implemented by the compiler.
