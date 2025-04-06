@@ -27,10 +27,10 @@ The data-pointer corresponds to the pointer as specified in the BF-language. It 
 The DP should be able to increment and decrement (corresponding to the \texttt{<} and \texttt{>} commands), and should be able to be enabled/disabled because of its connection to the address bus of the RAM (the Stack Pointer (SP, see \ref{sec:architecture:sp}, is also connected to this bus). Therefore, the DP has 3 control inputs:
 \begin{itemize}
 \itemsep0em 
-\item EN - Enable - when high, its value is sent to the address bus;
-\item INC - Increment - when high, the stored value is incremented on the next clock cycle;
-\item DEC - Decrement - when high, the stored value is decremented on the next clock cycle;
-\item R - Reset - While all other modules have the ability to be reset, this is the only module where this signal is listed as it is the only module that needs to be reset during runtime (at initialization, see \ref{seq:sequences:nonbf}).
+\item EN - Enable - Put the stored 16-bit value onto the address bus.
+\item U - Up - Increment the stored value.
+\item D - Down - Decrement the stored value.
+\item R - Reset - Reset the value to 0x0100, the start of the datasection of RAM. While all other modules have the ability to be reset, this is the only module where this signal is listed as it is the only module that needs to be reset during runtime (at initialization, see \ref{seq:sequences:nonbf}).
 \end{itemize}
 
 \subsubsection*{Outputs}
@@ -45,18 +45,18 @@ The data register holds a representation of the value currently pointed to by th
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em   
-\item D\_IN - 8 bits - connected to the data bus;
-\item EN - Enable - when high, its value is sent to the data bus;
-\item LD - Load - when high, the data on the data bus is loaded into the register on the next clock cycle;
-\item INC - Increment - when high, the stored value is incremented on the next clock cycle;
-\item DEC - Decrement - when high, the stored value is decremented on the next clock cycle.
+\item D\_IN - 8 bits - Data inputs, connected to the databus.
+\item EN - Enable - Put the stored value onto the databus.
+\item LD - Load - Load data from the bus into D.
+\item U - Up - Increment the stored value.
+\item D - Down - Decrement the stored value.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item D\_OUT - 8 bits - connected to the data bus;
-\item Z - Zero Flag - high when the register contains all zero's (0x00).
+\item D\_OUT - 8 bits - Data outputs, connected to the databus.
+\item Z - Zero Flag - High when the register stores a zero.
 \end{itemize}
 
 
@@ -66,16 +66,16 @@ The IP Register stores the instruction pointer (16-bits), which keeps track of t
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item IP\_IN - 16 bits - connected to the data bus (for loading a stored address off the stack);
-\item EN - Enable - when high, its value is sent to the databus (for storing an address on the stack);
-\item LD - Load - when high, the value on the databus is loaded into the register on the next clock cycle;
-\item INC - Increment - when high, the stored value is incremented on the next clock cycle.
+\item IP\_IN - 16 bits - Data inputs, connected to the databus.
+\item EN - Enable - Put the stored value onto the databus.
+\item LD - Load - Load data from the bus into IP.
+\item U - Up -Increment the stored value. 
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item IP\_OUT - 16 bits - connected to the Data Bus and the address inputs of program-ROM;
+\item IP\_OUT - 16 bits - Data outputs, connected to the databus and the address inputs of program-ROM;
 \end{itemize}
 
 
@@ -85,9 +85,9 @@ The stack is the first part of RAM (addresses 0x0000 - 0x00ff) and is reserved t
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item EN - Enable - when high, its value is sent to the address bus;
-\item INC - Increment - when high, the stored value is incremented on the next clock cycle;
-\item DEC - Decrement - when high, the stored value is decremented on the next clock cycle.
+\item EN - Enable - Put the stored value onto the databus.
+\item U - Up - Increment the stored value.
+\item D - Down - Decrement the stored value.
 \end{itemize}
 
 \subsubsection*{Outputs}
@@ -101,9 +101,9 @@ The Loop Skip (LS) register is a counter that indicates whether or not we're in 
 
 \subsubsection*{Inputs}
 \begin{itemize}
-\itemsep0em 
-\item INC - Increment - when high, the stored value is incremented on the next clock cycle;
-\item DEC - Decrement - when high, the stored value is decremented on the next clock cycle.
+  \itemsep0em
+\item U - Up - Increment the stored value.
+\item D - Down - Decrement the stored value.
 \end{itemize}
 
 \subsubsection*{Outputs}
@@ -118,9 +118,9 @@ The first flag register (FA) holds two flag values A and V which are used to ind
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item SETA - Sets the address-change-flag - set by the CU;
-\item SETV - Sets the value-change-flag - set by the CU;
-\item LD(FA) - Load A and V (if set by the CU) into FA.
+\item SETA - Set the address-change-flag.
+\item SETV - Set the value-change-flag.
+\item LD(FA) - Load A and V into FA.
 \item LD(FB) - Load A, V (previously buffered in FA), Z and S (from D and LS) into FB. 
 \end{itemize}
 
@@ -128,6 +128,49 @@ The first flag register (FA) holds two flag values A and V which are used to ind
 \begin{itemize}
 \itemsep0em 
 \item F\_OUT - 4 bits - connected to the CU (See \ref{sec:architecture:control_unit}).
+\end{itemize}
+
+
+\subsection{Register Driver} \label{sec:architecture:registerdriver}
+Rather that having a seperate signal for each of the INC/DEC-inputs of each register (e.g.~ INC\_D, INC\_LS, etc), a driver module was designed (see \ref{sec:implementation:registerdriver}) to drive register modules that supports modification of its contents. In addition to a universal INC/DEC signal, three Register Select (RS) bits are used to index the target-register. This approach has two advantages:
+\begin{enumerate}
+\item It decreases the amount of control signals needed;
+\item The logic needed to drive the counting registers (74LS193) only needs to be implemented once.
+\end{enumerate}
+
+The driver module accepts 5 control signals: 3 register-select signals (RS0 through RS2), INC and DEC. Using 3 register-select signals, up to 8 ($2^3$) registers can be selected, though only 5 need to be driven by the driver. Table \ref{tab:registers} contains an overview of each of the registers and the control signals they support.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c|c|c|c|c|c}
+    Register & \#Bits & EN  & LD  & INC  & DEC & RS \\ \hline 
+    D        & 8      & x   & x   & x    & x   & 001 \\
+    DP       & 16     & x   &     & x    & x   & 010 \\ 
+    SP       & 8      & x   &     & x    & x   & 011 \\ 
+    IP       & 16     & x   & x   & x    &     & 100 \\ 
+    LS       & 8      &     &     & x    & x   & 101 \\ 
+    FA       & 4      &     & x   &      &     & -   \\ 
+    FB       & 4      &     & x   &      &     & -   \\
+  \end{tabular}
+  \caption{Control signals available to each of the registers. The F and I register are not connected to the register driver.}
+  \label{tab:registers}
+\end{table}
+
+\subsubsection*{Inputs}
+\begin{itemize}
+  \itemsep0em
+\item RS0 - Register Select Bit 0
+\item RS1 - Register Select Bit 1
+\item RS2 - Register Select Bit 2
+\item INC - Increment selected register
+\item DEC - Decrement selected register
+\end{itemize}
+
+\subsubsection*{Outputs}
+\begin{itemize}
+\itemsep0em 
+\item U - 5 bits - Up signals - Connected to the U input of all registers that support the INC operation.
+\item D - 5 bits - Down-signals - Connected to the D input of all registers that support the DEC operation.
 \end{itemize}
 
 
@@ -152,16 +195,16 @@ The RAM is divided into two parts: stack and data. The first 256 bytes (0x0000 -
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_IN - 16 bits - Connected to the data bus (same lines as DATA\_OUT);
-\item ADDR\_IN - 16 bits - Connected to the address bus;
-\item OE - Output Enable - The value at the current address is sent to the databus;
-\item WE - Write Enable - The value on the databus is loaded into the current address.
+\item DATA\_IN - 16 bits - Input data, connected to the databus.
+\item ADDR\_IN - 16 bits - Address lines, connected to the address bus;
+\item OE - Output Enable - Put the value stored at the current address onto the databus;
+\item WE - Write Enable - Write the value on the databus into the current address.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item DATA\_OUT - 16 bits - Connected tot the databus (same lines as DATA\_IN)
+\item DATA\_OUT - 16 bits - Output data, connected to the databus (same lines as DATA\_IN).
 \end{itemize}
 
 \subsection{Program Memory (ROM)} \label{sec:architecture:rom}
@@ -170,13 +213,13 @@ The actual BF instructions are stored in Read-Only-Memory (ROM) and are addresse
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
-\item ADDR\_IN - 16 bits - Connected to the IP.
+\item ADDR\_IN - 16 bits - Address lines, connected to the IP.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item INS\_OUT - 4 bits - Connected to the CU;
+\item INS\_OUT - 4 bits - Instruction data, connected to the CU;
 \end{itemize}
 
 
@@ -186,7 +229,7 @@ The output module (which is assumed to be a screen) will be attached to the data
 \begin{itemize}
 \itemsep0em 
 \item DATA\_IN - 8 bits - connected to the data bus;
-\item EN: Enable Output - Display the contents of the bus on the next clock pulse. The way output is displayed could vary depending on the implementation of the output device.
+\item EN: Enable - Display the contents of the bus. The way output is displayed could vary depending on the implementation of the output device.
 \end{itemize}
 
 \subsubsection*{Outputs}
@@ -205,44 +248,20 @@ The input device to the computer is assumed to be a keyboard of some sort, which
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item KB\_OUT - 8 bits - Connected to the databus.
+\item DATA\_OUT - 8 bits - Output data, connected to the databus.
 \end{itemize}
+
+
 
 \subsection{Control Unit} \label{sec:architecture:cu}
 Each of the aforementioned components/modules has one or more control inputs that determine what happens on the next clock cycle. For example, some register-modules can be told to load a value from their input, increment or decrement the currently stored value, or do nothing at all. It is the Control Unit (CU) that supplies the appropriate control signals to each of the modules before the next clock pulse occurs, depending on the current instruction and state determined by the flags and cycle counter. The implementation details of how this is done in hardware are discussed in section \ref{sec:implementation}.
 
-\subsubsection*{Register Driver} \label{sec:architecture:cu:driver}
-Rather that having a seperate signal for each of the INC/DEC-inputs of each register (e.g.~ INC\_D, INC\_LS, etc), a driver module was designed (see \ref{sec:implementation:driver}) to drive register modules that supports modification of its contents. In addition to a universal INC/DEC signal, three Register Select (RS) bits are used to index the target-register. This approach has two advantages:
-\begin{enumerate}
-\item It decreases the amount of control signals needed;
-\item The logic needed to drive the counting registers (74LS193) only needs to be implemented once.
-\end{enumerate}
-
-The driver module accepts 5 control signals: 3 register-select signals (RS0 through RS2), INC and DEC. Using 3 register-select signals, up to 8 ($2^3$) registers can be selected, though only 5 need to be driven by the driver. Table \ref{tab:registers} contains an overview of each of the registers and the control signals they support.
-
-\begin{table}[H]
-  \centering
-  \begin{tabular}{c|c|c|c|c|c|c}
-    Register & \#Bits & EN  & LD  & INC  & DEC & RS \\ \hline 
-    D        & 8      & x   & x   & x    & x   & 001 \\
-    DP       & 16     & x   &     & x    & x   & 010 \\ 
-    SP       & 8      & x   &     & x    & x   & 011 \\ 
-    IP       & 16     & x   & x   & x    &     & 100 \\ 
-    LS       & 8      &     &     & x    & x   & 101 \\ 
-    FA       & 4      &     & x   &      &     & -   \\ 
-    FB       & 4      &     & x   &      &     & -   \\
-  \end{tabular}
-  \caption{Control signals available to each of the registers. The F and I register are not connected to the register driver.}
-  \label{tab:registers}
-\end{table}
-
-
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em
-\item CC\_IN - 3 bits - Current cycle count value (from the Cycle Counter)
-\item INS\_IN - 4 bits - Current instruction (from program ROM)
-\item FLAGS\_IN - 4 bits - Current flags (from FB)
+\item CC\_IN - 3 bits - Cycle counter input lines.
+\item INS\_IN - 4 bits - Instruction input lines (from program ROM).
+\item FLAGS\_IN - 4 bits - Flag input lines (from FB).
 \end{itemize}
 
 \subsubsection*{Outputs}
