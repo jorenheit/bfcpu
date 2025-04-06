@@ -24,8 +24,22 @@ The control signals necessary to perform the \texttt{-} command are similar to t
 
 None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.3]{img/plusalg}
+  \caption{Block diagram for the \texttt{+} command. The diagram for the \texttt{-} command is equivalent (using \texttt{Dec} rather than \texttt{Inc}).}
+  \label{fig:plusalg}
+\end{figure}
+
 \subsection{Moving the Pointer: \texttt{<} and \texttt{>}}
 Moving the datapointer around requires similar instructions compared to modifying the dataregister, the difference being that we increment or decrement the DP-register instead of the D-register. If the V-flag was set in the previous instruction, we need to write the updated value in the D-register back to RAM before moving the pointer. If not, we can immediately move the pointer. In either case do we need to set the A-flag in the F-register in order for the next instruction to take into account that the address has changed and the contents in the D-register are therefore not synchronized with the RAM. Like before, this instruction is ignored when S is set.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.3]{img/rightalg}
+  \caption{Block diagram for the \texttt{>} command. The diagram for the \texttt{<} command is equivalent (using \texttt{Dec} rather than \texttt{Inc}).}
+  \label{fig:rightalg}
+\end{figure}
 
 \subsection{Conditional Jumping: \texttt{[} and \texttt{]}}
 These are by far the most complicated instructions that require a lot of additional logic. Because the BF instruction set lacks a JMP-instruction where some argument holds the destination address, the computer has to store the address of the opening \texttt{[}-command in case it needs to loop back when the time comes. Also, if the loop is not entered, the LS-register is used to determine when execution should resume.
@@ -48,19 +62,69 @@ In the thrid scenario, the contents of D are not yet synchronized with the RAM (
 
 Finally, when already in the process of skipping a loop, the LS-register is decremented before moving to the next instruction.
 
+\begin{figure}[H]
+  \centering
+  \mbox{}\hfill
+  \begin{subfigure}[t]{0.4\linewidth}
+    \centering
+    \includegraphics[scale=0.3]{img/loopstartalg}
+    \caption{Block diagram for the loop-start command.}
+    \label{fig:loopstartalg}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.4\linewidth}
+    \centering
+    \includegraphics[scale=0.3]{img/loopendalg}
+    \caption{Block diagram for the loop-end command.}
+    \label{fig:loopendalg}
+  \end{subfigure}
+  \hfill\mbox{}
+
+  \caption{}
+  \label{fig:loopalg}
+\end{figure}
+
+
 \subsection{Output: \texttt{.}}
 There are three states that need to be taking into account when implementing the output-command. In the first state, the value in D is already in sync with the RAM and can be sent to the output device immediately. The output of D is enabled and PRE signal for the screen is set, in addition to incrementing the IP to move to the next instruction. When A was set, we first load the value from RAM into D before sending its contents to RAM. Lastly, when S is set, this instruction can simply be skipped.
 
-%\subsubsection*{}
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.3]{img/outputalg}
+  \caption{Block diagram for the output command.}
+  \label{fig:outputalg}
+\end{figure}
+
 \subsection{Input: \texttt{,} and \texttt{'}}
 As mentioned before in Section \ref{sec:architecture:kb}, the architecture implements two versions of the input command, buffered (\texttt{,}) and immediate (\texttt{'}). Because buffered inputs are more common in most (BF) programs other than game-like applications, this is the default mode (even though it is more complicated).
 
 \paragraph{Buffered Mode:}
-In this mode, control flow is stuck in a loop, waiting for something nonzero to appear in its D-register. A nonzero value means something was read from the input module, whereas a zero value indicates that the input buffer was empty. When the EN(KB) is presented to the keyboard module, this module should provide the next character in the input-buffer (implementation defined) onto the databus on the next clock cycle, when it is loaded into the D register. After doing so, the flag register (FB) is reloaded to update the Z flag, which is then used to decide between either moving to the next instruction (when Z is 0) or looping back to cycle 0 (without incrementing the IP). If Z is now nonzero, the V flag is set to indicate that the contents of the cell have changed and the IP is incremented to move to the next instruction. If Z is 0, the cycle counter is reset to 0 to put the system back into the state above where the keyboard-buffer can be read into the D-register. Of course, when S is set, we can simply skip all of this.
+In this mode, control flow is stuck in a loop, waiting for something nonzero to appear in its D-register. A nonzero value means something was read from the input module, whereas a zero value indicates that the input buffer was empty. When the EN signal is presented to the keyboard module, this module should provide the next character in the input-buffer (implementation defined) onto the databus on the next clock cycle, when it is loaded into the D register. After doing so, the flag register (FB) is reloaded to update the Z flag, which is then used to decide between either moving to the next instruction (when Z is 0) or looping back to cycle 0 (without incrementing the IP). If Z is now nonzero, the V flag is set to indicate that the contents of the cell have changed and the IP is incremented to move to the next instruction. If Z is 0, the cycle counter is reset to 0 to put the system back into the state above where the keyboard-buffer can be read into the D-register. Of course, when S is set, we can simply skip all of this.
 
 \paragraph{Immediate Mode:}
-In this mode, we don't care what was loaded into D, even if there was nothing there in the keyboard buffer; it is up to the programmer to handle the case where no keys were pressed. This makes the implementation a lot easier, taking at most 2 cycles to complete. We simply read whatever is in the keyboard buffer into D, set the V flag and move to the next instruction. Again, when S is set, this instruction is skipped.
-  
+In this mode, we don't care what was loaded into D, even if there was nothing there in the keyboard buffer; it is up to the programmer to handle the case where no keys were pressed. This makes the implementation a lot easier, taking only 3 cycles to complete. We simply read whatever is in the keyboard buffer into D, set the V flag and move to the next instruction. Again, when S is set, this instruction is skipped.
+
+\begin{figure}[H]
+  \centering
+  \mbox{}\hfill
+  \begin{subfigure}[t]{0.4\linewidth}
+    \centering
+    \includegraphics[scale=0.3]{img/inputbufalg}
+    \caption{Block diagram for the bufferen input command.}
+    \label{fig:inputbufalg}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[t]{0.4\linewidth}
+    \centering
+    \includegraphics[scale=0.3]{img/inputimalg}
+    \caption{Block diagram for the immediate input command.}
+    \label{fig:inputimalg}
+  \end{subfigure}
+  \hfill\mbox{}
+  \caption{}
+  \label{fig:inputalg}
+\end{figure}
+
 \subsection{Non-BF instructions} \label{seq:sequences:nonbf}
 Several non-BF instructions have been implemented for debugging purposes and to have the computer to be initialized at startup.
 
@@ -81,6 +145,7 @@ The \texttt{ERR} instruction is inserted in all non-reachable states. If for som
 
 \subsection{Microcode table}
 Table \ref{tab:microcode} shows each of the control sequences described in previous sections sections. Please note that in order to simplify notation, the control signals RS0, RS1 and RS2 have not been used to indicate register selection. Instead, the module to which the instruction (INC/DEC) is applied is provided in brackets. For example, incrementing the SP register would require control signals INC, RS0, RS1 which is denoted in Table \ref{tab:microcode} as INC(SP).
+\newpage
 \input{microcode_table}
 
 

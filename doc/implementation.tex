@@ -1,18 +1,23 @@
 \section{Implementation} \label{sec:implementation}
-This section will discuss the implementation of each module and the way they integrate together to make the computer. Figure \ref{fig:computer} shows the computer as it was in February 2025. The overlays shown in Figure \ref{fig:computer_parts} distinguish each of the modules described in previous sections.
+This section will discuss the implementation of each module and the way they integrate together to make the computer. Figure \ref{fig:prototypea} shows the computer as it was in February 2025. The overlays shown in Figure \ref{fig:prototypeb} show where each of the modules described in previous sections is located on the computer.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth]{img/placeholder}
-  \caption{Prototype as of February 2025.}
-  \label{fig:computer}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\textwidth]{img/placeholder}
-  \caption{Overview of the different parts of the computer.}
-  \label{fig:computer_parts}
+  \begin{subfigure}{0.9\linewidth}
+    \centering
+    \includegraphics[width=0.8\linewidth]{img/computercloseup}
+    \caption{Prototype of February 2025}
+    \label{fig:prototypea}
+  \end{subfigure}
+  \vspace{\baselineskip}
+  \begin{subfigure}{0.9\linewidth}
+    \centering
+    \includegraphics[width=0.8\linewidth]{img/computerparts}
+    \caption{Location of the modules on the prototype}
+    \label{fig:prototypeb}
+  \end{subfigure}
+  \caption{}
+  \label{fig:prototype}
 \end{figure}
 
 %%%%%%% CLOCK
@@ -20,7 +25,7 @@ This section will discuss the implementation of each module and the way they int
 \subsection{Clock Module} \label{sec:clock}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \includegraphics[width=0.6\textwidth]{img/clockmodulecloseup}
   \caption{Close up of the Master Clock and Reset/Resume Modules.}
   \label{fig:masterclockcloseup}
 \end{figure}
@@ -55,8 +60,7 @@ The frequency of the master clock can be set using dip switches to select the ca
 \end{table}
 
 \subsubsection{Frequency Display}
-Details about the frequency display here.
-
+To be able to see the frequency at which the computer is running, the module clock signal is connected to an ICM7226B \cite{?}, which is configured as an 8-digit frequency timer. It drives two 4-digit 7-segment displays at a 1 second interval (the frequency is measured and updated every second). For this module, no schematics will be provided.
 
 \subsection{Reset/Resume} \label{sec:resetresume}
 The Reset/Resume module is located directly underneath the clock and contains logic necessary to be able to reset the computer (necessary after applying power) and resuming the clock after it has been halted. The HLT signal coming from the decoder is latched into a register (74LS173) from which the corresponding output bit is connected to the HLT input of the clock module. When the system is reset (using the reset button) or when the resume button is pressed, the HLT bit is cleared and the clock resumes. This allows for pausing and resuming the computer, effectively adding breakpoints in the code. The reset button itself is debounced in the same way as the manual clock button to ensure a stable transition with a debounce time of around 300ms.
@@ -80,7 +84,7 @@ A full schematic is provided on the next page.
 \subsection{Register Driver} \label{sec:implementation:registerdriver}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \includegraphics[width=0.6\textwidth]{img/registerdrivercloseup}
   \caption{Close up of the Register Driver Module.}
   \label{fig:registerdrivercloseup}
 \end{figure}
@@ -97,7 +101,7 @@ A full schematic is provided on the next page.
 \subsection{DP Register Module}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \includegraphics[width=0.6\textwidth]{img/dpregistercloseup}
   \caption{Close up of the Data Pointer Register Module.}
   \label{fig:dpregcloseup}
 \end{figure}
@@ -120,7 +124,7 @@ A full schematic is provided on the next page.
 \begin{figure}[H]
   % TODO: add annotations to the image
   \centering
-  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \includegraphics[width=0.6\textwidth]{img/dregistercloseup}
   \caption{Close up of the Data Register Module.}
   \label{fig:dregcloseup}
 \end{figure}
@@ -141,7 +145,7 @@ A full schematic is provided on the next page.
 \subsection{IP Register Module}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \includegraphics[width=0.6\textwidth]{img/ipregistercloseup}
   \caption{Close up of the Instruction Register Module.}
   \label{fig:iregcloseup}
 \end{figure}
@@ -159,7 +163,7 @@ A full schematic is provided on the next page.
 \subsection{SP Register Module}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \includegraphics[width=0.6\textwidth]{img/spregistercloseup}
   \caption{Close up of the Stack Pointer Register Module.}
   \label{fig:spregcloseup}
 \end{figure}
@@ -177,7 +181,7 @@ A full schematic is provided on the next page.
 \subsection{LS Register Module}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \includegraphics[width=0.3\textwidth]{img/lsregistercloseup}
   \caption{Close up of the Loop Skip Register Module.}
   \label{fig:spregcloseup}
 \end{figure}
@@ -196,7 +200,7 @@ A full schematic is provided on the next page.
 \subsection{RAM Module}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \includegraphics[width=0.6\textwidth]{img/ramcloseup}
   \caption{Close up of the RAM Module.}
   \label{fig:ramcloseup}
 \end{figure}
@@ -214,7 +218,15 @@ A full schematic is provided on the next page.
 
 %%%%%%% CONTROL UNIT
 
-\subsection{Control Unit}
+\subsection{Control Unit}\label{sec:implementation:cu}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\textwidth]{img/controlunitcloseup}
+  \caption{Close up of the Control Unit.}
+  \label{fig:controlunitcloseup}
+\end{figure}
+
+
 \subsubsection{Partitioning}
 The control unit is responsible for sending the appropriate signals to each of the modules. The general idea is that the current instruction pointed to by the IP (4 bits) together with the state flags (another 4 bits: A, V, S and Z) and the cycle count (3 bits) combine together to form an (11 bit) address into a set of three EEPROM chips (AT28C64B), each of which contains part the signal configuration corresponding to that combination of state and instruction. When clocked by the decoder-clock (D\_CLK), the values currently at this address are loaded into the registers (74LS173) and asserted onto their respective modules, which will act upon them on the next pulse of the M\_CLK signal.
 
@@ -230,7 +242,7 @@ Based on the physical layout of the board, the following configuration was used 
 \end{tabular}
 \end{center}
 
-The three EEPROM's have been programmed using a custom built EEPROM programmer based around an Arduino Nano, combined with a python script (\texttt{bflash}) that is able to send a binary image to the Nano over a serial connection. The images that store the microcode tables have been generated by Mugen (see \ref{sec:utilities:mugen}, a utility developed to make the microcode programming more maintainable. Mugen generates the images from a specification file. The specification for the BFCPU is shown in the listing below and is a direct reflection of the microcode shown in Table \ref{tab:microcode}.
+The three EEPROM's have been programmed using a custom built EEPROM programmer based around an Arduino Nano, combined with a python script (\texttt{bflash}) that is able to send a binary image to the Nano over a serial connection. The images that store the microcode tables have been generated by Mugen (see \ref{sec:utilities:mugen}), a utility developed to make the microcode programming more maintainable. Mugen generates the images from a specification file. The specification for the BFCPU is shown in the listing below and is a direct reflection of the microcode shown in Table \ref{tab:microcode}.
 
 \lstinputlisting{../src/microcode/bfcpu.mu}
 
@@ -246,11 +258,7 @@ The cycle counter is another 74LS161 that simply counts up and sends its outputs
 A full schematic is provided on the next page.
 \includepdf[landscape=true]{schematics/controlunit.pdf}
 
-%%%%%%% FREQUENCY DISPLAY
-
-\subsection{Frequency Display}
-To be able to see the frequency at which the computer is running, the module clock signal is connected to an ICM7226B \cite{?}, which is configured as an 8-digit frequency timer. It drives two 4-digit 7-segment displays at a 1 second interval (the frequency is measured and updated every second). For this module, no schematics will be provided.
-
+%%%%%%% IO Module
 \subsection{IO Module}
 The IO system is handled by an ATMEGA328P microprocessor, commonly found in the Arduino Uno. It has three main functions:
 \begin{enumerate}
@@ -260,14 +268,22 @@ The IO system is handled by an ATMEGA328P microprocessor, commonly found in the 
 \end{enumerate}
 
 \subsubsection{Buttons and Menu}
-Two buttons are provided to interact with this system. They are mainly used to scroll the screen but can also be used to access and navigate a menu. This menu let's the user do the following:
+Two buttons are provided to interact with this system. They are mainly used to scroll the screen but can also be used to access and navigate a menu (Figure \ref{fig:menuscreen}). This menu let's the user do the following:
 \begin{enumerate}
 \item Clear the screen.
 \item Change the display-mode. By default, incoming data is interpreted as ASCII characters. When it should be displayed as raw numerical values (either in base 10 or 16), this option can be selected from the menu. When in either of these numerical modes, a delimiter character can be selected to separate bytes visually.
 \item Set autoscrolling on/off. By default the screen will scroll its contents when they overflow to always keep the most recent data in view. When new data is displayed, the screen is always scrolled to display this data. Setting autoscroll to `off' will disable these features.
 \item Echo on/off. When running an interactive program that requires keyboard input, the user probably wants to see what is being typed. This is the default behavior (echo on). If for some reason the keypresses should not be displayed, this option can be disabled.
-\item Reset to default settings. Whenever settings have been changed, the new settings will be saved to the persistent EEPROM memory of the MCU and loaded back into the RAM on startup to make the settings persist when the MCU is powered down. This option allows you to revert all changes and load the default settings back in.
+\item Reset to default settings. Whenever settings have been changed, the new settings will be saved to the persistent EEPROM memory of the MCU and loaded back on startup to make the settings persist when the MCU is powered down. This option allows you to revert all changes and load the default settings back in.
 \end{enumerate}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{img/menuscreen}
+  \caption{Part of the menu that is accessible by pressing both scroll-buttons simultaneously.}
+  \label{fig:menuscreen}
+\end{figure}
+
 
 \subsubsection{Handling Output}
 The \texttt{M\_CLK} signal is connected to an interrupt pin of the MCU. On every interrupt triggered by the clock, the MCU will check the status of the pin connected to the \texttt{EN\_OUT} signal. When it is high, all of the pins connected to the databus are read to reconstruct the byte present on the bus. This value is then displayed on the LCD. Listing \ref{lst:io_isr} shows the code for the interrupt routine running on the MCU.
@@ -292,7 +308,6 @@ The IO module can only handle input from PS/2 compatible keyboards. A modified v
 
 \subsubsection{Software}
 The full source code for the IO module can be found on Github: \url{https://github.com/jorenheit/bfcpu/tree/main/src/io_module}.
-
 
 \subsubsection{Schematic}
 A full schematic is provided on the next page.

@@ -3,6 +3,7 @@
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{caption}
+\usepackage{subcaption}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{xcolor,colortbl}
@@ -15,12 +16,9 @@
 \usepackage{amsmath}
 \usepackage{multicol}
 \usepackage{url}
-
 \usepackage[margin=1in]{geometry}
 
 \VerbatimFootnotes
-
-
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -64,15 +62,16 @@
 %\AtBeginEnvironment{longtable}{\small}
 
 \title{BFCPU 1.0}
-\author{ Joren Heit, Arthur Topal }
-\date{}
+\author{Joren Heit, Arthur Topal}
+\date{2025}
+
 \begin{document}
 \maketitle
 \thispagestyle{empty}
 
 \begin{figure}[H]
-	\centering
-	\includegraphics[width=0.9\textwidth]{img/_processor}
+  \centering
+  \includegraphics[width=0.9\textwidth]{img/_processor}
 \end{figure}
 
 \newpage
@@ -85,5 +84,6 @@
 \include{implementation}
 \include{utilities}
 \include{references}
+\include{conclusion}
 
 \end{document}
