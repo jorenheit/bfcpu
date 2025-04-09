@@ -202,6 +202,7 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     return {opt, 0};
 }
 
+//----------assemble_begin----------
 int assemble(Options const &opt)
 {
     std::istream &in  = *(opt.inStream);
@@ -316,3 +317,4 @@ int main(int argc, char **argv)
 
     return assemble(opt);
 }
+//----------assemble_end----------
