@@ -1,2 +1,47 @@
 \section{Conclusion}
 
+Looking back on the project, it was a very challenging, sometimes frustrating process that in the end paid off with a great feeling of accomplishment. It provided many tangible insight into computer architecture and proved that it is definitely possible to implement a Turing Complete system using basic parts and very little practicle experience in the field. There are most certainly many areas in which the computer can be improved, both in its efficiency and reliability. A natural next step might be to design a PCB that implements the architecture. This would probably increase the reliability and would allow the computer to run stable at much higher clock-frequencies, but would come at the cost of having less visually clear connections and therefore less educational value.
+
+A big part of the project was the devlopment of the toolchain. We hope that tools like Mugen and the programmer hardware/software could be of value to the community, for others that are implementing a custom architecture or even following Ben Eater's instructions on the 8-bit breadboard CPU. As previously mentioned, all software is available through Github at \url{https://github.com/jorenheit/bfcpu}.
+
+\subsection{Parts List}
+Table \ref{tab:parts} lists most of the parts used in this project. It is not meant to be a comprehensive list of every part used because this document is not meant to serve as a guide on building an identical system. 
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c|c|c}
+    Part & Description & Quantity \\ \hline
+    Breadboard & 830 hole & ? \\
+    Wire & 22AWG & A lot \\
+    74LS00 \cite{ls00} & NAND & ? \\
+    74LS04 \cite{ls04} & NOT & ? \\
+    74LS08 \cite{ls08} & AND & ? \\
+    74LS14 \cite{ls14} & Schmitt-Trigger & ? \\
+    74LS32 \cite{ls32} & OR & ? \\
+    74LS48 \cite{ls48} & 7-Segment Driver & ? \\
+    74LS76 \cite{ls76} & JK-Flip-Flop & ? \\
+    74LS86 \cite{ls86} & XOR & ? \\
+    74LS123 \cite{ls123} & Monostable Multivibrator & ? \\
+    74LS138 \cite{ls138} & 3-to-8 Decoder & \\
+    74LS157 \cite{ls157} & Data Selector & \\
+    74LS161 \cite{ls161} & 8-Bit Counter & \\
+    74LS173 \cite{ls173} & 8-Bit Register & \\
+    74LS193 \cite{ls193} & 8-Bit U/D Counter & \\
+    74LS245 \cite{ls245} & 8-Bit Bus Transceiver & \\
+    74HC595 \cite{hc595} & 8-Bit Shift Register & \\
+    NE555 \cite{555} & 555-Timer & \\
+    AT28C64B \cite{28c64} & 64K EEPROM & 4 \\
+    AS6C4008 \cite{c64008} & 512K SRAM & 2 \\
+    MC14068B \cite{14068B} & 8-Input NAND & 1 \\
+    ICM7226B \cite{7226B} & Frequency Counter & 1 \\
+    7-Segment Display & - & 2 \\
+    Quad 7-Segment Display & - & 2 \\
+    LED (single/array) & Various colors & A lot \\
+    HD44780 Compatible LCD & 4x20 Characters & 1 \\
+    Resistors & Different values & A lot \\
+    Capacitors & Different values & A reasonable amount \\    
+  \end{tabular}
+  \caption{Incomplete list of parts used in the project.}
+  \label{tab:parts}
+\end{table}
+

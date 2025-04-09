@@ -34,16 +34,16 @@
 }
 
 [opcodes] {
-  NOP		= 0x00
-  PLUS		= 0x01
-  MINUS		= 0x02
-  LEFT		= 0x03
-  RIGHT		= 0x04
-  IN_BUF	= 0x05
-  IN_IM		= 0x06
-  OUT		= 0x07
-  LOOP_START	= 0x08
-  LOOP_END	= 0x09
+  NOP           = 0x00
+  PLUS          = 0x01
+  MINUS         = 0x02
+  LEFT          = 0x03
+  RIGHT         = 0x04
+  IN_BUF        = 0x05
+  IN_IM         = 0x06
+  OUT           = 0x07
+  LOOP_START    = 0x08
+  LOOP_END      = 0x09
   INIT		= 0x0d
   HOME		= 0x0e
   HALT		= 0x0f
@@ -51,7 +51,7 @@
 
 
 [microcode] {
-  x:0:xxxx		-> LD_FB
+  x:0:xxxx              -> LD_FB
   
   PLUS:1:x00x		-> INC, RS0, SET_V, LD_FA
   PLUS:2:x00x		-> INC, RS2, CR
@@ -78,17 +78,15 @@
   LOOP_START:1:x000	-> INC, RS0, RS1
   LOOP_START:2:x000	-> WE_RAM, EN_SP, EN_IP
   LOOP_START:3:x000	-> INC, RS2, CR
-  LOOP_START:1:x10x	-> LD_D, OE_RAM, LD_FA
-  LOOP_START:2:x10x	-> CR # could be in cycle 1?
+  LOOP_START:1:x10x	-> OE_RAM, LD_D, LD_FA, CR
   LOOP_START:1:xx1x	-> INC, RS0, RS2
   LOOP_START:2:xx1x	-> INC, RS2, CR
 
   LOOP_END:1:x001	-> DEC, RS0, RS1
-  LOOP_END:2:x001	-> INC, RS0, RS2, CR
+  LOOP_END:2:x001	-> INC, RS2, CR
   LOOP_END:1:x000	-> EN_SP, OE_RAM, LD_IP
   LOOP_END:2:x000	-> INC, RS2, CR
-  LOOP_END:1:x10x	-> OE_RAM, LD_D, LD_FA
-  LOOP_END:2:x10x	-> CR # could be in cycle 1?
+  LOOP_END:1:x10x	-> OE_RAM, LD_D, LD_FA, CR
   LOOP_END:1:xx1x	-> DEC, RS0, RS2
   LOOP_END:2:xx1x	-> INC, RS2, CR
 

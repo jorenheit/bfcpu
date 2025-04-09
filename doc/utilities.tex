@@ -26,9 +26,15 @@ Even though the computer is designed to run BF natively, we can't just burn any 
   \label{tab:opcodes}
 \end{table}
 
-\texttt{bfasm} performs pretty much a one-to-one transformation of the BF commands in the provided textfile into these values. It will add some preample commands to initialize the system and puts a \texttt{HLT} instruction at the end of the program to stop the computer when the program has finished. Part of the source-code is listed in the listing below; for the full source, refer to \url{https://github.com/jorenheit/bfcpu/blob/main/src/bfasm/bfasm.cc}.
+\texttt{bfasm} performs pretty much a one-to-one transformation of the BF commands in the provided textfile into these values. It will add some preample commands to initialize the system and puts a \texttt{HLT} instruction at the end of the program to stop the computer when the program has finished (Figure \ref{fig:assembleoutput}). Part of the source-code is listed in the listing below; for the full source, refer to \url{https://github.com/jorenheit/bfcpu/blob/main/src/bfasm/bfasm.cc}.
 
-\lstinputlisting[firstnumber=0, linerange={assemble\_begin-assemble\_end}, language=c++]{../src/bfasm/bfasm.cc}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{img/assembleroutput}
+  \caption{Result of assembling a BF-file.}
+  \label{fig:assembleoutput}
+\end{figure}
+
 
 \subsection{Programmer}
 
