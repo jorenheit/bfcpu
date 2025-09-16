@@ -43,14 +43,14 @@
 
     Example:
 
-    SubMenu(Main, "Main Menu", true,  {}); // No action on select.
-    SubMenu(Echo, "Echo",      false, {}); // No action on select.
+    SubMenu(Main, "Main Menu", {}); // No action on select.
+    SubMenu(Echo, "Echo",      {}); // No action on select.
 
     MenuLeaf(EchoOn, "On",   item.home(), { action.setEchoEnabled(true); })
     MenuLeaf(EchoOn, "Off",  item.home(), { action.setEchoEnabled(true); })
     MenuLeaf(Exit,   "Exit", item.exit(), {}); // no code executed  
 
-  STEP 2: Build the tree by creating a typedef with the "using" directive.
+  STEP 4: Build the tree by creating a typedef with the "using" directive.
           Make sure that the root-menu is actually at the root of the definition.
 
     Example:
@@ -64,7 +64,7 @@
         Exit
       >;  
 
-  STEP 3: Instantiate the menu and call begin().
+  STEP 5: Instantiate the menu and call begin().
           This will set the root node such that submenu's know where to go when home() is called.
 
     Example:
