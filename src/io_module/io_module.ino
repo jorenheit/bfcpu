@@ -5,6 +5,7 @@
 #include "keyboardbuffer.h"
 #include "button.h"
 #include "lcdmenu.h"
+#include "random.h"
 
 // Global objects
 Settings       settings;
@@ -12,6 +13,7 @@ KeyboardBuffer kbBuffer(settings);
 LCDBuffer      lcdBuffer(settings);
 LCDScreen      lcdScreen(settings);
 LCDMenu        lcdMenu(lcdScreen, settings, lcdBuffer, kbBuffer);
+Random         rng;
 
 auto scrollUpButton   = Button::create<SCROLL_UP_PIN>();
 auto scrollDownButton = Button::create<SCROLL_DOWN_PIN>();
@@ -32,6 +34,9 @@ void setup() {
   // Initialize buffers
   kbBuffer.begin();
   lcdBuffer.begin();
+
+  // Initialize RNG
+  rng.begin(123); // TODO: implement seed settings
 
   // Load settings and initialize screen
   lcdMenu.loadSettings();
@@ -99,39 +104,45 @@ volatile size_t tickCount = 0;
 void onSystemClock() {
   ++tickCount;
 
-  enum KeyboardState : uint8_t {
-    IDLE,
-    WAIT,
-    RESET
-  };
-  static volatile KeyboardState kb_state = IDLE;
+  static enum : uint8_t {
+    IDLE, WAIT, RESET
+  } bus_state = IDLE;
 
-  if (kb_state == IDLE && digitalRead<DISPLAY_ENABLE_PIN>()) {
-    lcdBuffer.enqueue(readByteFromBus());
-    return;
+  if (bus_state != IDLE) {
+    switch (bus_state) {
+      case WAIT: {
+        bus_state = RESET;
+        return;
+      }
+      case RESET:
+        setIOPinsToInput(); [[fallthrough]];
+      default: {
+        bus_state = IDLE;
+        return;
+      }
+    }
   }
 
-  if (kb_state != IDLE || digitalRead<KEYBOARD_ENABLE_PIN>()) {
-    switch (kb_state) {
-      case IDLE:
-        {
-          setIOPinsToOutput();
-          writeByteToBus(kbBuffer.get());
-          kb_state = WAIT;
-          return;
-        }
-      case WAIT:
-        {
-          kb_state = RESET;
-          return;
-        }
-      case RESET:
-        {
-          setIOPinsToInput();
-          kb_state = IDLE;
-          return;
-        }
-    }
+  #define WRITE_TO_BUS_AND_WAIT(X) { \
+    setIOPinsToOutput();             \
+    writeByteToBus(X);               \
+    bus_state = WAIT;                \
+    return;                          \
+  }
+
+  #define DISPLAY_BYTE_FROM_BUS() {       \
+    lcdBuffer.enqueue(readByteFromBus()); \
+    return;                               \
+  }
+
+  bool const EN_OUT = digitalRead<DISPLAY_ENABLE_PIN>();
+  bool const EN_IN  = digitalRead<KEYBOARD_ENABLE_PIN>();
+
+  switch (EN_IN << 1 | EN_OUT) {
+    case 0b01: DISPLAY_BYTE_FROM_BUS();
+    case 0b10: WRITE_TO_BUS_AND_WAIT(kbBuffer.get());
+    case 0b11: WRITE_TO_BUS_AND_WAIT(rng.get());
+    default: return;
   }
 }
 //----------isr_end----------

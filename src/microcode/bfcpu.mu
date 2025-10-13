@@ -1,11 +1,11 @@
 # This file can be compiled with Mugen, see https://github.com/jorenheit/mugen.
 
-[rom] { 8192 x 8 }
+[rom] { 8192 x 8 x 3 }
 
 [address] {
   cycle:   3
   opcode:  4
-  flags:   4
+  flags:   V, A, S, Z
 }
 
 [signals] {
@@ -17,6 +17,7 @@
   DEC
   DPR
   EN_SP
+
   OE_RAM
   WE_RAM
   EN_IN
@@ -25,6 +26,7 @@
   SET_A
   LD_FB
   LD_FA
+
   EN_IP
   LD_IP
   EN_D
@@ -44,11 +46,18 @@
   OUT           = 0x07
   LOOP_START    = 0x08
   LOOP_END      = 0x09
+  RAND          = 0x0a  
   INIT		= 0x0d
   HOME		= 0x0e
   HALT		= 0x0f
 }
 
+# Resgister Select:
+# D  = RS0
+# DP = RS1
+# SP = RS0, RS1
+# IP = RS2
+# LS = RS0, RS2
 
 [microcode] {
   x:0:xxxx              -> LD_FB
@@ -83,7 +92,7 @@
   LOOP_START:2:xx1x	-> INC, RS2, CR
 
   LOOP_END:1:x001	-> DEC, RS0, RS1
-  LOOP_END:2:x001	-> INC, RS2, CR
+  LOOP_END:2:x001	-> INC, RS0, RS2, CR
   LOOP_END:1:x000	-> EN_SP, OE_RAM, LD_IP
   LOOP_END:2:x000	-> INC, RS2, CR
   LOOP_END:1:x10x	-> OE_RAM, LD_D, LD_FA, CR
@@ -91,8 +100,7 @@
   LOOP_END:2:xx1x	-> INC, RS2, CR
 
   OUT:1:x00x		-> EN_OUT, EN_D, INC, RS2, CR
-  OUT:1:x10x		-> OE_RAM, LD_D, LD_FA
-  OUT:2:x10x		-> EN_OUT, EN_D, INC, RS2, CR
+  OUT:1:x10x            -> EN_OUT, OE_RAM, INC, RS2, CR  
   OUT:1:xx1x		-> INC, RS2, CR
 
   IN_BUF:1:xx0x		-> EN_IN
@@ -107,6 +115,11 @@
   IN_IM:3:xx0x		-> INC, RS2, CR
   IN_IM:1:xx1x		-> INC, RS2, CR
 
+  RAND:1:xx0x		-> EN_IN, EN_OUT
+  RAND:2:xx0x		-> LD_D, SET_V, LD_FA
+  RAND:3:xx0x		-> INC, RS2, CR
+  RAND:1:xx1x		-> INC, RS2, CR
+  
   NOP:1:xxxx		-> INC, RS2, CR
   HALT:1:xxxx		-> HLT
   HALT:2:xxxx		-> INC, RS2, CR
