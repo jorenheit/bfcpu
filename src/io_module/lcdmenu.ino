@@ -28,7 +28,10 @@ void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, Button
     bothReleased = false;
     Settings const oldSettings = _settings;
     Menu::Pointer next = _current->highlighted()->select(_actions);
-    if (_settings != oldSettings) saveSettings();
+    if (_current->highlighted()->isValueSelect() || _settings != oldSettings) {
+      saveSettings();
+    }
+
     if (next == _menu.exit()) return exit();
     _current = next;
     _selectedLine = 1;
@@ -39,16 +42,26 @@ void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, Button
   }
   else if (up == ButtonState::JustReleased) {
     _lastActiveTime = millis();
-    bool const wrap = _current->up();
-    if (wrap) _selectedLine = min(_current->count(), VISIBLE_LINES - 1);
-    else if (_selectedLine > 1) --_selectedLine;
+    if (!_current->highlighted()->isValueSelect()) {
+      bool const wrap = _current->up();
+      if (wrap) _selectedLine = min(_current->count(), VISIBLE_LINES - 1);
+      else if (_selectedLine > 1) --_selectedLine;
+    }
+    else {
+      _current->highlighted()->up();
+    }
     display();  
   }
   else if (down == ButtonState::JustReleased) {
     _lastActiveTime = millis();
-    bool const wrap = _current->down();
-    if (wrap) _selectedLine = 1;
-    else if (_selectedLine < VISIBLE_LINES - 1) ++_selectedLine;
+    if (!_current->highlighted()->isValueSelect()) {
+      bool const wrap = _current->down();
+      if (wrap) _selectedLine = 1;
+      else if (_selectedLine < VISIBLE_LINES - 1) ++_selectedLine;
+    }
+    else {
+      _current->highlighted()->down();
+    }
     display();  
   }
 }
@@ -79,11 +92,10 @@ void LCDMenu::display(){
     copyToBuffer(buffer[0], _current->highlighted()->getLabel());
   }
   else {
-    static constexpr uint8_t OFFSET = 2;
     copyToBuffer(buffer[0], _current->getLabel());
     for (int8_t line = 1; line != VISIBLE_LINES; ++line) {
       Menu::Pointer item = _current->highlighted(line - _selectedLine);
-      if (item) copyToBuffer(&buffer[line][OFFSET], item->getLabel());
+      if (item) copyToBuffer(&buffer[line][MENU_LABEL_OFFSET], item->getLabel());
     }
     buffer[_selectedLine][0] = MENU_SELECT_CHARACTER;
   }

@@ -24,14 +24,13 @@ void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
   static bool tempDisplayActive = false;
   static size_t lastViewID = 0;
 
-  if (tempTimeout && (millis() < tempTimeout))
-  {
+  if (tempTimeout && (millis() < tempTimeout)) {
     tempDisplayActive = true;
     return;
   }
 
   if (tempDisplayActive) {
-    // temp display was active but has now has timed out -> reset and force display update
+    // temp display was active but has now has timed out (or was cancelled) -> reset and force display update
     tempDisplayActive = false;
     tempTimeout = 0; 
     forced = true;

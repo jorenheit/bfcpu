@@ -1,6 +1,7 @@
 #pragma once
 
 extern volatile size_t tickCount;
+extern int *rngSeedPtr;
 
 inline void tic() {
   tickCount = 0;

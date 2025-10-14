@@ -73,16 +73,25 @@
     Menu::Pointer current = menu.begin();
 */
 
-#define DEFINE_MENU_ITEM(NAME, LABEL, RETURN, ACTION_CODE)                                   \
-struct NAME##_ {                                                                             \
-  static constexpr char const* getLabel() { return LABEL; }                                  \
-  template <typename Actions>                                                                \
-  static Menu::MenuItem<Actions>* select(Menu::MenuItem<Actions> &item, Actions &actions){   \
-      (void)item; (void)actions;                                                             \
-      ACTION_CODE                                                                            \
-      return RETURN;                                                                         \
-  }                                                                                          \
-};                                                                          
+#define DEFINE_MENU_ITEM(NAME, LABEL, RETURN, ACTION_CODE)		                               \
+  struct NAME##_ {							                                                             \
+    static constexpr char const* getLabel() { return LABEL; }		                             \
+    template <typename Actions>						                                                   \
+    static Menu::MenuItem<Actions>* select(Menu::MenuItem<Actions> &item, Actions &actions){ \
+      (void)item; (void)actions;					                                                   \
+      ACTION_CODE			                                                                       \
+	    return RETURN; 	                                                                       \
+    }									                                                                       \
+  };                                                                          
+
+#define DEFINE_MENU_ITEM_VALUE_SELECT(NAME, PTR, MIN, MAX)	                                 \
+  struct NAME##_ {							                                                             \
+    static int* ptr() { return PTR; };                                                       \
+    static char const *getLabel() { return "DUMMY"; }                                        \
+    static Menu::MenuItem<Actions> *select(Menu::MenuItem<Actions> &item, Actions &) {       \
+      return item.home();						                                                         \
+    }									                                                                       \
+  };
 
 #define MenuActions(ACTIONS) using Actions_ = ACTIONS;         
 
@@ -92,3 +101,7 @@ using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_>;
 #define SubMenu(NAME, LABEL, ACTION_CODE) DEFINE_MENU_ITEM(NAME, LABEL, &item, ACTION_CODE); \
 template <typename First, typename ... Rest>                                                 \
 using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_, First, Rest...>;
+
+#define ValueSelect(NAME, PTR, MIN, MAX) DEFINE_MENU_ITEM_VALUE_SELECT(NAME, PTR, MIN, MAX); \
+using NAME = Menu::Helpers::MenuItemImplValueSelect<Actions_, NAME##_, MIN, MAX>;
+
