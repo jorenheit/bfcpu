@@ -1,6 +1,0 @@
-#include "clock.h"
-#include "register.h"
-#include "ram.h"
-#include "rom.h"
-#include "screen.h"
-#include "decoder.h"
