@@ -1,5 +1,0 @@
-include "std.bfx"
-
-function main() {
-    println("I <3 Kimmie");
-}
