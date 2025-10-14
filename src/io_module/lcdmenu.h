@@ -37,6 +37,7 @@ class LCDMenu {
   SubMenu(DisplayMode, "Display Mode",  { /* No action on select */    });
   SubMenu(DecMode,     "Decimal",       { actions.setMode(DECIMAL);    });
   SubMenu(HexMode,     "Hexadecimal",   { actions.setMode(HEXADECIMAL);});
+  SubMenu(SetRNGSeed,  "Set RNG Seed",  { /* No action on select */    });
 
   // Define leaf nodes
   MenuLeaf(Clear,         "Clear Buffers", item.exit(),   { actions.clear();                     });
@@ -51,6 +52,9 @@ class LCDMenu {
   MenuLeaf(SpaceDelim,    "[SPACE]",       item.home(),   { actions.setDelimiter(' ');           });
   MenuLeaf(Defaults,      "Defaults",      item.exit(),   { actions.restoreDefaults();           });
   MenuLeaf(Exit,          "Exit",          item.exit(),   { /* No action on select */            });
+  
+  // Value-select menu for the RNG seed
+  ValueSelect(SeedSelecter, rngSeedPtr, 1, 100);  
 
   // Build the final menu-type:
   using Menu = MainMenu <
@@ -62,6 +66,9 @@ class LCDMenu {
     Autoscroll<
       AutoscrollOn,
       AutoscrollOff
+    >,
+    SetRNGSeed<
+      SeedSelecter
     >,
     DisplayMode<
       TextMode,

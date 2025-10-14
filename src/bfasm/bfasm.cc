@@ -3,29 +3,28 @@
 #include <fstream>
 #include <algorithm>
 
-enum Instructions
-  {
-    NOP	        = 0x00,
-    PLUS	= 0x01,
-    MINUS	= 0x02,
-    LEFT	= 0x03,
-    RIGHT	= 0x04,
-    IN_BUF      = 0x05,
-    IN_IM       = 0x06,
-    OUT		= 0x07,
-    LOOP_START	= 0x08,
-    LOOP_END	= 0x09,
-    RAND        = 0x0a,
-    INIT        = 0x0d,
-    HOME        = 0x0e,
-    HLT         = 0x0f
-  };
+enum Instructions {
+  NOP	        = 0x00,
+  PLUS	= 0x01,
+  MINUS	= 0x02,
+  LEFT	= 0x03,
+  RIGHT	= 0x04,
+  IN_BUF      = 0x05,
+  IN_IM       = 0x06,
+  OUT		= 0x07,
+  LOOP_START	= 0x08,
+  LOOP_END	= 0x09,
+  RAND        = 0x0a,
+  WAIT_EXT    = 0x0b,
+  INIT        = 0x0d,
+  HOME        = 0x0e,
+  HLT         = 0x0f
+};
 
-enum KeyboardInputMode
-  {
-    IMMEDIATE,
-    BUFFERED
-  };
+enum KeyboardInputMode  {
+  IMMEDIATE,
+  BUFFERED
+};
 
 struct Options
 {
@@ -39,6 +38,7 @@ struct Options
   int maxDepth;
   bool allowUnbalanced;
   int init;
+  bool handshake;
 };
 
 void printHelp(std::string const &progName)
@@ -47,6 +47,7 @@ void printHelp(std::string const &progName)
 	    << "Options:\n"
 	    << "-h, --help            Display this text.\n"
 	    << "-i, --immediate-input Assemble input commands (,) to immediate mode (\').\n"
+	    << "-n, --no-handshake    Omit the handshake opcode from the initialization phase.\n"
 	    << "-H, --halt-enable     Interpret '!' as HLT in the BF code\n"
 	    << "-r, --rand-enable     Interpret '?' as RAND in the BF code\n"
 	    << "-g, --debug           Place a breakpoint (!) after each instruction.\n"
@@ -70,6 +71,7 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
   opt.mode = BUFFERED;
   opt.halt = false;
   opt.init = 1;
+  opt.handshake = true;
   opt.inStream = &std::cin;
   opt.outStream = &std::cout;
   opt.echo = false;
@@ -116,6 +118,10 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
       opt.allowUnbalanced = true;
       ++idx;
     }
+    else if (args[idx] == "-n" || args[idx] == "--no-handshake") {
+      opt.handshake = false;
+      ++idx;
+    }
     else if (args[idx] == "-d" || args[idx] == "--max-depth")
     {
       if (idx == args.size() - 1)
@@ -144,7 +150,6 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
 	return {opt, 1};
       }
     }
-	
     else if (args[idx] == "-o")
     {
       if (idx == args.size() - 1)
@@ -218,9 +223,12 @@ int assemble(Options const &opt)
   std::vector<unsigned char> result;
   int nestingDepth = 0;
 
-  // Start with NOP for stability
+  // Start with a NOP for stability
   result.push_back(NOP);
 
+  // Handshake
+  result.push_back(WAIT_EXT);
+  
   // Zero init DATA,  then restore the DP back to its home position (0x0100)
   if (opt.init)
   {

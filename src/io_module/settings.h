@@ -51,6 +51,14 @@ enum ButtonPrams: int {
   BUTTON_HOLD_TIME = 1000
 };
 
+enum RNGParams: int {
+  RNG_DEFAULT_SEED = 69
+};
+
+enum Handshake: uint8_t {
+  HANDSHAKE_MAGIC_VALUE = 0xFD
+};
+
 enum LCDParams: int {
   VISIBLE_LINES = 4,
   LINE_SIZE = 20,
@@ -61,6 +69,7 @@ enum LCDParams: int {
   MENU_TIMEOUT = 5000,
   TEMP_MESSAGE_TIMEOUT = 1000,
   MENU_SELECT_CHARACTER = 0x7E, // rightarrow
+  MENU_LABEL_OFFSET = 2,
   LCD_COMMAND_EXECUTION_MICROS = 40,
 
   AUTOSCROLL_DEFAULT_SETTING = true,
@@ -82,9 +91,9 @@ enum KeyboardParams: int {
 };
 
 enum IOBuffers: uint8_t {
-  KB_RING1 = 32,
-  KB_RING2 = 32,
-  LCD_RING = 128
+  KB_RING1 = 16,
+  KB_RING2 = 16,
+  LCD_RING = 64
 };
 
 enum EEPROMStorageParams: uint8_t {
@@ -101,12 +110,14 @@ struct Settings {
   bool autoscrollEnabled = AUTOSCROLL_DEFAULT_SETTING;
   bool echoEnabled = ECHO_DEFAULT_SETTING;
   char delimiter = DELIMITER_DEFAULT_SETTING;
+  int rngSeed = RNG_DEFAULT_SEED;
 
   bool operator==(Settings const &other) const {
     return (mode == other.mode) &&
           (autoscrollEnabled == other.autoscrollEnabled) &&
           (echoEnabled == other.echoEnabled) &&
-          (delimiter == other.delimiter);
+          (delimiter == other.delimiter) && 
+          (rngSeed == other.rngSeed);
   }
 
   bool operator!=(Settings const &other) const {

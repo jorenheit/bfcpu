@@ -38,6 +38,8 @@ public:
   virtual uint8_t count() const { return 0; }
   virtual bool up()   { return false; }
   virtual bool down() { return false; }
+  virtual bool isValueSelect() const { return false; }
+
 
   virtual MenuItem *back() { return parent ? parent : this; } // should be overridden by leaf-types
   MenuItem *stay() { return parent; };
@@ -99,7 +101,7 @@ namespace Helpers {
   {
     using Pointer = typename MenuItem<Actions>::Pointer;
 
-    virtual char const *getLabel() const override final {
+    virtual char const *getLabel() const override {
       return Impl::getLabel();
     };
 
@@ -164,6 +166,65 @@ namespace Helpers {
     virtual Pointer back() override final {
       return this->getParent()->getParent();
     }
+  };
+
+
+  template <typename Actions, typename Impl, int Min, int Max> 
+  class MenuItemImplValueSelect: public MenuItemImplBase<Actions, Impl> {
+    static_assert(Min >= 0, "Negative values are not supported.");
+    static_assert(Max > Min, "Max must be greater than Min.");
+
+  public:
+    virtual bool isValueSelect() const override final {
+      return true;
+    }
+
+    virtual bool up() override final {
+      int &value = *Impl::ptr();
+      if (++value > Max) value = Min;
+      return value == Min;			
+    }
+
+    virtual bool down() override final {
+      int &value = *Impl::ptr();
+      if (--value < Min) value = Max;
+      return value == Max;
+    }
+
+    virtual char const *getLabel() const override final {
+      static constexpr uint8_t numChars = countDigits(Max);
+      static constexpr uint8_t bufSize = LINE_SIZE - MENU_LABEL_OFFSET + 1;
+      static char buffer[bufSize];
+
+      buffer[bufSize - 1] = '\0';
+      int firstIdx = (bufSize - numChars - 1) / 2;
+      int lastIdx = firstIdx + numChars - 1;
+
+      // Leading spaces
+      for (int idx = 0; idx != firstIdx; ++idx) {
+        buffer[idx] = ' ';
+      }
+
+      // Number
+      int value = *Impl::ptr();
+      for (int idx = lastIdx; idx >= firstIdx; --idx) {
+        buffer[idx] = '0' + (value % 10);
+        value /= 10;
+      }
+
+      // Trailing spaces
+      for (int idx = lastIdx + 1; idx != bufSize - 1; ++idx) {
+        buffer[idx] = ' ';
+      }
+
+      return buffer;
+    }
+    
+    private:
+      static constexpr uint8_t countDigits(uint8_t value) {
+        return (value == 0) ? 1 : (value / 10 > 0) + countDigits(value / 10);
+      }
+
   };
 }
 

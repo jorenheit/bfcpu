@@ -15,6 +15,10 @@ LCDScreen      lcdScreen(settings);
 LCDMenu        lcdMenu(lcdScreen, settings, lcdBuffer, kbBuffer);
 Random         rng;
 
+// Pointer to RNG seed value needed to update from menu
+int *rngSeedPtr = &settings.rngSeed;
+
+// Buttons
 auto scrollUpButton   = Button::create<SCROLL_UP_PIN>();
 auto scrollDownButton = Button::create<SCROLL_DOWN_PIN>();
 auto menuButton       = ButtonPair::create(scrollUpButton, scrollDownButton);
@@ -35,12 +39,17 @@ void setup() {
   kbBuffer.begin();
   lcdBuffer.begin();
 
-  // Initialize RNG
-  rng.begin(123); // TODO: implement seed settings
-
-  // Load settings and initialize screen
+  // Load settings from EEPROM
   lcdMenu.loadSettings();
-  lcdScreen.begin("READY!");
+  
+  // Initialize RNG using loaded seed value
+  rng.begin(settings.rngSeed);
+
+  // Initialize screen
+  lcdScreen.begin();
+
+  // Block until the handshake has been completed
+  handshake();
 
   // Start listening for incoming clocks
   attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClock, RISING);
@@ -98,9 +107,31 @@ void scroll() {
   }
 }
 
-volatile size_t tickCount = 0;
+
+// ----------- HANDSHAKE ROUTINE ---------------
+volatile bool handshakeCompleted = false;
+
+void handshake() {
+  setIOPinsToOutput();
+  writeByteToBus(HANDSHAKE_MAGIC_VALUE);
+  attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClockDuringHandshake, RISING);
+  while (!handshakeCompleted) {}
+  setIOPinsToInput();
+}
+
+void onSystemClockDuringHandshake() {
+  bool const EN_IN = digitalRead<KEYBOARD_ENABLE_PIN>();
+  bool const EN_OUT = digitalRead<DISPLAY_ENABLE_PIN>();
+  if (EN_IN && EN_OUT) {
+    handshakeCompleted = true;
+    detachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN));
+  }
+}
+
 
 //----------isr_begin----------
+volatile size_t tickCount = 0;
+
 void onSystemClock() {
   ++tickCount;
 
