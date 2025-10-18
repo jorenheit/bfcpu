@@ -29,35 +29,31 @@ double measureFrequency() {
 }
 
 template <unsigned long(TimeFunc)() = millis>
-void interruptable_delay(size_t const t) {
+inline void interruptable_delay(size_t const t) {
   unsigned long now = TimeFunc();
   while (TimeFunc() - now < t) {}
 }
 
-inline __attribute__((always_inline)) 
-void setIOPinsToOutput() {
+inline void setIOPinsToOutput() {
   DDRC |= B00000001;
   DDRB |= B00111111;
   DDRD |= B10000000;
 }
 
-inline __attribute__((always_inline)) 
-void setIOPinsToInput() {
+inline void setIOPinsToInput() {
   DDRC &= ~B00000001;
   DDRB &= ~B00111111;
   DDRD &= ~B10000000;
 } 
 
-inline __attribute__((always_inline)) 
-byte readByteFromBus() {
+inline byte readByteFromBus() {
   // !! Assumes datapins have been set to input !!
   return ((PINC & B00000001) << 7) | 
 	       ((PINB & B00111111) << 1) | 
 	       ((PIND & B10000000) >> 7);
 }
 
-inline __attribute__((always_inline)) 
-void writeByteToBus(byte data) {
+inline void writeByteToBus(byte data) {
   // !! Assumes datapins have been set to output !!
   PORTC = (PORTC & ~B00000001) | ((data & B10000000) >> 7);
   PORTB = (PORTB & ~B00111111) | ((data & B01111110) >> 1);
@@ -65,27 +61,24 @@ void writeByteToBus(byte data) {
 }
 
 #include "fastdigitalread.h"
-template <int Pin>
-inline __attribute__((always_inline))  
-bool digitalRead() {
+template <int Pin> 
+inline bool digitalRead() {
   return fastDigitalRead<Pin>();
 }
 
 #include "fastdigitalwrite.h"
 template <int Pin>
-inline __attribute__((always_inline))  
-void digitalWrite(bool state) {
+inline void digitalWrite(bool state) {
   return fastDigitalWrite<Pin>(state);
 }
 
 template <int Pin, bool State>
-inline __attribute__((always_inline))  
-void digitalWrite() {
+inline void digitalWrite() {
   return fastDigitalWrite<Pin, State>();
 }
 
 template <int DataPin, int ClockPin, int BitOrder>
-void shiftOut(uint8_t const value)
+inline void shiftOut(uint8_t const value)
 {
   for (uint8_t i = 0; i < 8; ++i)  {
     digitalWrite<DataPin>(BitOrder == LSBFIRST ? 

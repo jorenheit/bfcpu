@@ -131,49 +131,37 @@ void onSystemClockDuringHandshake() {
 
 //----------isr_begin----------
 volatile size_t tickCount = 0;
-
-void onSystemClock() {
+void onSystemClock()  {
   ++tickCount;
 
   static enum : uint8_t {
     IDLE, WAIT, RESET
-  } bus_state = IDLE;
+  } state = IDLE;
 
-  if (bus_state != IDLE) {
-    switch (bus_state) {
-      case WAIT: {
-        bus_state = RESET;
-        return;
-      }
-      case RESET:
-        setIOPinsToInput(); [[fallthrough]];
-      default: {
-        bus_state = IDLE;
-        return;
-      }
-    }
+  if (state == WAIT) {
+    state = RESET;
+    return;
   }
-
-  #define WRITE_TO_BUS_AND_WAIT(X) { \
-    setIOPinsToOutput();             \
-    writeByteToBus(X);               \
-    bus_state = WAIT;                \
-    return;                          \
+  else if (state == RESET) {
+    setIOPinsToInput();
+    state = IDLE;
+    return;
   }
-
-  #define DISPLAY_BYTE_FROM_BUS() {       \
-    lcdBuffer.enqueue(readByteFromBus()); \
-    return;                               \
-  }
+ 
+  auto writeByteToBusAndWait = [](uint8_t value) -> void [[always_inline]] {
+    setIOPinsToOutput();             
+    writeByteToBus(value);               
+    state = WAIT;                 
+  };
 
   bool const EN_OUT = digitalRead<DISPLAY_ENABLE_PIN>();
   bool const EN_IN  = digitalRead<KEYBOARD_ENABLE_PIN>();
 
   switch (EN_IN << 1 | EN_OUT) {
-    case 0b01: DISPLAY_BYTE_FROM_BUS();
-    case 0b10: WRITE_TO_BUS_AND_WAIT(kbBuffer.get());
-    case 0b11: WRITE_TO_BUS_AND_WAIT(rng.get());
-    default: return;
+    case 0b01: return lcdBuffer.enqueue(readByteFromBus());
+    case 0b10: return writeByteToBusAndWait(kbBuffer.get());
+    case 0b11: return writeByteToBusAndWait(rng.get());
+    default:   return; /* UNREACHABLE */
   }
 }
 //----------isr_end----------

@@ -21,6 +21,22 @@ namespace Helper {
   };
 }
 
+template <uint32_t Modulus, bool IsPowerOfTwo = ((Modulus & (Modulus - 1)) == 0)>
+struct Mod {
+  template <typename T>
+  static T get(T arg) {
+    return arg % Modulus;
+  }
+};
+
+template <uint32_t Modulus>
+struct Mod<Modulus, true> {
+  template <typename T>
+  static T get(T arg) {
+    return (arg & (Modulus - 1));
+  }    
+};
+
 template <typename T>
 struct RingBufferResult {
   T value;
@@ -44,7 +60,7 @@ private:
   volatile IndexType tail = 0;
 
 public:
-  bool put(ValueType const &val) {
+  inline bool put(ValueType const &val) {
     IndexType const nextHead = Derived::next(head);
     if (nextHead != tail) {
       buffer[head] = val;
@@ -59,25 +75,25 @@ public:
     return false;
   }
 
-  Result get() {
+  inline Result get() {
     if (head == tail) return Result{ValueType{}, false};
     Result result{buffer[tail], true};
     tail = Derived::next(tail);
     return result;
   }
 
-  Result peek() const {
+  inline Result peek() const {
     return (head == tail) ? Result{ValueType{}, false} 
                           : Result{buffer[tail], true};
   }
 
-  void clear() {
+  inline void clear() {
     head = 0;
     tail = 0;
   }
 
-  inline bool available() const {
-    return (head != tail);
+  inline IndexType available() const {
+    return Mod<N>::get(head - tail + N);
   }
 };
 
@@ -86,7 +102,7 @@ class RingBuffer: public RingBufferBase<ValueType, N> {
   using IndexType = typename RingBufferBase<ValueType, N>::IndexType;
 public:
   inline static IndexType next(IndexType const index) {
-    return (index + 1) % static_cast<IndexType>(N);
+    return Mod<N>::get(index + 1);
   }  
 };
 

@@ -141,8 +141,7 @@ void LiquidCrystal_74HC595::pulseEnable() {
   delayMicroseconds(1);
   bitWrite(_register, E_595, 0);
   transfer();
-  //delayMicroseconds(LCD_COMMAND_EXECUTION_MICROS);
-  interruptable_delay<micros>(LCD_COMMAND_EXECUTION_MICROS);
+  delayMicroseconds(LCD_COMMAND_EXECUTION_MICROS);
 }
 
 void LiquidCrystal_74HC595::write4bits(uint8_t const value) {

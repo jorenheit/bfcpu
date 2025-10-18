@@ -4,16 +4,16 @@
 #include <algorithm>
 
 enum Instructions {
-  NOP	        = 0x00,
-  PLUS	= 0x01,
-  MINUS	= 0x02,
-  LEFT	= 0x03,
-  RIGHT	= 0x04,
+  NOP	      = 0x00,
+  PLUS	      = 0x01,
+  MINUS	      = 0x02,
+  LEFT	      = 0x03,
+  RIGHT	      = 0x04,
   IN_BUF      = 0x05,
   IN_IM       = 0x06,
-  OUT		= 0x07,
-  LOOP_START	= 0x08,
-  LOOP_END	= 0x09,
+  OUT	      = 0x07,
+  LOOP_START  = 0x08,
+  LOOP_END    = 0x09,
   RAND        = 0x0a,
   WAIT_EXT    = 0x0b,
   INIT        = 0x0d,
@@ -39,26 +39,28 @@ struct Options
   bool allowUnbalanced;
   int init;
   bool handshake;
+  bool nopBetweenDots;
 };
 
 void printHelp(std::string const &progName)
 {
   std::cout << "Usage: " << progName << " [options] <file(.bf)>\n"
 	    << "Options:\n"
-	    << "-h, --help            Display this text.\n"
-	    << "-i, --immediate-input Assemble input commands (,) to immediate mode (\').\n"
-	    << "-n, --no-handshake    Omit the handshake opcode from the initialization phase.\n"
-	    << "-H, --halt-enable     Interpret '!' as HLT in the BF code\n"
-	    << "-r, --rand-enable     Interpret '?' as RAND in the BF code\n"
-	    << "-g, --debug           Place a breakpoint (!) after each instruction.\n"
-	    << "-e, --echo            Follow each input command (,) up by an output command (.) to echo keyboard input.\n"
-	    << "                      This is only available in buffered input mode.\n"
-	    << "-d, --max-depth       Maximum nesting depth of []-pairs.\n"
-	    << "-z [N]                Initialize N chunks of 256 bytes with zero\'s. Default: N = 1.\n"
+	    << "-h, --help              Display this text.\n"
+	    << "-i, --immediate-input   Assemble input commands (,) to immediate mode (\').\n"
+	    << "-n, --no-handshake      Omit the handshake opcode from the initialization phase.\n"
+	    << "-H, --halt-enable       Interpret '!' as HLT in the BF code\n"
+	    << "-r, --rand-enable       Interpret '?' as RAND in the BF code\n"
+	    << "-N, --nop-between-dots  Insert a NOP between consecutive OUT instructions.\n"
+	    << "-g, --debug             Place a breakpoint (!) after each instruction.\n"
+	    << "-e, --echo              Follow each input command (,) up by an output command (.) to echo keyboard input.\n"
+	    << "                        This is only available in buffered input mode.\n"
+	    << "-d, --max-depth         Maximum nesting depth of []-pairs.\n"
+	    << "-z [N]                  Initialize N chunks of 256 bytes with zero\'s. Default: N = 1.\n"
 	    << "-u, --allow-unbalanced-loops\n"
-	    << "                      By default, the assembler will refuse to produce a program with unbalanced\n"
-	    << "                      loops ([ and ] do not match). Using this option will allow for this to occur.\n"
-	    << "-o [file, stdout]     Specify the output stream/file (default stdout).\n\n"
+	    << "                        By default, the assembler will refuse to produce a program with unbalanced\n"
+	    << "                        loops ([ and ] do not match). Using this option will allow for this to occur.\n"
+	    << "-o [file, stdout]       Specify the output stream/file (default stdout).\n\n"
 	    << "Example: " << progName << " -o program.bin program.bf\n";
 }
 
@@ -79,6 +81,7 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
   opt.maxDepth = 255;
   opt.allowUnbalanced = false;
   opt.rand = false;
+  opt.nopBetweenDots = false;
 
   std::string inputFile = "stdin";
   size_t idx = 1;
@@ -120,6 +123,10 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     }
     else if (args[idx] == "-n" || args[idx] == "--no-handshake") {
       opt.handshake = false;
+      ++idx;
+    }
+    else if (args[idx] == "-N" || args[idx] == "--nop-between-dots") {
+      opt.nopBetweenDots = true;
       ++idx;
     }
     else if (args[idx] == "-d" || args[idx] == "--max-depth")
@@ -250,7 +257,12 @@ int assemble(Options const &opt)
     case '-': result.push_back(MINUS); break; 
     case '<': result.push_back(LEFT); break; 
     case '>': result.push_back(RIGHT); break; 
-    case '.': result.push_back(OUT); break; 
+    case '.': {
+      result.push_back(OUT);
+      if (opt.nopBetweenDots && in.peek() == '.')
+	result.push_back(NOP);
+      break;
+    }
     case ',': {
       result.push_back(opt.mode == BUFFERED ? IN_BUF : IN_IM);
       if (opt.echo) result.push_back(OUT);

@@ -23,6 +23,7 @@ void LCDScreen::begin(char const *msg) {
 void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
   static bool tempDisplayActive = false;
   static size_t lastViewID = 0;
+  static unsigned long lastViewTime = 0;
 
   if (tempTimeout && (millis() < tempTimeout)) {
     tempDisplayActive = true;
@@ -36,7 +37,7 @@ void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
     forced = true;
   }
 
-  if (view.id == lastViewID && !forced) 
+  if ((view.id == lastViewID || (millis() - lastViewTime) < DISPLAY_FRAMETIME_MILLIS) && !forced) 
     return;
 
   lastViewID = view.id;
