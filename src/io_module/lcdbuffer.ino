@@ -17,12 +17,11 @@ void LCDBuffer::update() {
                                 : &LCDBuffer::insertAsHex;
 
   // Copy new data from ringBuf into the screenBuf using the selected insert function.
-  bool newData = false;
-  while (ringBuf.available()) {
+  auto bytesAvailable = ringBuf.available();
+  for (decltype(bytesAvailable) i = 0; i != bytesAvailable; ++i) {
     (this->*insert)(ringBuf.get().value);
-    newData = true;
   }
-  if (newData && settings.autoscrollEnabled) bringIntoView();
+  if (bytesAvailable && settings.autoscrollEnabled) bringIntoView();
 }
 
 LCDBuffer::View LCDBuffer::view() const {
