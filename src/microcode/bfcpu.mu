@@ -5,7 +5,7 @@
 [address] {
   cycle:   3
   opcode:  4
-  flags:   V, A, S, Z
+  flags:   K, V, A, S, Z
 }
 
 [signals] {
@@ -24,7 +24,7 @@
   EN_OUT
   SET_V
   SET_A
-  LD_FB
+  LD_FBI
   LD_FA
 
   EN_IP
@@ -32,7 +32,9 @@
   EN_D
   LD_D
   CR
-  ERR
+  CLR_K
+  K_REC
+  ERR  
 }
 
 [opcodes] {
@@ -41,12 +43,12 @@
   MINUS         = 0x02
   LEFT          = 0x03
   RIGHT         = 0x04
-  IN_BUF        = 0x05
-  IN_IM         = 0x06
-  OUT           = 0x07
-  LOOP_START    = 0x08
-  LOOP_END      = 0x09
-  RAND          = 0x0a  
+  IN            = 0x05
+  OUT           = 0x06
+  LOOP_START    = 0x07
+  LOOP_END      = 0x08
+  RAND          = 0x09
+  WAIT_EXT      = 0x0c  
   INIT		= 0x0d
   HOME		= 0x0e
   HALT		= 0x0f
@@ -60,76 +62,92 @@
 # LS = RS0, RS2
 
 [microcode] {
-  x:0:xxxx              -> LD_FB
+
+  NOP:0:xxxxx		-> LD_FBI
+  PLUS:0:xxxxx		-> LD_FBI
+  MINUS:0:xxxxx		-> LD_FBI
+  LEFT:0:xxxxx		-> LD_FBI
+  RIGHT:0:xxxxx		-> LD_FBI
+  IN:0:xxxxx		-> LD_FBI
+  OUT:0:xx0xx		-> LD_FBI, EN_D     # when OUT is spinning, EN_D must be kept high
+  OUT:0:xx1xx		-> LD_FBI, OE_RAM   # OE_RAM in this case, for the same reason
+  LOOP_START:0:xxxxx	-> LD_FBI
+  LOOP_END:0:xxxxx	-> LD_FBI
+  RAND:0:xxxxx		-> LD_FBI
+  WAIT_EXT:0:xxxxx	-> LD_FBI
+  INIT:0:xxxxx		-> LD_FBI
+  HOME:0:xxxxx		-> LD_FBI
+  HALT:0:xxxxx		-> LD_FBI
+
+  WAIT_EXT:1:0xxxx	-> CR
+  WAIT_EXT:1:1xxxx      -> CLR_K, K_REC, INC, RS2, CR
+
+  INIT:1:xxxx1		-> EN_D, WE_RAM, INC, RS0, RS2
+  INIT:2:xxxx1		-> LD_FBI, INC, RS1
+  INIT:3:xxx01		-> INC, RS2, CR
+  INIT:3:xxx11		-> CR
+
+  PLUS:1:xx00x		-> INC, RS0, SET_V, LD_FA
+  PLUS:2:xx00x		-> INC, RS2, CR
+  PLUS:1:xx10x		-> LD_D, OE_RAM, LD_FA, CR
+  PLUS:1:xxx1x		-> INC, RS2, CR
+
+  MINUS:1:xx00x		-> DEC, RS0, SET_V, LD_FA
+  MINUS:2:xx00x		-> INC, RS2, CR
+  MINUS:1:xx10x		-> LD_D, OE_RAM, LD_FA, CR
+  MINUS:1:xxx1x		-> INC, RS2, CR
+
+  LEFT:1:x0x0x		-> DEC, RS1, SET_A, LD_FA
+  LEFT:2:x0x0x		-> INC, RS2, CR
+  LEFT:1:x1x0x		-> EN_D, WE_RAM, LD_FA, CR
+  LEFT:1:xxx1x		-> INC, RS2, CR
+
+  RIGHT:1:x0x0x		-> INC, RS1, SET_A, LD_FA
+  RIGHT:2:x0x0x		-> INC, RS2, CR
+  RIGHT:1:x1x0x		-> EN_D, WE_RAM, LD_FA, CR
+  RIGHT:1:xxx1x		-> INC, RS2, CR
+
+  LOOP_START:1:xx001	-> INC, RS0, RS2
+  LOOP_START:2:xx001	-> INC, RS2, CR
+  LOOP_START:1:xx000	-> INC, RS0, RS1
+  LOOP_START:2:xx000	-> WE_RAM, EN_SP, EN_IP
+  LOOP_START:3:xx000	-> INC, RS2, CR
+  LOOP_START:1:xx10x	-> OE_RAM, LD_D, LD_FA, CR
+  LOOP_START:1:xxx1x	-> INC, RS0, RS2
+  LOOP_START:2:xxx1x	-> INC, RS2, CR
+
+  LOOP_END:1:xx001	-> DEC, RS0, RS1
+  LOOP_END:2:xx001	-> INC, RS2, CR
+  LOOP_END:1:xx000	-> EN_SP, OE_RAM, LD_IP
+  LOOP_END:2:xx000	-> INC, RS2, CR
+  LOOP_END:1:xx10x	-> OE_RAM, LD_D, LD_FA, CR
+  LOOP_END:1:xxx1x	-> DEC, RS0, RS2
+  LOOP_END:2:xxx1x	-> INC, RS2, CR
+
+  OUT:1:xxx1x		-> INC, RS2, CR
+  OUT:1:xx00x		-> EN_OUT, EN_D
+  OUT:1:xx10x		-> EN_OUT, OE_RAM
+  OUT:2:0x00x		-> EN_D, CR
+  OUT:2:0x10x		-> OE_RAM, CR  
+  OUT:2:1xx0x		-> K_REC, CLR_K, INC, RS2, CR  
+
+  IN:1:xxx1x		-> INC, RS2, CR  
+  IN:1:xxx0x		-> EN_IN
+  IN:2:0xx0x		-> CR
+  IN:2:1xx0x		-> LD_D, SET_V, LD_FA
+  IN:3:1xx0x		-> CLR_K, K_REC, INC, RS2, CR
+
+  RAND:1:xxx1x		-> INC, RS2, CR  
+  RAND:1:0xx0x		-> EN_IN, EN_OUT
+  RAND:2:0xx0x		-> CR
+  RAND:1:1xx0x		-> LD_D, SET_V, LD_FA
+  RAND:2:1xx0x		-> CLR_K, K_REC, INC, RS2, CR
   
-  PLUS:1:x00x		-> INC, RS0, SET_V, LD_FA
-  PLUS:2:x00x		-> INC, RS2, CR
-  PLUS:1:x10x		-> LD_D, OE_RAM, LD_FA, CR
-  PLUS:1:xx1x		-> INC, RS2, CR
+  NOP:1:xxxxx		-> INC, RS2, CR
+  HALT:1:xxxxx		-> HLT
+  HALT:2:xxxxx		-> INC, RS2, CR
 
-  MINUS:1:x00x		-> DEC, RS0, SET_V, LD_FA
-  MINUS:2:x00x		-> INC, RS2, CR
-  MINUS:1:x10x		-> LD_D, OE_RAM, LD_FA, CR
-  MINUS:1:xx1x		-> INC, RS2, CR
-
-  LEFT:1:0x0x		-> DEC, RS1, SET_A, LD_FA
-  LEFT:2:0x0x		-> INC, RS2, CR
-  LEFT:1:1x0x		-> EN_D, WE_RAM, LD_FA, CR
-  LEFT:1:xx1x		-> INC, RS2, CR
-
-  RIGHT:1:0x0x		-> INC, RS1, SET_A, LD_FA
-  RIGHT:2:0x0x		-> INC, RS2, CR
-  RIGHT:1:1x0x		-> EN_D, WE_RAM, LD_FA, CR
-  RIGHT:1:xx1x		-> INC, RS2, CR
-
-  LOOP_START:1:x001	-> INC, RS0, RS2
-  LOOP_START:2:x001	-> INC, RS2, CR
-  LOOP_START:1:x000	-> INC, RS0, RS1
-  LOOP_START:2:x000	-> WE_RAM, EN_SP, EN_IP
-  LOOP_START:3:x000	-> INC, RS2, CR
-  LOOP_START:1:x10x	-> OE_RAM, LD_D, LD_FA, CR
-  LOOP_START:1:xx1x	-> INC, RS0, RS2
-  LOOP_START:2:xx1x	-> INC, RS2, CR
-
-  LOOP_END:1:x001	-> DEC, RS0, RS1
-  LOOP_END:2:x001	-> INC, RS0, RS2, CR
-  LOOP_END:1:x000	-> EN_SP, OE_RAM, LD_IP
-  LOOP_END:2:x000	-> INC, RS2, CR
-  LOOP_END:1:x10x	-> OE_RAM, LD_D, LD_FA, CR
-  LOOP_END:1:xx1x	-> DEC, RS0, RS2
-  LOOP_END:2:xx1x	-> INC, RS2, CR
-
-  OUT:1:x00x		-> EN_OUT, EN_D, INC, RS2, CR
-  OUT:1:x10x            -> EN_OUT, OE_RAM, INC, RS2, CR  
-  OUT:1:xx1x		-> INC, RS2, CR
-
-  IN_BUF:1:xx0x		-> EN_IN
-  IN_BUF:2:xx0x		-> LD_D
-  IN_BUF:3:xx0x		-> LD_FB
-  IN_BUF:4:xx00		-> SET_V, LD_FA, INC, RS2, CR
-  IN_BUF:4:0x01		-> CR
-  IN_BUF:1:xx1x		-> INC, RS2, CR
-
-  IN_IM:1:xx0x		-> EN_IN
-  IN_IM:2:xx0x		-> LD_D, SET_V, LD_FA
-  IN_IM:3:xx0x		-> INC, RS2, CR
-  IN_IM:1:xx1x		-> INC, RS2, CR
-
-  RAND:1:xx0x		-> EN_IN, EN_OUT
-  RAND:2:xx0x		-> LD_D, SET_V, LD_FA
-  RAND:3:xx0x		-> INC, RS2, CR
-  RAND:1:xx1x		-> INC, RS2, CR
-  
-  NOP:1:xxxx		-> INC, RS2, CR
-  HALT:1:xxxx		-> HLT
-  HALT:2:xxxx		-> INC, RS2, CR
-
-  INIT:1:xxx1		-> EN_D, WE_RAM, INC, RS0, RS2
-  INIT:2:xxx1		-> LD_FB, INC, RS1
-  INIT:3:xx01		-> INC, RS2, CR
-  INIT:3:xx11		-> CR
-
-  HOME:1:xxxx		-> DPR, INC, RS2, CR
+  HOME:1:xxxxx		-> DPR, INC, RS2, CR
 
   catch	        	-> ERR, HLT
 }

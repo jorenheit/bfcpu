@@ -5,7 +5,9 @@
 
 class KeyboardBuffer {   
   PS2Keyboard kb;
-  RingBuffer<char, KB_RING2> ringBuf;
+
+  using RB = RingBuffer<char, KB_RING2>;
+  RB ringBuf;
   Settings const &settings;
 
 public:
@@ -18,4 +20,5 @@ public:
   char get();
   void clear();
   char peek() const;
+  RB::IndexType available() const; 
 };

@@ -13,6 +13,7 @@ class LCDMenu {
     Settings &_settings;
     LCDBuffer &_lcdBuf;
     KeyboardBuffer &_kbBuf;
+
   public:
     Actions(Settings &s, LCDBuffer &buf1, KeyboardBuffer &buf2):
       _settings(s),
@@ -20,38 +21,42 @@ class LCDMenu {
       _kbBuf(buf2)
     {}
 
-    inline void clear()                              { _lcdBuf.clear(); _kbBuf.clear(); }
-    inline void setEchoEnabled(bool const val)       { _settings.echoEnabled = val; }
-    inline void setAutoscrollEnabled(bool const val) { _settings.autoscrollEnabled = val; }
-    inline void setMode(::DisplayMode const mode)    { _settings.mode = mode; }
-    inline void setDelimiter(char const delim)       { _settings.delimiter = delim; }
-    inline void restoreDefaults()                    { _settings = {}; }
+    inline void clear()                                   { _lcdBuf.clear(); _kbBuf.clear(); }
+    inline void setEchoEnabled(bool const val)            { _settings.echoEnabled = val; }
+    inline void setAutoscrollEnabled(bool const val)      { _settings.autoscrollEnabled = val; }
+    inline void setDisplayMode(::DisplayMode const mode)  { _settings.displayMode = mode; }
+    inline void setInputMode(::InputMode const mode)      { _settings.inputMode = mode; }
+    inline void setDelimiter(char const delim)            { _settings.delimiter = delim; }
+    inline void restoreDefaults()                         { _settings = {}; }
   };
 
   MenuActions(Actions);
 
   // Define submenu nodes
-  SubMenu(MainMenu,    "Settings",      { /* No action on select */    });
-  SubMenu(Echo,        "Echo",          { /* No action on select */    });
-  SubMenu(Autoscroll,  "Autoscroll",    { /* No action on select */    });
-  SubMenu(DisplayMode, "Display Mode",  { /* No action on select */    });
-  SubMenu(DecMode,     "Decimal",       { actions.setMode(DECIMAL);    });
-  SubMenu(HexMode,     "Hexadecimal",   { actions.setMode(HEXADECIMAL);});
-  SubMenu(SetRNGSeed,  "Set RNG Seed",  { /* No action on select */    });
+  SubMenu(MainMenu,    "Settings",      { /* No action on select */            });
+  SubMenu(Echo,        "Echo",          { /* No action on select */            });
+  SubMenu(Autoscroll,  "Autoscroll",    { /* No action on select */            });
+  SubMenu(DisplayMode, "Display Mode",  { /* No action on select */            });
+  SubMenu(DecMode,     "Decimal",       { actions.setDisplayMode(DECIMAL);     });
+  SubMenu(HexMode,     "Hexadecimal",   { actions.setDisplayMode(HEXADECIMAL); });
+  SubMenu(SetRNGSeed,  "Set RNG Seed",  { /* No action on select */            });
+  SubMenu(InputMode,   "Input Mode",    { /* No action on select */            });
 
   // Define leaf nodes
-  MenuLeaf(Clear,         "Clear Buffers", item.exit(),   { actions.clear();                     });
-  MenuLeaf(EchoOn,        "On",            item.home(),   { actions.setEchoEnabled(true);        });
-  MenuLeaf(EchoOff,       "Off",           item.home(),   { actions.setEchoEnabled(false);       });
-  MenuLeaf(AutoscrollOn,  "On",            item.home(),   { actions.setAutoscrollEnabled(true);  });
-  MenuLeaf(AutoscrollOff, "Off",           item.home(),   { actions.setAutoscrollEnabled(false); });
-  MenuLeaf(TextMode,      "Text",          item.home(),   { actions.setMode(ASCII);              });
-  MenuLeaf(CommaDelim,    ",",             item.home(),   { actions.setDelimiter(',');           });
-  MenuLeaf(SemiDelim,     ";",             item.home(),   { actions.setDelimiter(';');           });
-  MenuLeaf(BarDelim,      "|",             item.home(),   { actions.setDelimiter('|');           });
-  MenuLeaf(SpaceDelim,    "[SPACE]",       item.home(),   { actions.setDelimiter(' ');           });
-  MenuLeaf(Defaults,      "Defaults",      item.exit(),   { actions.restoreDefaults();           });
-  MenuLeaf(Exit,          "Exit",          item.exit(),   { /* No action on select */            });
+  MenuLeaf(Clear,          "Clear Buffers", item.exit(),   { actions.clear();                     });
+  MenuLeaf(EchoOn,         "On",            item.home(),   { actions.setEchoEnabled(true);        });
+  MenuLeaf(EchoOff,        "Off",           item.home(),   { actions.setEchoEnabled(false);       });
+  MenuLeaf(AutoscrollOn,   "On",            item.home(),   { actions.setAutoscrollEnabled(true);  });
+  MenuLeaf(AutoscrollOff,  "Off",           item.home(),   { actions.setAutoscrollEnabled(false); });
+  MenuLeaf(TextMode,       "Text",          item.home(),   { actions.setDisplayMode(ASCII);       });
+  MenuLeaf(CommaDelim,     ",",             item.home(),   { actions.setDelimiter(',');           });
+  MenuLeaf(SemiDelim,      ";",             item.home(),   { actions.setDelimiter(';');           });
+  MenuLeaf(BarDelim,       "|",             item.home(),   { actions.setDelimiter('|');           });
+  MenuLeaf(SpaceDelim,     "[SPACE]",       item.home(),   { actions.setDelimiter(' ');           });
+  MenuLeaf(Defaults,       "Defaults",      item.exit(),   { actions.restoreDefaults();           });
+  MenuLeaf(BufferedInput,  "Buffered",      item.home(),   { actions.setInputMode(BUFFERED);      });
+  MenuLeaf(ImmediateInput, "Immediate",     item.home(),   { actions.setInputMode(IMMEDIATE);     });
+  MenuLeaf(Exit,           "Exit",          item.exit(),   { /* No action on select */            });
   
   // Value-select menu for the RNG seed
   ValueSelect(SeedSelecter, rngSeedPtr, 1, 100);  
@@ -67,9 +72,6 @@ class LCDMenu {
       AutoscrollOn,
       AutoscrollOff
     >,
-    SetRNGSeed<
-      SeedSelecter
-    >,
     DisplayMode<
       TextMode,
       DecMode <
@@ -84,6 +86,13 @@ class LCDMenu {
         BarDelim,
         SpaceDelim
       >
+    >,
+    InputMode<
+      BufferedInput,
+      ImmediateInput
+    >,
+    SetRNGSeed<
+      SeedSelecter
     >,
     Defaults,
     Exit

@@ -18,13 +18,15 @@ enum LCDDriverPins: uint8_t {
 };
 
 enum ModuleDriverPins: uint8_t {
+  K_CLK_PIN = 0,
+  K_REC_PIN = 1,
   SYSTEM_CLOCK_INTERRUPT_PIN = 2,
   KEYBOARD_CLOCK_INTERRUPT_PIN = 3,
   DISPLAY_ENABLE_PIN = A1,
   KEYBOARD_ENABLE_PIN = A2,
   SCROLL_UP_PIN = A3,
   SCROLL_DOWN_PIN = A4,
-  KEYBOARD_DATA_PIN = A5,
+  KEYBOARD_DATA_PIN = A5
 
 /*
   // Data Pins (not used directly but here for documentation purposes):
@@ -46,6 +48,11 @@ enum DisplayMode: uint8_t {
   N_MODES
 };
 
+enum InputMode: uint8_t {
+  BUFFERED,
+  IMMEDIATE
+};
+
 enum ButtonPrams: int {
   BUTTON_DEBOUNCE_DELAY = 200,
   BUTTON_HOLD_TIME = 1000
@@ -53,10 +60,6 @@ enum ButtonPrams: int {
 
 enum RNGParams: int {
   RNG_DEFAULT_SEED = 69
-};
-
-enum Handshake: uint8_t {
-  HANDSHAKE_MAGIC_VALUE = 0xFD
 };
 
 enum LCDParams: int {
@@ -77,6 +80,7 @@ enum LCDParams: int {
   AUTOSCROLL_DEFAULT_SETTING = true,
   ECHO_DEFAULT_SETTING = true,
   DISPLAY_MODE_DEFAULT_SETTING = ASCII,
+  INPUT_MODE_DEFAULT_SETTING = BUFFERED,
   DELIMITER_DEFAULT_SETTING = ','
 };
 
@@ -104,22 +108,28 @@ enum EEPROMStorageParams: uint8_t {
   EEPROM_SETTINGS_ADDRESS = 1
 };
 
+enum HandshakeParams: int {
+  HANDSHAKE_STARTUP_DELAY_MILLIS = 500,
+  MAX_TRIES_WAIT_SYS = 50
+};
 
 // ============================  Dynamic Settings ================================= //
 
 struct Settings {
-  DisplayMode mode = static_cast<DisplayMode>(DISPLAY_MODE_DEFAULT_SETTING);
+  DisplayMode displayMode = static_cast<DisplayMode>(DISPLAY_MODE_DEFAULT_SETTING);
+  InputMode inputMode = static_cast<InputMode>(INPUT_MODE_DEFAULT_SETTING);
   bool autoscrollEnabled = AUTOSCROLL_DEFAULT_SETTING;
   bool echoEnabled = ECHO_DEFAULT_SETTING;
   char delimiter = DELIMITER_DEFAULT_SETTING;
   int rngSeed = RNG_DEFAULT_SEED;
 
   bool operator==(Settings const &other) const {
-    return (mode == other.mode) &&
-          (autoscrollEnabled == other.autoscrollEnabled) &&
-          (echoEnabled == other.echoEnabled) &&
-          (delimiter == other.delimiter) && 
-          (rngSeed == other.rngSeed);
+    return (displayMode == other.displayMode) &&
+           (inputMode == other.inputMode) &&
+           (autoscrollEnabled == other.autoscrollEnabled) &&
+           (echoEnabled == other.echoEnabled) &&
+           (delimiter == other.delimiter) && 
+           (rngSeed == other.rngSeed);
   }
 
   bool operator!=(Settings const &other) const {

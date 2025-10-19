@@ -99,8 +99,8 @@ public:
 
 template <typename ValueType, uint32_t N>
 class RingBuffer: public RingBufferBase<ValueType, N> {
-  using IndexType = typename RingBufferBase<ValueType, N>::IndexType;
 public:
+  using IndexType = typename RingBufferBase<ValueType, N>::IndexType;
   inline static IndexType next(IndexType const index) {
     return Mod<N>::get(index + 1);
   }  
@@ -108,8 +108,8 @@ public:
 
 template <typename ValueType>
 class RingBuffer<ValueType, (1UL << 8)>: public RingBufferBase<ValueType, (1UL << 8)> {
-  using IndexType = typename RingBufferBase<ValueType, (1UL << 8)>::IndexType;
 public:
+  using IndexType = typename RingBufferBase<ValueType, (1UL << 8)>::IndexType;
   inline static IndexType next(IndexType const index) {
     return index + 1;
   }  

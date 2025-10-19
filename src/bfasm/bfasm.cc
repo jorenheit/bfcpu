@@ -9,26 +9,19 @@ enum Instructions {
   MINUS	      = 0x02,
   LEFT	      = 0x03,
   RIGHT	      = 0x04,
-  IN_BUF      = 0x05,
-  IN_IM       = 0x06,
-  OUT	      = 0x07,
-  LOOP_START  = 0x08,
-  LOOP_END    = 0x09,
-  RAND        = 0x0a,
-  WAIT_EXT    = 0x0b,
+  IN          = 0x05,
+  OUT	      = 0x06,
+  LOOP_START  = 0x07,
+  LOOP_END    = 0x08,
+  RAND        = 0x09,
+  WAIT_EXT    = 0x0c,
   INIT        = 0x0d,
   HOME        = 0x0e,
   HLT         = 0x0f
 };
 
-enum KeyboardInputMode  {
-  IMMEDIATE,
-  BUFFERED
-};
-
 struct Options
 {
-  KeyboardInputMode mode;
   bool halt;
   std::istream *inStream;
   std::ostream *outStream;
@@ -47,14 +40,12 @@ void printHelp(std::string const &progName)
   std::cout << "Usage: " << progName << " [options] <file(.bf)>\n"
 	    << "Options:\n"
 	    << "-h, --help              Display this text.\n"
-	    << "-i, --immediate-input   Assemble input commands (,) to immediate mode (\').\n"
 	    << "-n, --no-handshake      Omit the handshake opcode from the initialization phase.\n"
 	    << "-H, --halt-enable       Interpret '!' as HLT in the BF code\n"
 	    << "-r, --rand-enable       Interpret '?' as RAND in the BF code\n"
 	    << "-N, --nop-between-dots  Insert a NOP between consecutive OUT instructions.\n"
 	    << "-g, --debug             Place a breakpoint (!) after each instruction.\n"
 	    << "-e, --echo              Follow each input command (,) up by an output command (.) to echo keyboard input.\n"
-	    << "                        This is only available in buffered input mode.\n"
 	    << "-d, --max-depth         Maximum nesting depth of []-pairs.\n"
 	    << "-z [N]                  Initialize N chunks of 256 bytes with zero\'s. Default: N = 1.\n"
 	    << "-u, --allow-unbalanced-loops\n"
@@ -70,7 +61,6 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
   std::vector<std::string> const args{argv, argv + argc};
   Options opt;
 
-  opt.mode = BUFFERED;
   opt.halt = false;
   opt.init = 1;
   opt.handshake = true;
@@ -90,11 +80,6 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     if (args[idx] == "-h" || args[idx] == "--help")
     {
       return {opt, 1};
-    }
-    else if (args[idx] == "-i" || args[idx] == "--immediate-input")
-    {
-      opt.mode = IMMEDIATE;
-      ++idx;
     }
     else if (args[idx] == "-H" || args[idx] == "--halt-enable")
     {
@@ -196,11 +181,6 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     }
   }
 
-  if (opt.echo && opt.mode == IMMEDIATE) {
-    std::cerr << "ERROR: --echo cannot be used simultaneously with --immediate.\n";
-    return {opt, 1};
-  }
-
   if (!opt.outStream || !opt.outStream->good())
   {
     std::cerr << "ERROR: Output file not set. Use -o to specifiy stdout or a file.\n";
@@ -233,7 +213,7 @@ int assemble(Options const &opt)
   // Start with a NOP for stability
   result.push_back(NOP);
 
-  // Handshake
+  // System needs to wait for external peripheral(s) to indicate ready
   result.push_back(WAIT_EXT);
   
   // Zero init DATA,  then restore the DP back to its home position (0x0100)
@@ -264,7 +244,7 @@ int assemble(Options const &opt)
       break;
     }
     case ',': {
-      result.push_back(opt.mode == BUFFERED ? IN_BUF : IN_IM);
+      result.push_back(IN);
       if (opt.echo) result.push_back(OUT);
       break;
     }

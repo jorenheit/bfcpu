@@ -27,3 +27,7 @@ char KeyboardBuffer::peek() const {
   auto result = ringBuf.peek();
   return result.good ? result.value : 0;
 }
+
+KeyboardBuffer::RB::IndexType KeyboardBuffer::available() const {
+  return ringBuf.available();
+}

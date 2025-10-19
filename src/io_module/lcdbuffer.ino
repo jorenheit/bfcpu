@@ -12,9 +12,9 @@ void LCDBuffer::update() {
   // Select the insertion function
   using InsertFuncPtr = void (LCDBuffer::*)(byte const);
   InsertFuncPtr const insert = 
-    (settings.mode == ASCII)    ? &LCDBuffer::insertAsAscii   :
-    (settings.mode == DECIMAL)  ? &LCDBuffer::insertAsDecimal
-                                : &LCDBuffer::insertAsHex;
+    (settings.displayMode == ASCII)    ? &LCDBuffer::insertAsAscii   :
+    (settings.displayMode == DECIMAL)  ? &LCDBuffer::insertAsDecimal
+                                       : &LCDBuffer::insertAsHex;
 
   // Copy new data from ringBuf into the screenBuf using the selected insert function.
   auto bytesAvailable = ringBuf.available();
