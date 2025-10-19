@@ -1,28 +1,28 @@
 \section{Control Sequences} \label{sec:sequences}
 \subsection{Instruction Decoding}
-By setting the control signals as described in Section \ref{sec:architecture} appropriately, the modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed per BF instruction (also known as microcode instructions). The Control Unit implements this as a lookup table in 3 ROM chips, where the instruction (4 bits), flags (4 bits) and cycle counter (3 bits) act as an address into this table (Figure \ref{fig:decoder}). There are 22 different control signals, so 3 8-bit EEPROM chips have been used to store the entire table. More details on the implementation can be found in Section \ref{sec:implementation:cu}. Below we will go through each of the instructions in order to annotate the contents of Table \ref{tab:microcode}.
+By setting the control signals as described in Section \ref{sec:architecture} appropriately, modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed for each BF instruction. The Control Unit implements this as a lookup-table in 3 ROM chips, where the instruction (4 bits), flags (5 bits) and cycle counter (3 bits) act as an address into this table (Figure \ref{fig:decoder}). Given that the CU has to be able to supply a total of 24 different control signals, three 8-bit EEPROM chips have been used to store the microcode lookup-table. More details on the implementation can be found in Section \ref{sec:implementation:cu}. Below we will go through each of the control-sequences listed in Table \ref{tab:microcode}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{img/instruction_decoding}
-  \caption{Decoding an instruction: the current instruction, state and cycle-count function as an index to the ROMs, which return the control signal configuration.}
+  \caption{Decoding an instruction: the current instruction, flags and cycle-count are used as an index to the three ROM chips that output the control signals corresponding to the current state of the system.}
   \label{fig:decoder}
 \end{figure}
 
-It is important to note that, because of the choice of driving all of the (counting) registers with a common interface (Section \ref{sec:architecture:cu:driver}), only one register can be driven during each clock cycle. That is, the INC and DEC signals can be applied to only one register at a time. 
+\paragraph{No simultaneous INC/DEC signals.} It is important to note that, because of the choice of driving all of the (counting) registers with a common interface (Section \ref{sec:architecture:registerdriver}), only one register can be driven during each clock cycle. That is, the INC and DEC signals can be applied to only one register at a time. 
 
 
-\subsection{Cycle 0}
-The first cycle of each instruction is identical: all flags (A and V from FB and S and Z from LS and D) are loaded into the FB register. This provides the CU with all the necessary information to determine the control signals for the next cycle (the instruction is loaded directly from ROM and does not have to be enabled). 
+\subsection{Cycle 0: Instruction Fetch}
+The first cycle of each instruction is identical\footnote{The OUT instruction is slightly different but this can be ignored for now. For more information, refer to \label{sec:??}}: A, V, S and Z are loaded into the FB registerand the current instruction (pointed to by IP) is loaded from program ROM into the instruction register. This provides the CU with all the necessary information to determine the control signals for cycle 1: LD\_FB, LD\_I.
 
-\subsection{Modifying Data: \texttt{+} and \texttt{-}}
-The sequence of instructions necessary to execute a \texttt{+} command depends on the state of the system. If the A flag is not set, the value in D already corresponds to the value currently pointed to by the DP. In that case, its INC signal is set in order for it to increment on the next clock pulse. Additionally, the V-flag is set to indicate that the value in D has been changed, which is then loaded into the FA register. In the next cycle, the INC signal is set for the IP register and the cycle counter is reset to prepare for the next instruction.
+\subsection{Modifying Data: \texttt{+} and \texttt{-}} \label{sec:sequences:+-}
+\paragraph{PLUS-instruction} The sequence of instructions necessary to execute a \texttt{+} command depends on the state of the system. If the A flag (address-change-flag) is not set, the value in D already corresponds to the value currently pointed to by the DP and no synchronization has to be performed. In that case, its INC signal is immediately asserted to the D register in order for it to increment on the next clock pulse. The V-flag must then be set in order to indicate that the value in D has been changed: this is done by asserting the SET\_V signal to FA and latching in the value using the LD(FA) signal. Now that the value has been incremented and the corresponding flag has been set, the IP is incremented using the register-driver. Referring to Table \ref{tab:registers}, we see only RS2 has to be asserted in conjunction with the INC signal to increment the IP (register address 0b100). The cycle reset signal is asserted at the same time to make sure the next instruction will be loaded on cycle 0: INC, RS2, CR.
 
-However, when the A flag \emph{was} set, we first need to fetch the correct value from RAM by enabling the DP register and loading the resulting value into D. From hereon, the next set of control signals is identical to that described above in the case where A was not set.
+However, when the A flag \emph{was} set, this means that the address has recently changed and the value inside D does not correspond to the value pointed to by the DP in RAM. We therefore need to fetch the current value from RAM by enabling the DP register, enabling the RAM to output its content on the databus and loading the resulting value into D: EN(DP), OE\_RAM, LD(D). From hereon, the next set of control signals is identical to that described above in the case where A was not set.
 
-The control signals necessary to perform the \texttt{-} command are similar to those of the \texttt{+} command, the only difference being the DEC signal to perform a subtraction rather than addition.
+\paragraph{MINUS-instruction} The control signals necessary to perform the \texttt{-} command are similar to those of the \texttt{+} command, the only difference being the DEC signal to perform a subtraction rather than addition.
 
-None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately.
+\paragraph{Skipping:} None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately and reset the cycle counter: INC, RS2, CR.
 
 \begin{figure}[H]
   \centering
@@ -31,8 +31,14 @@ None of the actions above need to be performed when the S flag is set, which mea
   \label{fig:plusalg}
 \end{figure}
 
-\subsection{Moving the Pointer: \texttt{<} and \texttt{>}}
-Moving the datapointer around requires similar instructions compared to modifying the dataregister, the difference being that we increment or decrement the DP-register instead of the D-register. If the V-flag was set in the previous instruction, we need to write the updated value in the D-register back to RAM before moving the pointer. If not, we can immediately move the pointer. In either case do we need to set the A-flag in the F-register in order for the next instruction to take into account that the address has changed and the contents in the D-register are therefore not synchronized with the RAM. Like before, this instruction is ignored when S is set.
+\subsection{Moving the Pointer: \texttt{<} and \texttt{>}} \label{sec:sequences:<>}
+\paragraph{RIGHT-instruction} Moving the datapointer one cell to the right requires similar instructions compared to PLUS instruction, the difference being that we increment the DP-register rather than the D-register. If the V-flag is not set, it means that the value we point to hasn't changed and we don't need to care about synchronization. DP (register address 010) is incremented immediately and the A-flag is set to indicate we changed the address and are now out of sync: INC, RS1, SET\_A, LD\_FA.
+
+In the case that V \emph{was} set during one of the previous instructions, we need to write the updated value in the D-register back to RAM before moving the pointer. This is achieved by enabling the value in D onto the databus, setting the RAM module to write-mode. Furthermore, the V-flag needs to be cleared. This is achieved by loading FA without setting any signals; this will effectively set both A and V back to zero: EN\_D, WE\_RAM, LD\_FA.
+
+\paragraph{LEFT-instruction} The control signals necessary to perform the \texttt{<} command are similar to those of the \texttt{>} command, the only difference being the DEC signal to perform a subtraction rather than addition.
+
+\paragraph{Skipping:} None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately and reset the cycle counter: INC, RS2, CR.
 
 \begin{figure}[H]
   \centering
@@ -42,25 +48,45 @@ Moving the datapointer around requires similar instructions compared to modifyin
 \end{figure}
 
 \subsection{Conditional Jumping: \texttt{[} and \texttt{]}}
-These are by far the most complicated instructions that require a lot of additional logic. Because the BF instruction set lacks a JMP-instruction where some argument holds the destination address, the computer has to store the address of the opening \texttt{[}-command in case it needs to loop back when the time comes. Also, if the loop is not entered, the LS-register is used to determine when execution should resume.
+These are by far the most complicated instructions that require a lot of additional logic. Because the BF instruction set lacks a JMP-instruction where some argument holds the destination address, the computer has to store the address of the opening \texttt{[}-command in case it needs to loop back when the time comes. When a loop is skipped, the LS (Loop Skip) register is used to determine when execution should resume.
 
-\paragraph{Loop Start:}  
-In the first scenario, where the D-register is up-to-date (A not set) and its Z-flag is set, we can immediately conclude that this loop should be skipped over. Hence, the LS-register is incremented and the next instruction is loaded (to be ignored until the LS-register becomes 0 again).
+\paragraph{LOOP\_START-instruction} In the first scenario, where A is not set (the D-register is up-to-date) and the Z-flag is set (A = 0, Z = 1), we can immediately conclude that this loop should be skipped over. Hence, the LS-register is incremented and the next instruction is loaded (to be ignored until the LS-register becomes 0 again). Since LS is addressed by the register driver at address 101, this is achieved by the following control sequence: INC, RS0, RS2. In the next cycle, the IP is incremented and the cycle-counter is reset to move to the next instruction: INC, RS2, CR.
 
-In the second scenario, the A-flag is still not set but the Z-flag for the D-register is not set either, meaning that control should enter the loop. It takes 3 cycles to do so: increment the stack-pointer (cycle 1), write the current IP to this address on the stack (cycle 2) and move to the next instruction (cycle 3).
+  In the second scenario, the A-flag is still not set but the Z-flag for the D-register is not set either (A = 0, Z = 0), meaning that control \emph{should} enter the loop. It takes 3 cycles to do so: increment the stack-pointer (cycle 1), write the current IP to this address on the stack (cycle 2) and move to the next instruction (cycle 3). The corresponding control sequences are therefore:
+  \begin{enumerate}
+  \item INC, RS0, RS1
+  \item WE\_RAM, EN\_SP, EN\_IP
+  \item INC, RS2, CR
+  \end{enumerate}
 
-In scenario 3, the A-flag is set, which means that we should first load the new data from RAM into the D-register (cycle 1). After loading a new value into D, flags and cycle count are reset to 0 (without incrementing the instruction pointer). This means the same instruction is reloaded with updated flags on the next iteration, putting the system into either one of the states above.
+In the third scenario the A-flag \emph{is} set, which means that we should first load the new data from RAM into the D-register (cycle 1) and reset the flag: OE\_RAM, LD\_D, LD\_FA, CR. The cycle count is immediately reset to 0 without incrementing the instruction pointer. This means the same instruction is reloaded with updated flags on the next iteration, putting the system into either one of the states above (either scenario 1 or 2).
 
-In the case that we were already skipping code (S set), we need to increment the LS-register once more to account for another pair of nested \texttt{[]}'s (cycle 1) and then continue to the next instruction (cycle 2).
+In the final scenario, we are in the process of skipping code, indicated by the S-flag (S = 1). In this case, we have encountered a nested loop that needs to be skipped over, so we increment the LS-register once more to account for another pair of nested \texttt{[]}'s (cycle 1) and then continue to the next instruction (cycle 2).
+\begin{enumerate}
+\item INC, RS0, RS2
+\item INC, RS2, CR
+\end{enumerate}
+Note that these instructions could not take place in the same cycle due to the usage of the register driver, which can only increment one register per cycle.
 
-\paragraph{Loop End:}
-In the first scenario, which takes 2 cycles to execute, there is a known (synchronized) zero in the D-register (Z set, A not set). This means we can immediately choose to exit the loop. To do so, the stack-pointer is decremented (cycle 1) to point at the previous value on the stack. In cycle 2, the IP is incremented as usual.
+\paragraph{LOOP\_END-instruction} In the first scenario, which takes 2 cycles to execute, there is a known (synchronized) zero in the D-register (A = 0, Z = 1). This means we can immediately choose to exit the loop. To do so, the stack-pointer is decremented (cycle 1) to point at the previous value on the stack. In cycle 2, the IP is incremented as usual:
+\begin{enumerate}
+\item DEC, RS0, RS1  
+\item INC, RS2, CR
+\end{enumerate}
 
-If there is a known nonzero value in D (scenario 2: Z not set, A not set), this means we must loop back to the IP stored on the top of the stack. This value is loaded into the IP-register by enabling the SP and RAM and setting the LD signal for the IP-register (cycle 1). On the second cycle, this new IP (pointing to a \texttt{[}) is incremented to re-enter the loop.
+In the second scenario, there is a known nonzero value in D (A = 0, Z = 0), this means we must loop back to the IP stored on the top of the stack. This value is loaded into the IP-register by enabling the SP and RAM and setting the LD signal for the IP-register (cycle 1). On the second cycle, this new IP (pointing to a \texttt{[}) is incremented to re-enter the loop.
+\begin{enumerate}
+\item EN\_SP, OE\_RAM, LD\_IP
+\item INC, RS2, CR
+\end{enumerate}
   
-In the thrid scenario, the contents of D are not yet synchronized with the RAM (A set), so we first need to load it in. After loading the value into D, the flags and cycle counter are reset to put the system back into one of the previously defined states.
+In the thrid scenario, the contents of D are not yet synchronized with the RAM (A = 1), so we first need to load it in. After loading the value into D, the flags and cycle counter are reset to put the system back into one of the previously defined states: OE\_RAM, LD\_D, LD\_FA, CR.
 
-Finally, when already in the process of skipping a loop, the LS-register is decremented before moving to the next instruction.
+Finally, when already in the process of skipping a loop, the LS-register is decremented before moving to the next instruction before resetting the cycle counter and incrementing the IP:
+\begin{enumerate}
+\item DEC, RS0, RS2
+\item INC, RS2, CR
+\end{enumerate}
 
 \begin{figure}[H]
   \centering
@@ -86,38 +112,59 @@ Finally, when already in the process of skipping a loop, the LS-register is decr
 
 
 \subsection{Output: \texttt{.}}
-There are three states that need to be taking into account when implementing the output-command. In the first state, the value in D is already in sync with the RAM and can be sent to the output device immediately. The output of D is enabled and PRE signal for the screen is set, in addition to incrementing the IP to move to the next instruction. When A was set, we first load the value from RAM into D before sending its contents to RAM. Lastly, when S is set, this instruction can simply be skipped.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[scale=0.3]{img/outputalg}
-  \caption{Block diagram for the output command.}
-  \label{fig:outputalg}
-\end{figure}
+\paragraph{Handshake:} Due to the asynchronous nature of the output peripheral, it is necessary to enter into a handshake protocol whenever a byte is put on the bus for display. The handshake protocol is therefore defined by the following steps:
+\begin{enumerate}
+\item The CU asserts the EN\_OUT signal and enables the module that contains the current value (either D when A = 0 or RAM when A = 1), such that its contents appear on the databus: EN\_OUT, (EN\_D or OE\_RAM).
+\item The output module is notified of this through the EN\_OUT signal and reads this value from the bus. When done, it sets the K-flag.
+\item After enabling the data on the bus, the CU repeatedly checks the K-flag. When it becomes 1, the CU knows that the data has been succesfully taken from the bus, at which point the supplying module can disable its outputs. The CU then finalizes the handshake by acknowledging the reception of the K-flag and resetting it, ready for the output module to set it again on the next OUT instruction.
+  \begin{itemize}
+  \item K = 0: CR, (EN\_D or OE\_RAM)
+  \item K = 1: K\_REC, CLR\_K, INC, RS2, CR   
+  \end{itemize}
+\end{enumerate}
 
-\subsection{Input: \texttt{,} and \texttt{'}}
-As mentioned before in Section \ref{sec:architecture:kb}, the architecture implements two versions of the input command, buffered (\texttt{,}) and immediate (\texttt{'}). Because buffered inputs are more common in most (BF) programs other than game-like applications, this is the default mode (even though it is more complicated).
 
-\paragraph{Buffered Mode:}
-In this mode, control flow is stuck in a loop, waiting for something nonzero to appear in its D-register. A nonzero value means something was read from the input module, whereas a zero value indicates that the input buffer was empty. When the EN signal is presented to the keyboard module, this module should provide the next character in the input-buffer (implementation defined) onto the databus on the next clock cycle, when it is loaded into the D register. After doing so, the flag register (FB) is reloaded to update the Z flag, which is then used to decide between either moving to the next instruction (when Z is 0) or looping back to cycle 0 (without incrementing the IP). If Z is now nonzero, the V flag is set to indicate that the contents of the cell have changed and the IP is incremented to move to the next instruction. If Z is 0, the cycle counter is reset to 0 to put the system back into the state above where the keyboard-buffer can be read into the D-register. Of course, when S is set, we can simply skip all of this.
+\paragraph{Cycle 0:} As mentioned briefly before, the OUT instruction is the only instruction that has a slighty different cycle 0 control sequence associated with it. This is because the waiting-loop is implemented by simply resetting the cycle count, such that the instruction is loaded in again but may now branch differently depending on the value of K, which might change in the meantime. However, the data on the bus should remain valid for the entire duration of the loop, since the output module may read from it asynchronously. To accommodate for this, the 0-cycle for the OUT instruction enables either D or RAM, depending on the value of the A-flag. This does no harm whenever the sequence is encountered outside of the loop, but does keep the data valid during one: LD\_FB, LD\_I, (EN\_D or EN\_RAM).
 
-\paragraph{Immediate Mode:}
-In this mode, we don't care what was loaded into D, even if there was nothing there in the keyboard buffer; it is up to the programmer to handle the case where no keys were pressed. This makes the implementation a lot easier, taking only 3 cycles to complete. We simply read whatever is in the keyboard buffer into D, set the V flag and move to the next instruction. Again, when S is set, this instruction is skipped.
+\paragraph{Skipping:} None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately and reset the cycle counter: INC, RS2, CR.
+
+\subsection{Input: \texttt{,}}
+\paragraph{Handshake:} Similar to the output command, the input command implements a handshake protocol to make sure that the databus is claimed by the input-device for the exact right amount of time, in order for the system to reliably read its contents. This happens using the same K-flag and K\_REC signals as were used in the output handshake.
+\begin{enumerate}
+\item The CU asserts the EN\_IN signal to let the input-device know that it can claim ownership of the bus.
+\item The input-devices receives the EN\_IN signal and puts a value onto the bus (see below for the difference between immediate and buffered input-mode). When the data is ready, it sets the K-flag.
+\item After asserting the EN\_IN signal, the CU waits for the K-flag by continuously resetting the cycle counter and branching on the value of K. Once that becomes high, it loads the data into the D register and sets the V-flag:
+  \begin{itemize}
+  \item K = 0: CR
+  \item K = 1: LD\_D, SET\_V, LD\_FA
+  \end{itemize}
+\item To final
+\end{enumerate}
+
+\paragraph{Input-Modes:} The input peripheral (probably) manages an internal buffer to serve subsequent bytes from to the system, which might be empty when the request for input arrives. When this happens, it is up to the peripheral to decide upon one of 2 options:
+\begin{enumerate}
+\item Wait for the buffer to contain data. Only then set the K-flag (buffered mode).
+\item Assert zero's to the bus and set the K-flag immediately (immediate mode).
+\end{enumerate}
+In our implementation of the IO-module (see \ref{sec:implementation:iomodule}), both modes are supported and can be selected from in the options menu.
+
+\paragraph{Skipping:} None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately and reset the cycle counter: INC, RS2, CR.
 
 \begin{figure}[H]
   \centering
   \mbox{}\hfill
   \begin{subfigure}[t]{0.4\linewidth}
     \centering
-    \includegraphics[scale=0.3]{img/inputbufalg}
-    \caption{Block diagram for the bufferen input command.}
+    \includegraphics[scale=0.3]{img/outputalg}
+    \caption{Block diagram for the output command.}
     \label{fig:inputbufalg}
   \end{subfigure}
   \hfill
   \begin{subfigure}[t]{0.4\linewidth}
     \centering
-    \includegraphics[scale=0.3]{img/inputimalg}
-    \caption{Block diagram for the immediate input command.}
+    \includegraphics[scale=0.3]{img/inputalg}
+    \caption{Block diagram for the input command.}
     \label{fig:inputimalg}
   \end{subfigure}
   \hfill\mbox{}
@@ -126,13 +173,38 @@ In this mode, we don't care what was loaded into D, even if there was nothing th
 \end{figure}
 
 \subsection{Non-BF instructions} \label{seq:sequences:nonbf}
-Several non-BF instructions have been implemented for debugging purposes and to have the computer to be initialized at startup.
+Several non-BF instructions have been implemented for debugging purposes and to initialization at startup. Furthermore, the common extension \emph{Random Brainf*ck} \cite{esolangs-rbf} is implemented as an additional instruction (RAND) that acts just like the IN instruction, except now a random number appears on the bus rather than user input (handled by the IO module as well). All non-BF opcodes are listed and described below.
 
 \subsubsection{\texttt{NOP}}
 The NOP instruction does nothing. It simply increments the IP and resets the cycle count to move to the next instruction.
 
+\subsubsection{\texttt{WAIT\_EXT}}
+The WAIT\_EXT instruction (\emph{wait for external device}) should be the first instruction in the program binary and simply loops on the K-flag, waiting for an external peripheral to set it to 1. When this happens, the CU immediately resets the flag and acknowledges it using the K\_REC signal. Both the BF system and the IO module will now be ready for operation:
+\begin{itemize}
+ \item K = 0: CR
+ \item K = 1: CLR\_K, K\_REC, INC, RS2, CR
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.4]{img/waitextalg}
+  \caption{Block diagram for the WAIT\_EXT instruction.}
+  \label{fig:rightalg}
+\end{figure}
+
+
 \subsubsection{\texttt{INIT}} \label{sec:sequences:init}
-BF assumes that memory is zero-initialized. In practice, SRAM-modules will contain random values at startup, so the assembler must add a preamble to the main code in order to initialize the RAM (or part of it) to 0. While this can be handled using canonical BF commands, initializing one cell at a time using a sequence of \texttt{[-]} commands, it is much faster to write directly to RAM. This is the purpose of the INIT instruction: for each INIT instruction, a contiguous chunk of 256 memory-cells will be zero-initialized. Since it is guaranteed that the D register contains a zero after reset, this value can directly be written into RAM. By incrementing the LS data pointer at the same time and inspecting the S flag on the next cycle, the computer keeps track of the number of cells that have been initialized. While the LS register has not looped around back to 0, resetting the S flag, the data pointer is incremented to move to the next cell. When finally the S flag resets, the datapointer has to return to its starting value. For this purpose alone, the \texttt{HOME} instruction has been added.
+In any BF program it is assumed that all memory is zero-initialized. In practice, SRAM-modules will contain random values at startup, so the assembler must add a preamble to the main code (after the initial WAIT\_EXT handshake) in order to initialize the RAM (or at least part of it) to 0. While this can be handled using canonical BF commands, initializing one cell at a time using a sequence of \texttt{[-]} commands, it is much faster to write directly to RAM. This is the purpose of the INIT instruction: for each INIT instruction, a contiguous chunk of 256 memory-cells will be zero-initialized. Since it is guaranteed that the D register contains a zero after reset, this value can directly be written into RAM on the first cycle of INIT while also incrementing the LS and DP registers. DP is incremented to move through the memory-space whereas LS is incremented in order to be able to count to 256, at which point the S flag will go low again due to the LS register overflowing back to 0. If more memory needs to be initialized, the assembler can simply concatenate multiple INIT instructions.
+\begin{enumerate}
+\item EN\_D, WE\_RAM, INC, RS0, RS2
+\item LD\_FB, INC, RS1
+\item
+  \begin{itemize}
+  \item S = 0: INC, RS2, CR
+  \item S = 1: CR
+  \end{itemize}
+\end{enumerate}
+After the appropriate number of INIT instructions have been instructed, the HOME instruction must be called in order for the DP to return back to the start of the memory (0x0100).
 
 \subsubsection{\texttt{HOME}} \label{sec:sequences:home}
 In order for the datapointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the datapointer using the DPR signal.

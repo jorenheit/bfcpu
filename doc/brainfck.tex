@@ -1,4 +1,5 @@
-\section{Brainf*ck}\label{section:brainfck}                                                       
+\section{Brainf*ck}\label{sec:brainfck}
+\subsection{Language Description}
 Brainf*ck is a popular esoteric programming language. Just like any other programming language, it allows the programmer to write programs consisting of commands that are executed in order. The catch is that there is a total of only 8 commands available to the programmer, all written as a single character: ``\texttt{+-<>[].,}''. Each of these commands corresponds to an operation on an array of memory or a pointer, pointing to some location within this memory. At the start of the program, every cell in (an infinite amount of) memory is initialized to 0 and the pointer is pointing to the very first element (index 0, see Figure \ref{fig:bfmachine_initial}).
 %
 \begin{figure}[H]
@@ -39,9 +40,8 @@ Hello World!
 
 
 
-\subsection{Architectures}
-\subsubsection{Von Neumann}
-Modern computers are built according to the von Neumann architecture \cite{vonneumann-wiki}, which specifies a CPU (containing registers and an ALU), a single unit of memory and input/output devices (Figure \ref{fig:vonneumann}). The registers of the CPU can be loaded with data from the memory unit and operated on by the ALU (Arithmetic and Logic Unit). Typical about this kind of architecture is the fact that not only data, but also the instructions (the program) are stored in memory. The program is therefore just as much part of the data as the data itself and can even be modified by itself.
+\subsection{Brainf*ck Architecture}
+\paragraph{Von Neumann.} Modern computers are built according to the von Neumann architecture \cite{vonneumann-wiki}, which specifies a CPU (containing registers and an ALU), a single unit of memory and input/output devices (Figure \ref{fig:vonneumann}). The registers of the CPU can be loaded with data from the memory unit and operated on by the ALU (Arithmetic and Logic Unit). Typical about this kind of architecture is the fact that not only data, but also the instructions (the program) are stored in memory. The program is therefore just as much part of the data as the data itself and can even be modified by itself.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{img/vonneumann}
@@ -49,8 +49,7 @@ Modern computers are built according to the von Neumann architecture \cite{vonne
   \label{fig:vonneumann}
 \end{figure}
 
-\subsubsection{Harvard}
-Unlike within the Von Neumann architecture, the Harvard architecture specifies two kinds of memory: program memory and data memory (Figure \ref{fig:harvard}). The program memory contains only the instructions to be carried out and cannot be modified at runtime. Other than that, the architecture is similar to Von Neumann, in that it consists of a CPU (again containing registers and an ALU), memory (program and data) and input/output devices.
+\paragraph{Harvard.} Unlike within the Von Neumann architecture, the Harvard architecture specifies two kinds of memory: program memory and data memory (Figure \ref{fig:harvard}). The program memory contains only the instructions to be carried out and cannot be modified at runtime. Other than that, the architecture is similar to Von Neumann, in that it consists of a CPU (again containing registers and an ALU), memory (program and data) and input/output devices.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{img/harvard}
@@ -61,6 +60,6 @@ Unlike within the Von Neumann architecture, the Harvard architecture specifies t
 The architecture assumed by the BF language is similar to the Harvard architecture, in that the memory does not contain the program itself. This implies that the program is stored somewhere else and cannot be addressed by the pointer, like in Listing \ref{lst:bfint}, where the program was stored in a seperate array to the data. The ALU is very limited and can only perform increment, decrement and comparison to zero.
 
 
-\subsection{BF as an Instruction Set}
-Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above. An instruction set of size 8 is truly tiny compared to more traditional instruction sets such as those implemented by modern processors or even microcontrollers and older 8-bit systems. Broadly speaking, Complex Instruction Set Computers (CISC) are designed to do as much work as possible in the least number of clock cycles, whereas Reduced Instruction Set Computers (RISC) focus on having a small instruction set with basic operations. For comparison, the x86 instruction set is massive with over 1500 instructions implemented in hardware, whereas RISC processors only need to implement 50 to 100 instuctions. Even compared to RISC, the BF instruction set (BFISC from hereon) is tiny even compared to the smallest instruction sets in use today. This isn't necessarily a good thing; a smaller number of instructions simply means you need more of them to perform meaningful computations, which is reflected by the fact that complex BF programs are typically very large in size.
+\subsection{BF Instruction Set}
+Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above. An instruction set of size 8 is truly tiny compared to more traditional instruction sets such as those implemented by modern processors or even microcontrollers and older 8-bit systems. Broadly speaking, Complex Instruction Set Computers (CISC) are designed to do as much work as possible in the least number of clock cycles, whereas Reduced Instruction Set Computers (RISC) focus on having a small instruction set with basic operations. For comparison, the x86 instruction set is massive with over 1500 instructions implemented in hardware, whereas RISC processors only need to implement 50 to 100 instuctions. Even compared to RISC, the BF instruction set is tiny even compared to the smallest instruction sets in use today. This isn't necessarily a good thing; a smaller number of instructions simply means you need more of them to perform meaningful computations, which is reflected by the fact that complex BF programs are typically very large in size.
 

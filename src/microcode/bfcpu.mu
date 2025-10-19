@@ -79,14 +79,6 @@
   HOME:0:xxxxx		-> LD_FBI
   HALT:0:xxxxx		-> LD_FBI
 
-  WAIT_EXT:1:0xxxx	-> CR
-  WAIT_EXT:1:1xxxx      -> CLR_K, K_REC, INC, RS2, CR
-
-  INIT:1:xxxx1		-> EN_D, WE_RAM, INC, RS0, RS2
-  INIT:2:xxxx1		-> LD_FBI, INC, RS1
-  INIT:3:xxx01		-> INC, RS2, CR
-  INIT:3:xxx11		-> CR
-
   PLUS:1:xx00x		-> INC, RS0, SET_V, LD_FA
   PLUS:2:xx00x		-> INC, RS2, CR
   PLUS:1:xx10x		-> LD_D, OE_RAM, LD_FA, CR
@@ -142,6 +134,14 @@
   RAND:2:0xx0x		-> CR
   RAND:1:1xx0x		-> LD_D, SET_V, LD_FA
   RAND:2:1xx0x		-> CLR_K, K_REC, INC, RS2, CR
+
+  WAIT_EXT:1:0xxxx	-> CR
+  WAIT_EXT:1:1xxxx      -> CLR_K, K_REC, INC, RS2, CR
+
+  INIT:1:xxxx1		-> EN_D, WE_RAM, INC, RS0, RS2
+  INIT:2:xxxx1		-> LD_FBI, INC, RS1
+  INIT:3:xxx01		-> INC, RS2, CR
+  INIT:3:xxx11		-> CR
   
   NOP:1:xxxxx		-> INC, RS2, CR
   HALT:1:xxxxx		-> HLT
