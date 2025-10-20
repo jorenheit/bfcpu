@@ -16,7 +16,7 @@ By setting the control signals as described in Section \ref{sec:architecture} ap
 The first cycle of each instruction is identical\footnote{The OUT instruction is slightly different but this can be ignored for now. For more information, refer to \label{sec:??}}: A, V, S and Z are loaded into the FB registerand the current instruction (pointed to by IP) is loaded from program ROM into the instruction register. This provides the CU with all the necessary information to determine the control signals for cycle 1: LD\_FB, LD\_I.
 
 \subsection{Modifying Data: \texttt{+} and \texttt{-}} \label{sec:sequences:+-}
-\paragraph{PLUS-instruction} The sequence of instructions necessary to execute a \texttt{+} command depends on the state of the system. If the A flag (address-change-flag) is not set, the value in D already corresponds to the value currently pointed to by the DP and no synchronization has to be performed. In that case, its INC signal is immediately asserted to the D register in order for it to increment on the next clock pulse. The V-flag must then be set in order to indicate that the value in D has been changed: this is done by asserting the SET\_V signal to FA and latching in the value using the LD(FA) signal. Now that the value has been incremented and the corresponding flag has been set, the IP is incremented using the register-driver. Referring to Table \ref{tab:registers}, we see only RS2 has to be asserted in conjunction with the INC signal to increment the IP (register address 0b100). The cycle reset signal is asserted at the same time to make sure the next instruction will be loaded on cycle 0: INC, RS2, CR.
+\paragraph{PLUS-instruction} The sequence of instructions necessary to execute a \texttt{+} command depends on the state of the system. If the A flag (address-change-flag) is not set, the value in D already corresponds to the value currently pointed to by the DP and no synchronization has to be performed. In that case, its INC signal is immediately asserted to the D register in order for it to increment on the next clock pulse. Referring to Table \ref{tab:registers}, we see only RS0 has to be asserted in conjunction with the INC signal to increment D (register address 0b001). The V-flag must also be set in order to indicate that the value in D has been changed: this is done by asserting the SET\_V signal to FA and latching in the value using the LD(FA) signal: INC, RS0, SET\_V, LD\_FA. Now that the value has been incremented and the corresponding flag has been set, the IP is incremented using the register-driver. The cycle reset signal is asserted at the same time to make sure the next instruction will be loaded on cycle 0: INC, RS2, CR.
 
 However, when the A flag \emph{was} set, this means that the address has recently changed and the value inside D does not correspond to the value pointed to by the DP in RAM. We therefore need to fetch the current value from RAM by enabling the DP register, enabling the RAM to output its content on the databus and loading the resulting value into D: EN(DP), OE\_RAM, LD(D). From hereon, the next set of control signals is identical to that described above in the case where A was not set.
 
@@ -117,10 +117,10 @@ Finally, when already in the process of skipping a loop, the LS-register is decr
 \begin{enumerate}
 \item The CU asserts the EN\_OUT signal and enables the module that contains the current value (either D when A = 0 or RAM when A = 1), such that its contents appear on the databus: EN\_OUT, (EN\_D or OE\_RAM).
 \item The output module is notified of this through the EN\_OUT signal and reads this value from the bus. When done, it sets the K-flag.
-\item After enabling the data on the bus, the CU repeatedly checks the K-flag. When it becomes 1, the CU knows that the data has been succesfully taken from the bus, at which point the supplying module can disable its outputs. The CU then finalizes the handshake by acknowledging the reception of the K-flag and resetting it, ready for the output module to set it again on the next OUT instruction.
+\item After enabling the data on the bus, the CU repeatedly checks the K-flag. When it becomes 1, the CU knows that the data has been succesfully taken from the bus, at which point the supplying module (D or RAM) can disable its outputs. The CU then finalizes the handshake by resetting the K-flag. As soon as the output module notices that the K-flag was reset, it starts waiting for its next instruction.
   \begin{itemize}
   \item K = 0: CR, (EN\_D or OE\_RAM)
-  \item K = 1: K\_REC, CLR\_K, INC, RS2, CR   
+  \item K = 1: CLR\_K, INC, RS2, CR   
   \end{itemize}
 \end{enumerate}
 
@@ -130,7 +130,7 @@ Finally, when already in the process of skipping a loop, the LS-register is decr
 \paragraph{Skipping:} None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately and reset the cycle counter: INC, RS2, CR.
 
 \subsection{Input: \texttt{,}}
-\paragraph{Handshake:} Similar to the output command, the input command implements a handshake protocol to make sure that the databus is claimed by the input-device for the exact right amount of time, in order for the system to reliably read its contents. This happens using the same K-flag and K\_REC signals as were used in the output handshake.
+\paragraph{Handshake:} Similar to the output command, the input command implements a handshake protocol to make sure that the databus is claimed by the input-device for the exact right amount of time, in order for the system to reliably read its contents. This happens using the same K-flag that was used in the output handshake.
 \begin{enumerate}
 \item The CU asserts the EN\_IN signal to let the input-device know that it can claim ownership of the bus.
 \item The input-devices receives the EN\_IN signal and puts a value onto the bus (see below for the difference between immediate and buffered input-mode). When the data is ready, it sets the K-flag.
@@ -139,7 +139,7 @@ Finally, when already in the process of skipping a loop, the LS-register is decr
   \item K = 0: CR
   \item K = 1: LD\_D, SET\_V, LD\_FA
   \end{itemize}
-\item To final
+\item To finalize the handshake, the K-flag is cleared by the CU by setting the CLR\_K signal.  
 \end{enumerate}
 
 \paragraph{Input-Modes:} The input peripheral (probably) manages an internal buffer to serve subsequent bytes from to the system, which might be empty when the request for input arrives. When this happens, it is up to the peripheral to decide upon one of 2 options:
@@ -179,7 +179,7 @@ Several non-BF instructions have been implemented for debugging purposes and to 
 The NOP instruction does nothing. It simply increments the IP and resets the cycle count to move to the next instruction.
 
 \subsubsection{\texttt{WAIT\_EXT}}
-The WAIT\_EXT instruction (\emph{wait for external device}) should be the first instruction in the program binary and simply loops on the K-flag, waiting for an external peripheral to set it to 1. When this happens, the CU immediately resets the flag and acknowledges it using the K\_REC signal. Both the BF system and the IO module will now be ready for operation:
+The WAIT\_EXT instruction (\emph{wait for external device}) should be the first instruction in the program binary and simply loops on the K-flag, waiting for an external peripheral to set it to 1. When this happens, the CU immediately resets the flag using the CLR\_K signal. Both the BF system and the IO module will now be ready for operation:
 \begin{itemize}
  \item K = 0: CR
  \item K = 1: CLR\_K, K\_REC, INC, RS2, CR
@@ -204,16 +204,20 @@ In any BF program it is assumed that all memory is zero-initialized. In practice
   \item S = 1: CR
   \end{itemize}
 \end{enumerate}
-After the appropriate number of INIT instructions have been instructed, the HOME instruction must be called in order for the DP to return back to the start of the memory (0x0100).
+After the appropriate number of INIT instructions have been execured, the HOME instruction (see \ref{seq:sequences:home} must be called in order for the DP to return back to the start of the memory (0x0100).
 
 \subsubsection{\texttt{HOME}} \label{sec:sequences:home}
 In order for the datapointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the datapointer using the DPR signal.
 
 \subsubsection{\texttt{HLT}}
-The HLT instruction halts the clock and (temporarily) stops the program. When enabled, the assembler will interpret an exclamation mark (\texttt{!}) as \texttt{HLT} in the BF-code. Moreover, the assembler will insert the HLT instruction at the end of the program and provides the option to insert a HLT instruction after initialization to pause the program before the code is executed. 
+The \texttt{HLT} instruction halts the clock and (temporarily) stops the program by asserting the HLT signal. The assembler will place a HLT instruction after initialization (\texttt{INIT}) and after the final instruction of the main program. This former allows the user to manually start the program after the system has been fully set up and the latter prevents the program from continuing into invalid memory after it has executed its final command. Furthermore, the assembler can interpret an exclamation mark (\texttt{!}) as a \texttt{HLT} in the BF-code to set breakpoints for debugging.
+
+When the system is resumed and cycle 2 of the HLT instruction is reached, the IP is incremented as usual in the final cycle of any instruction: INC, RS2, CR.
 
 \subsubsection{\texttt{ERR}}
-The \texttt{ERR} instruction is inserted in all non-reachable states. If for some reason a state occurs that maps to the \texttt{ERR} command, the clock will be halted and some indicator on the Control Unit should light up to let its users know that something has gone wrong. It is therefore functionally the same as the HLT instruction, the only difference being that an addidional light indicates the error status.
+The \texttt{ERR} instruction enables the ERR signal and halts the clock: ERR, HLT. It therefore acts similarly to a regular \texttt{HLT}, but indicates to the end user that the system was halted due to an error (and it is therefore probably not wise to resume the system anyway). Furthermore, there is no second cycle defined to increment IP and go beyond this point in the program.
+
+Every undefined state in the microcode table implicitly contains the \texttt{ERR} sequence. If for some reason a state occurs that maps to the \texttt{ERR} command, the clock will be halted and some indicator on the Control Unit should light up to let its users know that something has gone terribly wrong and the computer has reached an unreachable state.
 
 \subsection{Microcode table}
 Table \ref{tab:microcode} shows each of the control sequences described in previous sections sections. Please note that in order to simplify notation, the control signals RS0, RS1 and RS2 have not been used to indicate register selection. Instead, the module to which the instruction (INC/DEC) is applied is provided in brackets. For example, incrementing the SP register would require control signals INC, RS0, RS1 which is denoted in Table \ref{tab:microcode} as INC(SP).

@@ -18,8 +18,8 @@ enum LCDDriverPins: uint8_t {
 };
 
 enum ModuleDriverPins: uint8_t {
-  K_CLK_PIN = 0,
-  K_REC_PIN = 1,
+  K_OUT_PIN = 0,
+  K_IN_PIN = 1,
   SYSTEM_CLOCK_INTERRUPT_PIN = 2,
   KEYBOARD_CLOCK_INTERRUPT_PIN = 3,
   DISPLAY_ENABLE_PIN = A1,
@@ -109,8 +109,7 @@ enum EEPROMStorageParams: uint8_t {
 };
 
 enum HandshakeParams: int {
-  HANDSHAKE_STARTUP_DELAY_MILLIS = 500,
-  MAX_TRIES_WAIT_SYS = 50
+  HANDSHAKE_STARTUP_DELAY_MILLIS = 500
 };
 
 // ============================  Dynamic Settings ================================= //

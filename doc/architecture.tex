@@ -243,20 +243,17 @@ The actual BF instructions are stored in Read-Only-Memory (ROM) and are addresse
 
 
 \subsection{Screen (SCR)}  \label{sec:architecture:scr}
-The output module (which is assumed to be a screen) will be attached to the data bus and will display whatever is on the bus  when enabled using the EN signal. Because the output is handled asynchronously by some peripheral that will, from the perspective of the CPU, be viewed as a black box, it needs a flag to acknowlegde a successful data-transfer. This is done through the K-flag, which is set by the peripheral after reading data from the databus (this flag is shared with the input device for a similar purpose). The system can then signify that it has received and cleared this flag through the K\_REC signal, indicating that the transfer procedure has been completed.
+The output module (which is assumed to be a screen) will be attached to the data bus and will display whatever is on the bus  when enabled using the EN signal. Because the output is handled asynchronously by some peripheral that will, from the perspective of the CPU, be viewed as a black box, it needs a flag to acknowlegde a successful data-transfer. This is done through the K-flag, which is set by the peripheral after reading data from the databus (this flag is shared with the input device for a similar purpose). This flag can only be reset by the CU, indicating that the transfer procedure has been completed.
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
 \item DATA\_IN - 8 bits - connected to the data bus.
 \item EN: Enable - Display the contents of the bus. The format of the output (ASCII, hex, etc) may vary depending on the implementation of the output device.
-\item K\_REC - K Received and Reset - connected to the CU.
+\item CLR\_K - Clears the K-flag - connected to the CU
 \end{itemize}
 
 \subsubsection*{Outputs}
-\begin{itemize}
-\item SET\_K: Set the acknowledge-flag.
-\end{itemize}
-
+None.
 
 \subsection{Keyboard (KB)} \label{sec:architecture:kb}
 The input device to the computer is assumed to be a keyboard of some sort\footnote{At a later stage in the process of building the CPU, a Random Number Generator (RNG) was implemented as a second input device, to support a common Brainf*ck extension, where \texttt{?} is used to generate a random number in the currently active cell.}, that implements a buffer from which some 8-bit value can be requested. The control unit can assert the enable-signal of this device and should then wait until the K-flag is set, indicating that the data is ready to be read from the databus. It is left up to the implementation of the peripheral to decide what to do when there is nothing in the buffer (either wait for user input or return 0). Shared with the output-peripheral, the K\_REC signal is used to indicate that the K-flag has been received and reset, indicating that the data has been transferred and the input-device can yield control of the databus back to the system.
@@ -265,14 +262,13 @@ The input device to the computer is assumed to be a keyboard of some sort\footno
 \begin{itemize}
 \itemsep0em 
 \item EN - Enable - Make the contents of the input buffer available on the databus.
-\item K\_REC - K Received and Reset - connected to the CU.
+\item CLR\_K - Clears the K-flag - connected to the CU.
 \end{itemize}
 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
 \item DATA\_OUT - 8 bits - Output data, connected to the databus.
-\item SET\_K: Set the acknowledge-flag.
 \end{itemize}
 
 
@@ -312,8 +308,7 @@ Each of the aforementioned components/modules has one or more control inputs tha
 \item LD\_D - Load D
 \item LD\_IP - Load IP
 \item CR - Cycle Reset
-\item CLR\_K - Clear the K register
-\item K\_REC - Assert the K-Received/Reset signal onto the IO system
+\item CLR\_K - Clear the K-flag in the IO module
 \item ERR - Error Signal
 \end{itemize}
 

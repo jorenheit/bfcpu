@@ -6,7 +6,7 @@
 #include "button.h"
 #include "lcdmenu.h"
 #include "random.h"
-#include <PinChangeInterrupt.h>
+//#include <PinChangeInterrupt.h>
 
 // Global objects
 Settings settings;
@@ -29,9 +29,10 @@ void setup() {
   pinMode(SYSTEM_CLOCK_INTERRUPT_PIN, INPUT);
   pinMode(DISPLAY_ENABLE_PIN, INPUT);
   pinMode(KEYBOARD_ENABLE_PIN, INPUT);
-  pinMode(K_CLK_PIN, OUTPUT);
-  digitalWrite<K_CLK_PIN, LOW>();
-  attachPCINT(digitalPinToPCINT(K_REC_PIN), setKReceived, RISING);
+  pinMode(K_OUT_PIN, OUTPUT);
+  pinMode(K_IN_PIN, INPUT);
+  digitalWrite<K_OUT_PIN, LOW>();
+  //attachPCINT(digitalPinToPCINT(K_IN_PIN), setKReceivedFlag, FALLING);
   setIOPinsToInput();
 
   // Initialize buttons
@@ -111,23 +112,16 @@ void echo(char const c) {
   lcdBuffer.enqueue(c);
 }
 
-//----------handshake/bus protocol-----------
-static volatile bool kReceived = false;
-void setKReceived() {
-  kReceived = true;
-}
-
 void setK() {
-  digitalWrite<K_CLK_PIN, HIGH>();
+  digitalWrite<K_OUT_PIN, HIGH>();
   __asm__ __volatile__("nop\n\t");
-  digitalWrite<K_CLK_PIN, LOW>();
-  kReceived = false;
+  digitalWrite<K_OUT_PIN, LOW>();
 }
 
 void handshake() {
   delay(HANDSHAKE_STARTUP_DELAY_MILLIS);
   setK();
-  while (!kReceived) {}
+  while (digitalRead<K_IN_PIN>()) {}
 }
 
 volatile size_t tickCount = 0;
@@ -155,11 +149,9 @@ void onSystemClock() {
   };
 
   if (state == WAIT_SYS) {
-    static int timeout = MAX_TRIES_WAIT_SYS;
-    if (kReceived || --timeout == 0) {
+    if (!digitalRead<K_IN_PIN>()) {
       setIOPinsToInput();
       state = IDLE;
-      timeout = MAX_TRIES_WAIT_SYS;
     }
     return;
   } else if (state == WAIT_KB) {
@@ -180,7 +172,7 @@ void onSystemClock() {
       if (settings.inputMode == IMMEDIATE || kbBuffer.available()) {
         writeByteToBusAndWait(kbBuffer.get(), WAIT_SYS);
       } else {
-        writeByteToBusAndWait(0, WAIT_KB); // keep bus at 0 while waiting
+        state = WAIT_KB;
       }
       return;
     }
