@@ -57,7 +57,7 @@ The data register holds a representation of the value currently pointed to by th
 \begin{itemize}
 \itemsep0em 
 \item D\_OUT - 8 bits - Data outputs, connected to the databus.
-\item Z - Zero Flag - High when the register stores a zero.
+\item SET\_Z - Set Zero Flag - High when the register stores a zero, connected to FB.
 \end{itemize}
 
 
@@ -110,7 +110,7 @@ The Loop Skip (LS) register is a counter that indicates whether or not we're in 
 \subsubsection*{Outputs}
 \begin{itemize}
 \itemsep0em 
-\item S - Skip flag - set when it value is nonzero.
+\item SET\_S - Skip flag - set when it value is nonzero, connected to FB.
 \end{itemize}
 
 \subsection{Flag Registers (FA and FB)} \label{sec:architecture:flags}

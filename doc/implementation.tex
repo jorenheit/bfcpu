@@ -22,7 +22,7 @@ This section will discuss the implementation of each module and the way they int
 
 %%%%%%% CLOCK
 
-\subsection{Clock Module} \label{sec:clock}
+\subsection{Clock} \label{sec:clock}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/clockmodulecloseup}
@@ -106,7 +106,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% DATA POINTER REGISTER
 
-\subsection{DP Register Module}
+\subsection{DP Register}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/dpregistercloseup}
@@ -127,7 +127,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% DATA REGISTER
 
-\subsection{D Register Module}
+\subsection{D Register}
 \begin{figure}[H]
   % TODO: add annotations to the image
   \centering
@@ -152,7 +152,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% INSTRUCTION POINTER REGISTER
 
-\subsection{IP Register Module}
+\subsection{IP Register}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/ipregistercloseup}
@@ -173,7 +173,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% STACK POINTER REGISTER
 
-\subsection{SP Register Module}
+\subsection{SP Register}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/spregistercloseup}
@@ -192,7 +192,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% LS Register
 
-\subsection{LS Register Module}
+\subsection{LS Register}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.3\textwidth]{img/lsregistercloseup}
@@ -209,10 +209,27 @@ A full schematic is provided on the next page.
 \includepdf[landscape=true]{schematics/loopskipregister.pdf}
 
 
+%%%%%%%%%%% FA/FB
+
+\subsection{Flag Registers}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\textwidth]{img/placeholder}
+  \caption{Close up of the flag registers FA and FB.}
+  \label{fig:ramcloseup}
+\end{figure}
+
+\subsubsection{Overview}
+There are two stages of flag-buffering; the first stage is the FA register (in which the A and V flags are stored) and the second the FB register (in which all flags except K are latched when the instruction is loaded). Both of these registers have been implemented using a 74LS173 4-bit register. The A and V flag are stored in FA by the CU whenever the value in D is changed (V) or whenever the pointer is changing its position (A). This can happen mid-instruction without changing the address on the microcode EEPROMs because the flag lines leading into those come from the FB register. At each cycle 0, the buffered A and V flags are loaded into FB, together with S and Z coming from the LS and D registers respectively. Since this always happens in conjunction with loading the instruction from program ROM into the instruction register (see \ref{sec:implementation:cu}), the control signal has been named LD\_FBI. The flags in the FB register will (mostly) remain constant during the execution of an opcode.
+
+\subsubsection{Schematic}
+A full schematic is provided on the next page.
+\includepdf[landscape=true]{schematics/loopskipregister.pdf}
+
 
 %%%%%%% RAM Module
 
-\subsection{RAM Module}
+\subsection{RAM}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/ramcloseup}
@@ -302,11 +319,9 @@ The IO system is handled by an ATMEGA328P microprocessor, commonly found in the 
 
 
 \subsubsection{Handshake Protocol}
+\paragraph{Output} The \texttt{M\_CLK} signal is connected to an interrupt pin of the MCU. On every interrupt triggered by the clock, when the system is in its IDLE state, it will check the EN\_IN and EN\_OUT lines to determine if it should initiate a read or write sequence to the databus. When EN\_OUT is found to be high, it will copy the byte currently present on the bus into its screen-buffer, set the K flag and change its state to WAIT\_SYS. On every subsequent clock pulse, while in the WAIT\_SYS state, it will check if the K flag has been reset by the control unit. If so, the handshake has been completed and the module returns to its IDLE state (see Figure \ref{fig:isrflow}).
 
-
-\paragraph{Output} The \texttt{M\_CLK} signal is connected to an interrupt pin of the MCU. On every interrupt triggered by the clock, the MCU will check the status of the pin connected to the \texttt{EN\_OUT} signal. When it is high, all of the pins connected to the databus are read to reconstruct the byte present on the bus. This value is then displayed on the LCD. Listing \ref{lst:io_isr} shows the code for the interrupt routine running on the MCU.
-
-\paragraph{Input} Handling input from the keyboard is slightly more involved. When interrupted by the clock, if the \texttt{EN\_IN} signal is found to be high, the MCU goes into a 3-clock-cycle routine. During the first cycle (when the \texttt{EN\_IN} signal went high), the IO pins are set to output-mode, data is fetched from the keyboard and put on the bus. On the second cycle, it does nothing at all; this is when the computer reads the value into the D register. Then on the 3rd cycle, when the computer should have completed reading the value into its register, the pins can be reset to input-mode (high Z) and the MCU will wait for its next instruction. The flow of the state-machine that implements this algorithm is shown in Figure \ref{fig:isrflow}.
+\paragraph{Input} If the EN\_IN signal is found to be asserted, the system has two possible courses of action, depending on the input-mode currently set by the user (through the on-screen settings menu). In (the default) buffered mode, the system will change its state to WAIT\_KB and wait for a byte to become available in the keyboard-buffer. As soon as it does, it will provide this value onto the bus and notify the CU by setting the K flag. It then moves into the WAIT\_SYS state to await confirmation by the CU (which in turn resets the K flag). In immediate mode, all zeros will be written to the bus and the K flag is set immediately even when the keyboard-buffer is still empty. If, in addition to EN\_IN, EN\_OUT is asserted as well, a random byte is put onto the bus (see Figure \ref{fig:isrflow}).
 
 \begin{figure}[H]
   \centering
@@ -316,7 +331,7 @@ The IO system is handled by an ATMEGA328P microprocessor, commonly found in the 
 \end{figure}
 
 \subsubsection{Shift Register}
-To decrease the number of pins needed to drive the LCD module, a shift register is used. In the current implementation, every pin except the RX/TX pins (reseverd for debugging over a serial connection) is used so using the shift register (74HC595) was vital.
+A shift register (74HC595) had to be used to decrease the number of pins on the Atmega328p necessary to drive the LCD screen. Not a single IO pin has not been used, so the shift register proved invaluable for this application.
 
 \subsubsection{LCD Screen}
 The software was written in such a way that most common LCD character screens (compatible with Hitachi the HD44780 driver) will be handled appropriately. Both a 16x2 and 20x4 have successfully been installed in the computer. A modified version of the \texttt{LiquidCrystal\_74HC595} library was used to implement the LCD driver.

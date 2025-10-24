@@ -79,34 +79,54 @@
   HOME:0:xxxxx          -> LD_FBI
   HALT:0:xxxxx          -> LD_FBI
 
-  PLUS:1:xx00x          -> INC, RS0, SET_V, LD_FA
-  PLUS:2:xx00x          -> INC, RS2, CR
-  PLUS:1:xx10x          -> LD_D, OE_RAM
-  PLUS:2:xx10x          -> INC, RS0, SET_V, LD_FA  
-  PLUS:3:xx10x          -> INC, RS2, CR
-  PLUS:1:xxx1x          -> INC, RS2, CR
+  # PLUS:1:xx00x          -> INC, RS0, SET_V, LD_FA
+  # PLUS:2:xx00x          -> INC, RS2, CR
+  # PLUS:1:xx10x          -> LD_D, OE_RAM
+  # PLUS:2:xx10x          -> INC, RS0, SET_V, LD_FA  
+  # PLUS:3:xx10x          -> INC, RS2, CR
+  # PLUS:1:xxx1x          -> INC, RS2, CR
 
-  MINUS:1:xx00x         -> DEC, RS0, SET_V, LD_FA
-  MINUS:2:xx00x         -> INC, RS2, CR
-  MINUS:1:xx10x         -> LD_D, OE_RAM
-  MINUS:2:xx10x         -> DEC, RS0, SET_V, LD_FA
-  MINUS:3:xx10x         -> INC, RS2, CR
-  MINUS:1:xxx1x         -> INC, RS2, CR
+  # MINUS:1:xx00x         -> DEC, RS0, SET_V, LD_FA
+  # MINUS:2:xx00x         -> INC, RS2, CR
+  # MINUS:1:xx10x         -> LD_D, OE_RAM
+  # MINUS:2:xx10x         -> DEC, RS0, SET_V, LD_FA
+  # MINUS:3:xx10x         -> INC, RS2, CR
+  # MINUS:1:xxx1x         -> INC, RS2, CR
 
-  LEFT:1:x0x0x          -> DEC, RS1, SET_A, LD_FA  
-  LEFT:2:x0x0x          -> INC, RS2, CR
-  LEFT:1:x1x0x          -> EN_D, WE_RAM
-  LEFT:2:x1x0x          -> DEC, RS1, SET_A, LD_FA 
-  LEFT:3:x1x0x          -> INC, RS2, CR
-  LEFT:1:xxx1x          -> INC, RS2, CR
+  # LEFT:1:x0x0x          -> DEC, RS1, SET_A, LD_FA  
+  # LEFT:2:x0x0x          -> INC, RS2, CR
+  # LEFT:1:x1x0x          -> EN_D, WE_RAM
+  # LEFT:2:x1x0x          -> DEC, RS1, SET_A, LD_FA 
+  # LEFT:3:x1x0x          -> INC, RS2, CR
+  # LEFT:1:xxx1x          -> INC, RS2, CR
 
-  RIGHT:1:x0x0x         -> INC, RS1, SET_A, LD_FA
-  RIGHT:2:x0x0x         -> INC, RS2, CR
-  RIGHT:1:x1x0x         -> EN_D, WE_RAM
-  RIGHT:2:x1x0x         -> INC, RS1, SET_A, LD_FA
-  RIGHT:3:x1x0x         -> INC, RS2, CR
-  RIGHT:1:xxx1x         -> INC, RS2, CR
+  # RIGHT:1:x0x0x         -> INC, RS1, SET_A, LD_FA
+  # RIGHT:2:x0x0x         -> INC, RS2, CR
+  # RIGHT:1:x1x0x         -> EN_D, WE_RAM
+  # RIGHT:2:x1x0x         -> INC, RS1, SET_A, LD_FA
+  # RIGHT:3:x1x0x         -> INC, RS2, CR
+  # RIGHT:1:xxx1x         -> INC, RS2, CR
 
+  PLUS:1:xx00x		-> INC, RS0, SET_V, LD_FA
+  PLUS:2:xx00x		-> INC, RS2, CR
+  PLUS:1:xx10x		-> LD_D, OE_RAM, LD_FA, CR
+  PLUS:1:xxx1x		-> INC, RS2, CR
+
+  MINUS:1:xx00x		-> DEC, RS0, SET_V, LD_FA
+  MINUS:2:xx00x		-> INC, RS2, CR
+  MINUS:1:xx10x		-> LD_D, OE_RAM, LD_FA, CR
+  MINUS:1:xxx1x		-> INC, RS2, CR
+
+  LEFT:1:x0x0x		-> DEC, RS1, SET_A, LD_FA
+  LEFT:2:x0x0x		-> INC, RS2, CR
+  LEFT:1:x1x0x		-> EN_D, WE_RAM, LD_FA, CR
+  LEFT:1:xxx1x		-> INC, RS2, CR
+
+  RIGHT:1:x0x0x		-> INC, RS1, SET_A, LD_FA
+  RIGHT:2:x0x0x		-> INC, RS2, CR
+  RIGHT:1:x1x0x		-> EN_D, WE_RAM, LD_FA, CR
+  RIGHT:1:xxx1x		-> INC, RS2, CR
+  
   LOOP_START:1:xx001    -> INC, RS0, RS2
   LOOP_START:2:xx001    -> INC, RS2, CR
   LOOP_START:1:xx000    -> INC, RS0, RS1

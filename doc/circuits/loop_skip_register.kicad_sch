@@ -1374,7 +1374,7 @@
 			)
 		)
 	)
-	(global_label "S"
+	(global_label "SET_S"
 		(shape output)
 		(at 234.95 82.55 0)
 		(fields_autoplaced yes)
@@ -1386,7 +1386,7 @@
 		)
 		(uuid "c4674315-6960-42bd-84a4-64314441881f")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 239.1447 82.55 0)
+			(at 243.4384 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)

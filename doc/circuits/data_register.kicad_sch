@@ -4046,7 +4046,7 @@
 			)
 		)
 	)
-	(global_label "Z"
+	(global_label "SET_Z"
 		(shape output)
 		(at 181.61 95.25 0)
 		(fields_autoplaced yes)
@@ -4058,7 +4058,7 @@
 		)
 		(uuid "c4674315-6960-42bd-84a4-64314441881f")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 185.8047 95.25 0)
+			(at 190.0984 95.25 0)
 			(effects
 				(font
 					(size 1.27 1.27)
