@@ -1,0 +1,9 @@
+*
+!*/
+!compress.sh
+!*.tex
+!report.pdf
+!.gitignore
+
+datasheets/
+slides/
