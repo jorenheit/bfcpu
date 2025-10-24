@@ -111,7 +111,7 @@ Finally, when already in the process of skipping a loop, the LS-register is decr
 \end{figure}
 
 
-\subsection{Output: \texttt{.}}
+\subsection{Output: \texttt{.}} \label{sec:sequences:output}
 
 \paragraph{Handshake:} Due to the asynchronous nature of the output peripheral, it is necessary to enter into a handshake protocol whenever a byte is put on the bus for display. The handshake protocol is therefore defined by the following steps:
 \begin{enumerate}
@@ -129,7 +129,7 @@ Finally, when already in the process of skipping a loop, the LS-register is decr
 
 \paragraph{Skipping:} None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately and reset the cycle counter: INC, RS2, CR.
 
-\subsection{Input: \texttt{,}}
+\subsection{Input: \texttt{,}} \label{sec:sequences:input}
 \paragraph{Handshake:} Similar to the output command, the input command implements a handshake protocol to make sure that the databus is claimed by the input-device for the exact right amount of time, in order for the system to reliably read its contents. This happens using the same K-flag that was used in the output handshake.
 \begin{enumerate}
 \item The CU asserts the EN\_IN signal to let the input-device know that it can claim ownership of the bus.

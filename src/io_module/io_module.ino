@@ -6,7 +6,6 @@
 #include "button.h"
 #include "lcdmenu.h"
 #include "random.h"
-//#include <PinChangeInterrupt.h>
 
 // Global objects
 Settings settings;
@@ -125,6 +124,7 @@ void handshake() {
 }
 
 volatile size_t tickCount = 0;
+
 //----------isr_begin----------
 void onSystemClock() {
   ++tickCount;
@@ -135,17 +135,17 @@ void onSystemClock() {
     WAIT_KB
   } state = IDLE;
 
-  auto const writeByteToBusAndWait = [](uint8_t const value, uint8_t const newState) -> void [[always_inline]] {
+  auto const writeByteToBusAndWait = [](uint8_t const value) -> void [[always_inline]] {
     setIOPinsToOutput();
     writeByteToBus(value);
     setK();
-    state = static_cast<decltype(state)>(newState);
+    state = WAIT_SYS;
   };
 
-  auto const enqueueByteFromBusAndWait = [](uint8_t const newState) -> void [[always_inline]] {
+  auto const enqueueByteFromBusAndWait = []() -> void [[always_inline]] {
     lcdBuffer.enqueue(readByteFromBus());
     setK();
-    state = static_cast<decltype(state)>(newState);
+    state = WAIT_SYS;
   };
 
   if (state == WAIT_SYS) {
@@ -156,7 +156,7 @@ void onSystemClock() {
     return;
   } else if (state == WAIT_KB) {
     if (kbBuffer.available()) {
-      writeByteToBusAndWait(kbBuffer.get(), WAIT_SYS);
+      writeByteToBusAndWait(kbBuffer.get());
     }
     return;
   }
@@ -166,18 +166,18 @@ void onSystemClock() {
 
   switch (EN_IN << 1 | EN_OUT) {
     case 0b01: {
-      return enqueueByteFromBusAndWait(WAIT_SYS);
+      return enqueueByteFromBusAndWait();
     }
     case 0b10: {
       if (settings.inputMode == IMMEDIATE || kbBuffer.available()) {
-        writeByteToBusAndWait(kbBuffer.get(), WAIT_SYS);
+        writeByteToBusAndWait(kbBuffer.get());  
       } else {
         state = WAIT_KB;
       }
       return;
     }
     case 0b11: {
-      return writeByteToBusAndWait(rng.get(), WAIT_SYS);
+      return writeByteToBusAndWait(rng.get());
     }
     default: return; /* UNREACHABLE */
   }

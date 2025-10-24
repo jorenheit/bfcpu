@@ -40,7 +40,7 @@ void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, Button
   else if (!bothReleased && both == ButtonState::Released) {
     bothReleased = true;
   }
-  else if (up == ButtonState::JustReleased) {
+  else if (up == ButtonState::JustReleased || up == ButtonState::Hold) {
     _lastActiveTime = millis();
     if (!_current->highlighted()->isValueSelect()) {
       bool const wrap = _current->up();
@@ -52,7 +52,7 @@ void LCDMenu::handleButtons(ButtonState const up, ButtonState const down, Button
     }
     display();  
   }
-  else if (down == ButtonState::JustReleased) {
+  else if (down == ButtonState::JustReleased || down == ButtonState::Hold) {
     _lastActiveTime = millis();
     if (!_current->highlighted()->isValueSelect()) {
       bool const wrap = _current->down();
