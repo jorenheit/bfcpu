@@ -1,3 +1,72 @@
+\documentclass{article}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor,colortbl}
+\usepackage{longtable}
+\usepackage{pdflscape}
+\usepackage{fancyvrb}
+\usepackage{cprotect}
+\usepackage{forloop}
+\usepackage{pdfpages}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{tabularx}
+\usepackage{url}
+\usepackage[margin=1in]{geometry}
+
+\VerbatimFootnotes
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+  basicstyle=\ttfamily,
+  frame=single,
+  commentstyle=\color{lightgray},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{black},
+  stringstyle=\color{darkgray},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=4,
+  rangeprefix=//----------,
+  rangesuffix=----------
+}
+
+\newfloat{lstfloat}{htbp}{lop}
+\floatname{lstfloat}{Listing}
+\def\lstfloatautorefname{Listing}
+
+\captionsetup{font=footnotesize,format=hang}
+
+\newcommand{\nocontentsline}[3]{}
+%\newcommand{\tocless}[2]{\bgroup\let\addcontentsline=\nocontentsline#1{#2}\egroup}
+
+\definecolor{Gray}{gray}{0.9}
+\definecolor{White}{gray}{1}
+
+%\AtBeginEnvironment{longtable}{\small}
+
+\title{Synapse-191}
+\author{Joren Heit}
+\date{2025}
+
+\begin{document}
 \section{Control Sequences} \label{sec:sequences}
 \subsection{Instruction Decoding}
 By setting the control signals as described in Section \ref{sec:architecture} appropriately, modules can work together to perform each of the BF instructions. Table \ref{tab:microcode} shows the control sequences that are executed for each BF instruction. The Control Unit implements this as a lookup-table in 3 ROM chips, where the instruction (4 bits), flags (5 bits) and cycle counter (3 bits) act as an address into this table (Figure \ref{fig:decoder}). Given that the CU has to be able to supply a total of 24 different control signals, three 8-bit EEPROM chips have been used to store the microcode lookup-table. More details on the implementation can be found in Section \ref{sec:implementation:cu}. Below we will go through each of the control-sequences listed in Table \ref{tab:microcode}.
@@ -241,3 +310,5 @@ Table \ref{tab:microcode} shows each of the control sequences described in previ
 
 
 
+
+\end{document}

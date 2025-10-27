@@ -1,39 +1,129 @@
 \section{Bill of Materials}
-Table \ref{tab:parts} lists most of the parts used in this project. It is not meant to be a comprehensive list of every part used because this document is not meant to serve as a guide on building an identical system. 
+The following section lists all components required to build the Synapse-191 computer, including
+integrated circuits, passive components, and other hardware parts.  
+The system was constructed entirely on solderless breadboards using standard through-hole
+TTL logic and readily available electronic parts.  
+Component quantities reflect the final, fully assembled configuration of the system,
+including the control unit, data path, clock circuitry, and I/O modules.
+
+Note that in several cases, alternative or suboptimal parts were used based on component
+availability at the time of construction.  
+These lists are therefore intended as a reference for replication and documentation purposes,
+not as precise shopping lists.  
+Anyone attempting to build a similar system should expect to keep a stock of spare parts and
+make appropriate substitutions where necessary.
+
+\subsection{Integrated Circuits}
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c|l}
+    Part                     & Quantity & Description \\\hline
+    74LS00                   & 3 & 4x NAND \\
+    74LS02                   & 1 & 4x NOR \\
+    74LS04                   & 6 & 6x NOT \\
+    74LS08                   & 2 & 4x AND \\
+    74LS14                   & 1 & 6x Schmitt-Trigger \\
+    74LS32                   & 2 & 4x OR \\
+    74LS48                   & 2 & 7-Segment Driver  \\
+    74LS74                   & 1 & 2x D-Flip-Flop  \\
+    74LS76                   & 1 & 2x JK-Flip-Flop  \\
+    74LS86                   & 1 & 4x XOR  \\
+    74LS123                  & 2 & 2x Monostable Multivibrator  \\
+    74LS138                  & 2 & 3-to-8 Decoder  \\
+    74LS157                  & 1 & 4-bit Data Selector \\
+    74LS161                  & 2 & 8-Bit Counter  \\
+    74LS173                  & 9 & 8-Bit Register  \\
+    74LS193                  & 14 & 8-Bit U/D Counter  \\
+    74LS245                  & 10 & 8-Bit Bus Transceiver  \\
+    74HC595                  & 1 & 8-Bit Shift Register  \\
+    MC14078B                 & 2 & 8-Input NOR  \\
+    NE555                    & 4 & 555-Timer \\
+    AT28C64B                 & 4 & 64K EEPROM  \\
+    AS6C4008                 & 2 & 512K SRAM  \\
+    ICM7226B                 & 1 & Frequency Timer  \\
+  \end{tabular}
+  \caption{IC's used in the project.}
+  \label{tab:parts}
+\end{table}
+
+\subsection{Passive Components}
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{c|c|c|l}
-    Part                   & Description & Quantity & Notes \\ \hline
-    Breadboard             & 830 hole & ? ~25 & 21 breadboards ($7\times3$) were used to build the main platform, but the power lines from others have been added around the perimeter for power, ground, clock and reset lines. \\
-    74LS00                 & NAND & ? &\\
-    74LS04                 & NOT & ? &\\
-    74LS08                 & AND & ? &\\
-    74LS14                 & Schmitt-Trigger & ? &\\
-    74LS32                 & OR & ? &\\
-    74LS48                 & 7-Segment Driver & ? &\\
-    74LS76                 & JK-Flip-Flop & ? &\\
-    74LS86                 & XOR & ? &\\
-    74LS123                & Monostable Multivibrator & ? &\\
-    74LS138                & 3-to-8 Decoder & &\\
-    74LS157                & Data Selector & &\\
-    74LS161                & 8-Bit Counter & &\\
-    74LS173                & 8-Bit Register & &\\
-    74LS193                & 8-Bit U/D Counter & &\\
-    74LS245                & 8-Bit Bus Transceiver & &\\
-    74HC595                & 8-Bit Shift Register & &\\
-    NE555                  & 555-Timer & &\\
-    AT28C64B               & 64K EEPROM & 4 &\\
-    AS6C4008               & 512K SRAM & 2 &\\
-    MC14068B               & 8-Input NAND & 1 &\\
-    ICM7226B               & Frequency Counter & 1 &\\
-    7-Segment Display      & - & 2 &\\
-    Quad 7-Segment Display & - & 2 &\\
-    LED (single/array)     & Various colors & A lot &\\
-    HD44780 Compatible LCD & 4x20 Characters & 1 &\\
-    Resistors              & Different values & A lot &\\
-    Capacitors             & Different values & A reasonable amount &\\    
+  \begin{subtable}[t]{0.3\textwidth}
+    \vspace{0pt}
+    \begin{tabular}{r|l}
+      Value                    & Quantity \\ \hline
+      220 $\Omega$              & 1  \\
+      330 $\Omega$              & 8  \\
+      470 $\Omega$              & 80 \\
+      1 $k\Omega$               & 5  \\
+      2 $k\Omega$               & 1  \\
+      4.7 $k\Omega$             & 10 \\
+      5 $k\Omega$               & 3  \\
+      10 $k\Omega$              & 5  \\
+      100 $k\Omega$             & 2  \\
+      220 $k\Omega$             & 1  \\
+      470 $k\Omega$             & 1  \\
+      10 $M\Omega$              & 2  \\
+    \end{tabular}
+    \caption{Resistors}
+  \end{subtable}
+  \hfill
+  \begin{subtable}[t]{0.3\textwidth}
+    \vspace{0pt}
+    \begin{tabular}{r|l}
+      Value                    & Quantity \\ \hline
+      470 $\mu F$              & 1 \\    
+      10 $\mu F$               & 1 \\    
+      4.7 $\mu F$              & 1 \\    
+      1 $\mu F$                & 3 \\    
+      100 nF (104)             & 50\\    
+      10 nF (103)              & 5 \\    
+      2.2 nF (222)             & 1 \\
+      1 nF (102)               & 4 \\
+      470 pF (471)             & 1 \\
+      220 pF (221)             & 1 \\
+      100 pF (101)             & 1 \\    
+      47 pF                    & 2  \\    
+      22 pF                    & 2  \\    
+    \end{tabular}
+    \caption{Capacitors}
+  \end{subtable}
+  \hfill
+  \begin{subtable}[t]{0.3\textwidth}
+    \vspace{0pt}
+    \begin{tabular}{r|l}
+      Value                      & Quantity \\ \hline
+      10 MHz crystal             & 1 \\    
+      16 MHz crystal             & 1 \\
+      10 k$\Omega$ potentiometer & 2 \\
+      Toggle switch              & 2 \\
+      DIP switch (x8)            & 1 \\
+      Tactile button             & 5 \\
+      20-22AWG wire              & ? \\
+    \end{tabular}
+    \caption{Other passive components}
+  \end{subtable}
+
+  \caption{Resistors, capacitors and other passive components used in the project.}
+  \label{tab:rcbom}
+\end{table}
+
+
+\subsection{Other Parts}
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c|l}
+    Part                     & Quantity & Description \\\hline
+    Breadboard               & $\sim$25 & 830 hole  \\
+    Single 7-Segment Display & 2 &    \\
+    Quad 7-Segment Display   & 2 &    \\
+    Single LED               & 15& Various colors \\
+    Bar LED strip            & 11& 10 LEDs per strip  \\
+    HD44780 Compatible LCD   & 1 & 4x20 Characters  \\
   \end{tabular}
-  \caption{Incomplete list of parts used in the project.}
+  \caption{Other parts used in the project.}
   \label{tab:parts}
 \end{table}
+

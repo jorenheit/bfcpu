@@ -15,6 +15,7 @@
 \usepackage{pdfpages}
 \usepackage{amsmath}
 \usepackage{multicol}
+\usepackage{tabularx}
 \usepackage{url}
 \usepackage[margin=1in]{geometry}
 
@@ -50,29 +51,40 @@
 \newfloat{lstfloat}{htbp}{lop}
 \floatname{lstfloat}{Listing}
 \def\lstfloatautorefname{Listing}
-
 \captionsetup{font=footnotesize,format=hang}
-
 \newcommand{\nocontentsline}[3]{}
-%\newcommand{\tocless}[2]{\bgroup\let\addcontentsline=\nocontentsline#1{#2}\egroup}
-
 \definecolor{Gray}{gray}{0.9}
 \definecolor{White}{gray}{1}
 
-%\AtBeginEnvironment{longtable}{\small}
+\makeatletter
+\newcommand{\subtitle}[1]{\gdef\@subtitle{#1}} % define \subtitle command
+\renewcommand{\maketitle}{
+  \begin{center}
+    {\Huge\bfseries \@title \par}      % larger title
+    \vspace{0.5cm}
+    {\large\itshape \@subtitle \par}   % subtitle in italics
+  \end{center}
+}
+\makeatother
 
 \title{Synapse-191}
-\author{Joren Heit, Arthur Topal}
-\date{2025}
+\subtitle{Building A Brainf*ck Computer on Breadboards}
+\author{}
+\date{} 
 
 \begin{document}
-\maketitle
 \thispagestyle{empty}
-
+\maketitle
+\vspace{3cm}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth]{img/_processor}
+  \includegraphics[width=0.9\textwidth]{img/titlepage_img1}
 \end{figure}
+\vfill
+\begin{flushright}
+  {\large Joren Heit}\\[0.3em]
+  {\normalsize 2025}
+\end{flushright}
 
 \newpage
 \tableofcontents
@@ -85,5 +97,5 @@
 \include{utilities}
 \include{conclusion}
 \include{bom}
-\include{references}
+\include{references}            
 \end{document}

@@ -1,5 +1,4 @@
-# Synapse-191: A Native Brainf*ck Computer
-<p align="center"><kbd><img src="doc/img/pics/1000041125.jpg" width="400"/></kbd></p>
+# Synapse-191: A Native Brainf*ck Computer align="center"><kbd><img src="doc/img/pics/1000041125.jpg" width="400"/></kbd></p>
 
 ## Overview
 

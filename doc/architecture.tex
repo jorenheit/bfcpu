@@ -1,6 +1,6 @@
 \section{Architecture} \label{sec:architecture}
 \subsection{Overview} \label{sec:architecture:overview}
-In simple terms, a BF machine consists of an array of memory-cells, together with a pointer pointing to one of these cells. The pointer can move along the array while modifying its contents one step at a time. An example of this representation in some intermediate state is shown in Figure \ref{fig:simplerepresentation}. Consider the BF program ``\texttt{>>>>>+.}'', applied to the initial conditions shown in the example. The pointer would take 5 steps to the right, landing on cell 9 which contains the number 41. It will then increment and output this value, displaying 42 on the screen (assuming a screen of some sort is used as the output device and it is displaying numbers directly rather than interpreting them as ASCII).
+In simple terms, a BF machine consists of an array of memory-cells, together with a pointer pointing to one of these cells. The pointer can move along the array while modifying its contents one step at a time. Figure \ref{fig:simplerepresentation} illustrates an example intermediate state of such a system. Consider the BF program ``\texttt{>>>>>+.}'', applied to the initial conditions shown in the example. The pointer would take 5 steps to the right, landing on cell 9 which contains the number 41. It will then increment and output this value, displaying 42 on the screen (assuming a screen of some sort is used as the output device and it is displaying numbers directly rather than interpreting them as ASCII).
 
 \begin{figure}[H]
   \centering
@@ -81,7 +81,7 @@ The IP Register stores the instruction pointer (16-bits), which keeps track of t
 
 
 \subsection{Stack Pointer Register (SP)} \label{sec:architecture:sp}
-The stack is the first part of RAM (addresses 0x0000 - 0x00ff) and is reserved to keep track of addresses in ROM that might need to be jumped to when flow encounters a loop-end instructoin (\texttt{]}). The stack-pointer (SP) points to an address in this space; it is incremented whenever a new jump-address is pushed to the stack and decremented whenever an address is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it the SP overflows (wraps around back to 0) and starts overwriting previous values. This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs. Although possible, it is very unlikely to happen for the simple programs we intend to run.
+The stack is the first part of RAM (addresses 0x0000 - 0x00ff) and is reserved to keep track of addresses in ROM that might need to be jumped to when flow encounters a loop-end instruction (\texttt{]}). The stack-pointer (SP) points to an address in this space; it is incremented whenever a new jump-address is pushed to the stack and decremented whenever an address is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it the SP overflows (wraps around back to 0) and starts overwriting previous values. This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs. Although possible, it is very unlikely to happen for the simple programs we intend to run.
 
 \subsubsection*{Inputs}
 \begin{itemize}
@@ -114,7 +114,7 @@ The Loop Skip (LS) register is a counter that indicates whether or not we're in 
 \end{itemize}
 
 \subsection{Flag Registers (FA and FB)} \label{sec:architecture:flags}
-The first flag register (FA) holds two flag values A and V which are used to indicate that either the address or value respecively has changed during one of the previous instructions. For instance, is D was incremented, the V-flag is set to indicate a change of the \emph{value} being pointed to (the value in RAM is now outdated). For a more detailed description of the function and application of these flags, refer to Section \ref{sec:sequences:+-} and \ref{sec:sequences:<>}. On the zeroth cycle of every instruction, these flags are latched into the FB register together with the Z and S flags (set by the D and LS registers) for a total of 4 flags. The previously mentioned K-flag is specific to interactions with the IO-module and will be discussed in Section \ref{sec:todo}.
+The first flag register (FA) holds two flag values A and V which are used to indicate that either the address or value respectively has changed during one of the previous instructions. For instance, is D was incremented, the V-flag is set to indicate a change of the \emph{value} being pointed to (the value in RAM is now outdated). For a more detailed description of the function and application of these flags, refer to Section \ref{sec:sequences:+-} and \ref{sec:sequences:<>}. On the zeroth cycle of every instruction, these flags are latched into the FB register together with the Z and S flags (set by the D and LS registers) for a total of 4 flags. The previously mentioned K-flag is specific to interactions with the IO-module and will be discussed in Section \ref{sec:todo}.
 
 \subsubsection*{Inputs}
 \begin{itemize}
@@ -194,7 +194,7 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
 
 
 \subsection{Cycle Counter (CC)} \label{sec:architecture:cc}
-Almost every BF instruction requires multiple cycles to complete. Therefore, in addition to the instuction and state, a cycle counter is used to determine the control signals that should be sent out.  This cycle counter is a 3-bit counting register (allowing for at most 8 cycles per instruction) that increments on every clock cycle and sends its output to the control unit. Its only control signal is the Cycle Reset (CR) signal which resets the count in order to fetch the next instruction (which happens on cycle 0).
+Almost every BF instruction requires multiple cycles to complete. Therefore, in addition to the instruction and state, a cycle counter is used to determine the control signals that should be sent out.  This cycle counter is a 3-bit counting register (allowing for at most 8 cycles per instruction) that increments on every clock cycle and sends its output to the control unit. Its only control signal is the Cycle Reset (CR) signal which resets the count in order to fetch the next instruction (which happens on cycle 0).
 
 \subsubsection*{Inputs}
 \begin{itemize}
@@ -243,7 +243,7 @@ The actual BF instructions are stored in Read-Only-Memory (ROM) and are addresse
 
 
 \subsection{Screen (SCR)}  \label{sec:architecture:scr}
-The output module (which is assumed to be a screen) will be attached to the data bus and will display whatever is on the bus  when enabled using the EN signal. Because the output is handled asynchronously by some peripheral that will, from the perspective of the CPU, be viewed as a black box, it needs a flag to acknowlegde a successful data-transfer. This is done through the K-flag, which is set by the peripheral after reading data from the databus (this flag is shared with the input device for a similar purpose). This flag can only be reset by the CU, indicating that the transfer procedure has been completed.
+The output module (which is assumed to be a screen) will be attached to the data bus and will display whatever is on the bus  when enabled using the EN signal. Because the output is handled asynchronously by some peripheral that will, from the perspective of the CPU, be viewed as a black box, it needs a flag to acknowledge a successful data-transfer. This is done through the K-flag, which is set by the peripheral after reading data from the databus (this flag is shared with the input device for a similar purpose). This flag can only be reset by the CU, indicating that the transfer procedure has been completed.
 \subsubsection*{Inputs}
 \begin{itemize}
 \itemsep0em 
@@ -294,7 +294,7 @@ Each of the aforementioned components/modules has one or more control inputs tha
 \item INC - Increment selected register
 \item DEC - Decrement selected register
 \item DPR - Reset DP
-\item EN\_SP- Enable SP to address bus \footnote{Note that there is no EN\_DP since this signal is mutally exclusive with EN\_SP; whenever one is set, the other is unset and vice versa.}
+\item EN\_SP- Enable SP to address bus \footnote{Note that there is no EN\_DP since this signal is mutually exclusive with EN\_SP; whenever one is set, the other is unset and vice versa.}
 \item OE\_RAM - Output Enable RAM
 \item WE\_RAM - Write Enable RAM
 \item EN\_IN - Enable input (keyboard) to databus

@@ -1,8 +1,16 @@
 \section{Conclusion}
+The BFCPU project started as a fun challenge: could we build a full computer, from scratch, that speaks Brainf*ck as its native language? Not because it’s practical—because it’s interesting. Bit by bit, the design grew into a complete system: a microcoded CPU with a clean Harvard-like architecture, a two-phase clock, a working toolchain, and a surprisingly advanced I/O module. Somewhere along the way, the breadboards turned into a small city of logic chips, wires, and LEDs that somehow cooperate well enough to run real programs.
 
+That’s not to say it’s perfect. In fact, it never has been fully stable. Every now and then, some chip decides that ground is optional, and the whole thing drifts into chaos until it’s nudged back to life. It’s the kind of problem that’s inherent to breadboards—those long, shared rows aren’t exactly meant for dense, high-speed digital logic. Still, the system works well enough to demonstrate every part of the design, and it’s a small miracle that it does so as reliably as it does.
 
+If there’s ever a “next step,” it would be to take everything learned from this messy forest of jump wires and translate it onto a proper PCB. That would eliminate most of the grounding and signal integrity issues and turn this hand-built prototype into a stable, portable machine.
 
-Looking back on the project, it was a very challenging, sometimes frustrating process that in the end paid off with a great feeling of accomplishment. It provided many tangible insight into computer architecture and proved that it is definitely possible to implement a Turing Complete system using basic parts and very little practicle experience in the field. There are most certainly many areas in which the computer can be improved, both in its efficiency and reliability. A natural next step might be to design a PCB that implements the architecture. This would probably increase the reliability and would allow the computer to run stable at much higher clock-frequencies, but would come at the cost of having less visually clear connections and therefore less educational value.
+But even as it stands, the BFCPU has been a fantastic experiment—one that turned abstract ideas about microarchitecture, control logic, and timing into something you can literally touch. It’s a reminder that sometimes the best way to understand how computers work isn’t to simulate them, but to build one with your own hands—and then spend months trying to figure out why it occasionally forgets what “ground” means.
+\vspace{2cm}
 
-A big part of the project was the devlopment of the toolchain. We hope that tools like Mugen and the programmer hardware/software could be of value to the community, for others that are implementing a custom architecture or even following Ben Eater's instructions on the 8-bit breadboard CPU. As previously mentioned, all software is available through Github at \url{https://github.com/jorenheit/bfcpu}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{img/final_img}
+\end{figure}
+
 
