@@ -67,9 +67,7 @@ The goal of this project was to implement a working CPU that runs Brainf*ck prog
 4. Insert the ROM into the computer and execute the program.
 
 ### Watch the Process
-<p align="center">
 [![Click to watch](https://img.youtube.com/vi/KEQ2o_t6Cj4/0.jpg)](https://www.youtube.com/watch?v=KEQ2o_t6Cj4)
-</p>
 ---
 
 ## Documentation
