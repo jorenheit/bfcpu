@@ -66,7 +66,7 @@ The goal of this project was to implement a working CPU that runs Brainf*ck prog
 3. Flash the binary to a ROM chip (using **bflash** or any other utility to program EEPROM chips).
 4. Insert the ROM into the computer and execute the program.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/KEQ2o_t6Cj4?si=zAc5PQM7JVWBzK8S" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![Click to watch](https://img.youtube.com/vi/KEQ2o_t6Cj4/0.jpg)](https://www.youtube.com/watch?v=KEQ2o_t6Cj4)
 
 ---
 
