@@ -13,7 +13,7 @@ By setting the control signals as described in Section \ref{sec:architecture} ap
 
 
 \subsection{Cycle 0: Instruction Fetch}
-The first cycle of each instruction is identical\footnote{The OUT instruction is slightly different but this can be ignored for now. For more information, refer to \label{sec:??}}: A, V, S and Z are loaded into the FB registerand the current instruction (pointed to by IP) is loaded from program ROM into the instruction register. This provides the CU with all the necessary information to determine the control signals for cycle 1: LD\_FB, LD\_I.
+The first cycle of each instruction is identical\footnote{The OUT instruction is slightly different but this can be ignored for now. For more information, refer to \label{sec:??}}: A, V, S and Z are loaded into the FB register and the current instruction (pointed to by IP) is loaded from program ROM into the instruction register. This provides the CU with all the necessary information to determine the control signals for cycle 1: LD\_FB, LD\_I.
 
 \subsection{Modifying Data: \texttt{+} and \texttt{-}} \label{sec:sequences:+-}
 \paragraph{PLUS-instruction} The sequence of instructions necessary to execute a \texttt{+} command depends on the state of the system. Three different scenario's have to be taken into account:
@@ -35,7 +35,7 @@ The first cycle of each instruction is identical\footnote{The OUT instruction is
 \end{figure}
 
 \subsection{Moving the Pointer: \texttt{<} and \texttt{>}} \label{sec:sequences:<>}
-\paragraph{RIGHT-instruction} Moving the datapointer one cell to the right requires similar instructions compared to PLUS instruction, the difference being that we increment the DP-register rather than the D-register. Similarly, we consider three different scenario's, branching on the V-flag instead of the A-flag:
+\paragraph{RIGHT-instruction} Moving the data pointer one cell to the right requires similar instructions compared to PLUS instruction, the difference being that we increment the DP-register rather than the D-register. Similarly, we consider three different scenario's, branching on the V-flag instead of the A-flag:
 %
 \begin{enumerate}
 \item (V = 0, S = 0): If the V-flag is not set, it means that the value we point to hasn't changed and we don't need to care about synchronization. The DP (register address 010) is incremented immediately and the A-flag is set to indicate we changed the address and are now out of sync: INC, RS1, SET\_A, LD\_FA. In the following cycle, we move to the next instruction: INC, RS2, CR.
@@ -218,7 +218,7 @@ In any BF program it is assumed that all memory is zero-initialized. In practice
 After the appropriate number of INIT instructions have been execured, the HOME instruction (see \ref{sec:sequences:home} must be called in order for the DP to return back to the start of the memory (0x0100).
 
 \subsubsection{\texttt{HOME}} \label{sec:sequences:home}
-In order for the datapointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the datapointer using the CLR\_DP signal.
+In order for the data pointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the data pointer using the CLR\_DP signal.
 
 \subsubsection{\texttt{HLT}}
 The \texttt{HLT} instruction halts the clock and (temporarily) stops the program by asserting the HLT signal. The assembler will place a HLT instruction after initialization (\texttt{INIT}) and after the final instruction of the main program. This former allows the user to manually start the program after the system has been fully set up and the latter prevents the program from continuing into invalid memory after it has executed its final command. Furthermore, the assembler can interpret an exclamation mark (\texttt{!}) as a \texttt{HLT} in the BF-code to set breakpoints for debugging.
@@ -231,7 +231,7 @@ The \texttt{ERR} instruction enables the ERR signal and halts the clock: ERR, HL
 Every undefined state in the microcode table implicitly contains the \texttt{ERR} sequence. If for some reason a state occurs that maps to the \texttt{ERR} command, the clock will be halted and some indicator on the Control Unit should light up to let its users know that something has gone terribly wrong and the computer has reached an unreachable state.
 
 \subsection{Microcode table}
-Table \ref{tab:microcode} shows each of the control sequences described in previous sections sections. Please note that in order to simplify notation, the control signals RS0, RS1 and RS2 have not been used to indicate register selection. Instead, the module to which the instruction (INC/DEC) is applied is provided in brackets. For example, incrementing the SP register would require control signals INC, RS0, RS1 which is denoted in Table \ref{tab:microcode} as INC(SP).
+Table \ref{tab:microcode} shows each of the control sequences described in the previous sections. Please note that in order to simplify notation, the control signals RS0, RS1 and RS2 have not been used to indicate register selection. Instead, the module to which the instruction (INC/DEC) is applied is provided in brackets. For example, incrementing the SP register would require control signals INC, RS0, RS1 which is denoted in Table \ref{tab:microcode} as INC(SP).
 \newpage
 \input{microcode_table}
 
