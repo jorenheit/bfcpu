@@ -100,8 +100,6 @@
   LEFT:0:()                     -> LD_FBI
   RIGHT:0:()                    -> LD_FBI
   IN:0:()                       -> LD_FBI
-  OUT:0:(A=0)                   -> LD_FBI, EN_D     # when OUT is spinning, EN_D must be kept high
-  OUT:0:(A=1)                   -> LD_FBI, OE_RAM   # OE_RAM in this case, for the same reason
   LOOP_START:0:()               -> LD_FBI
   LOOP_END:0:()                 -> LD_FBI
   RAND:0:()                     -> LD_FBI
@@ -109,6 +107,11 @@
   INIT:0:()                     -> LD_FBI
   HOME:0:()                     -> LD_FBI
   HALT:0:()                     -> LD_FBI
+
+  # When OUT is spinning, EN_D must be kept high in cycle 0
+  OUT:0:(A=0)                   -> LD_FBI, EN_D
+  # OE_RAM in this case, for the same reason  
+  OUT:0:(A=1)                   -> LD_FBI, OE_RAM   
 
   PLUS:1:(A=0,S=0)              -> INC_D
   PLUS:2:(A=0,S=0)              -> NEXT

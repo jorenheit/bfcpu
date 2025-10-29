@@ -1,8 +1,8 @@
-\section{Utilities}
+\section{Utilities} \label{sec:utilities}
 While designing and implementing the computer, several supporting utilities were developed. The assembler (\texttt{bfasm}) is responsible for translating BF programs (text) into machine language (binary), the programmer and its software are used to write data to EEPROM chips and Mugen aids in having a more maintainable microcode definition. Each of these 3 utilities will be described in more detail below.
 
-\subsection{Assembler: \texttt{bfasm}}
-Even though the computer is designed to run BF natively, we can't just burn any text-file containing BF commands onto the program-ROM and expect it to execute them. Instead, each of these commands has to be translated into the binary opcodes that correspond to these commands. Table \ref{tab:opcodes} lists all the available commands and the values that map to these commands. As explained in Section \ref{sec:sequences}, there are a few non-BF that have been added.
+\subsection{Assembler: \texttt{bfasm}} \label{sec:utilities:bfasm}
+Even though the computer is designed to run BF natively, we can't just burn any text-file containing BF commands onto the program-ROM and expect it to execute them. Instead, each of these commands has to be translated into its corresponding binary opcode. Table \ref{tab:opcodes} lists all the available commands and the values that map to these commands. As explained in Section \ref{sec:sequences}, there are a few non-BF that have been added.
 
 \begin{table}[H]
   \centering
@@ -14,10 +14,11 @@ Even though the computer is designed to run BF natively, we can't just burn any 
     \texttt{<} & 0x03 \\
     \texttt{>} & 0x04 \\
     \texttt{,} & 0x05 \\
-    \texttt{'} & 0x06 \\
-    \texttt{.} & 0x07 \\
-    \texttt{\detokenize{[}} & 0x08 \\
-    \texttt{\detokenize{]}} & 0x09 \\
+    \texttt{.} & 0x06 \\
+    \texttt{\detokenize{[}} & 0x07 \\
+    \texttt{\detokenize{]}} & 0x08 \\
+    \texttt{?} & 0x09 \\
+    \texttt{WAIT\_EXT} & 0x0c \\
     \texttt{INIT} & 0x0d \\
     \texttt{HOME} & 0x0e \\
     \texttt{HLT}  & 0x0f 
@@ -26,17 +27,17 @@ Even though the computer is designed to run BF natively, we can't just burn any 
   \label{tab:opcodes}
 \end{table}
 
-\texttt{bfasm} performs pretty much a one-to-one transformation of the BF commands in the provided textfile into these values. It will add some preample commands to initialize the system and puts a \texttt{HLT} instruction at the end of the program to stop the computer when the program has finished (Figure \ref{fig:assembleoutput}). Part of the source-code is listed in the listing below; for the full source, refer to \url{https://github.com/jorenheit/bfcpu/blob/main/src/bfasm/bfasm.cc}.
+\texttt{bfasm} performs pretty much a one-to-one transformation of the BF commands in the provided textfile into these values. It will add some preample commands to initialize the system and puts a \texttt{HLT} instruction at the end of the program to stop the computer when the program has finished (Figure \ref{fig:assembleoutput}).
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\textwidth]{img/assembleroutput}
-  \caption{Result of assembling a BF-file.}
+  \caption{Result of assembling a plaintext BF-file.}
   \label{fig:assembleoutput}
 \end{figure}
 
 
-\subsection{Programmer}
+\subsection{Programmer} \label{sec:utilities:bflash}
 
 \begin{figure}[H]
   \centering
@@ -49,7 +50,7 @@ Given that there are four EEPROM chips embedded in the computer (one containing 
 
 \includepdf[landscape=true]{schematics/eeprom_programmer.pdf}
 
-\subsection{Microcode Generation (Mugen)}
+\subsection{Microcode Generation (Mugen)} \label{sec:utilities:mugen}
 Initially, the binary images that were burnt onto the microcode EEPROM chips were generated using a simple Octave/Matlab script. This meant that both the microcode and the logic to generate the images had to be expressed in this language. While this certainly worked (albeit a bit slow), we felt the need to develop a more general approach to generating microcode images. To satisfy this need, Mugen was developed. It takes a file in which the microcode can be expressed intuitively and generates the binary images from it. The Mugen project can be found in \url{https://github.com/jorenheit/mugen}. Section \ref{sec:implementation:cu} shows the Mugen specification file for this project. When this file is passed to Mugen, it shows the resulting memory layout. which corresponds to the layout as shown in the schematics of the Control Unit.
 
 \begin{lstlisting}

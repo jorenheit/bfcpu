@@ -284,8 +284,7 @@ int assemble(Options const &opt)
   result.push_back(HLT);
 
 
-  if (not opt.allowUnbalanced && nestingDepth != 0)
-  {
+  if (not opt.allowUnbalanced && nestingDepth != 0) {
     std::cerr << "ERROR: Program contains unbalanced loops. Use the -u option to ignore.\n";
     return 1;
   }
@@ -294,11 +293,9 @@ int assemble(Options const &opt)
   std::vector<unsigned char> packed;
   unsigned char buf = 0;
 
-  for (size_t i = 0; i != result.size(); ++i)
-  {
+  for (size_t i = 0; i != result.size(); ++i) {
     unsigned char cmd = result[i];
-    if ((i & 1) == 0)
-    {
+    if ((i & 1) == 0) {
       buf = cmd;
       continue;
     }

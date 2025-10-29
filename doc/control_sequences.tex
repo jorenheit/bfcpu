@@ -95,7 +95,7 @@ These are by far the most complicated instructions that require a lot of additio
       
     \item (A = 1, S = 0): In the third scenario, the contents of D are not yet synchronized with the RAM, so we first need to load it in. After loading the value into D, the flags and cycle counter are reset to put the system back into one of the previously defined states: OE\_RAM, LD\_D, LD\_FA, CR.
 
-    \item Finally, when already in the process of skipping a loop, the LS-register is decremented before moving to the next instruction before resetting the cycle counter and incrementing the IP:
+    \item (S = 1): Finally, when already in the process of skipping a loop, the LS-register is decremented before moving to the next instruction before resetting the cycle counter and incrementing the IP:
       \begin{enumerate}
       \item DEC, RS0, RS2
       \item INC, RS2, CR
@@ -127,21 +127,20 @@ These are by far the most complicated instructions that require a lot of additio
 
 \subsection{Output: \texttt{.}} \label{sec:sequences:output}
 
-\paragraph{Handshake:} Due to the asynchronous nature of the output peripheral, it is necessary to enter into a handshake protocol whenever a byte is put on the bus for display. The handshake protocol is therefore defined by the following steps:
+\paragraph{Handshake:} Due to the asynchronous nature of the output peripheral, it is necessary to enter into a handshake protocol whenever a byte is put on the bus for display. In this protocol, the K flag is used to communicate between the CPU and the IO module: it is set by the IO module to indicate that it has read the data from the bus, and reset by the CU to indicate that the handshake has been received and completed:
+
 \begin{enumerate}
-\item The CU asserts the EN\_OUT signal and enables the module that contains the current value (either D when A = 0 or RAM when A = 1), such that its contents appear on the databus: EN\_OUT, (EN\_D or OE\_RAM).
+\item The CU asserts the EN\_OUT signal and enables the module that contains the current value (either D when A = 0 or RAM when A = 1), such that its contents appear on the databus:\\EN\_OUT, (EN\_D or OE\_RAM).
 \item The output module is notified of this through the EN\_OUT signal and reads this value from the bus. When done, it sets the K-flag.
 \item After enabling the data on the bus, the CU repeatedly checks the K-flag. When it becomes 1, the CU knows that the data has been successfully taken from the bus, at which point the supplying module (D or RAM) can disable its outputs. The CU then finalizes the handshake by resetting the K-flag. As soon as the output module notices that the K-flag was reset, it starts waiting for its next instruction.
-  \begin{itemize}
+  \begin{enumerate}
   \item K = 0: CR, (EN\_D or OE\_RAM)
   \item K = 1: CLR\_K, INC, RS2, CR   
-  \end{itemize}
+  \end{enumerate}
 \end{enumerate}
 
 
-\paragraph{Cycle 0:} As mentioned briefly before, the OUT instruction is the only instruction that has a slightly different cycle 0 control sequence associated with it. This is because the waiting-loop is implemented by simply resetting the cycle count, such that the instruction is loaded in again but may now branch differently depending on the value of K, which might change in the meantime. However, the data on the bus should remain valid for the entire duration of the loop, since the output module may read from it asynchronously. To accommodate for this, the 0-cycle for the OUT instruction enables either D or RAM, depending on the value of the A-flag. This does no harm whenever the sequence is encountered outside of the loop, but does keep the data valid during one: LD\_FB, LD\_I, (EN\_D or EN\_RAM).
-
-\paragraph{Skipping:} None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately and reset the cycle counter: INC, RS2, CR.
+\paragraph{Cycle 0:} As mentioned briefly before, the OUT instruction is the only instruction that has a slightly different cycle 0 control sequence associated with it. This is because the waiting-loop is implemented by simply resetting the cycle count, such that the instruction is loaded in again but may now branch differently depending on the value of K, which might change in the meantime. However, the data on the bus should remain valid for the entire duration of the loop, since the output module may read from it asynchronously. To accommodate for this, the 0-cycle for the OUT instruction enables either D or RAM, depending on the value of the A-flag. This does no harm whenever the sequence is encountered outside of the loop, but does keep the data valid during one. Cycle 0 for the OUT opcode therefore consists of these control signals: LD\_FB, LD\_I, (EN\_D or EN\_RAM).
 
 \subsection{Input: \texttt{,}} \label{sec:sequences:input}
 \paragraph{Handshake:} Similar to the output command, the input command implements a handshake protocol to make sure that the databus is claimed by the input-device for the exact right amount of time, in order for the system to reliably read its contents. This happens using the same K-flag that was used in the output handshake.
@@ -161,9 +160,7 @@ These are by far the most complicated instructions that require a lot of additio
 \item Wait for the buffer to contain data. Only then set the K-flag (buffered mode).
 \item Assert zero's to the bus and set the K-flag immediately (immediate mode).
 \end{enumerate}
-In our implementation of the IO-module (see \ref{sec:implementation:iomodule}), both modes are supported and can be selected from in the options menu.
-
-\paragraph{Skipping:} None of the actions above need to be performed when the S flag is set, which means that we're in the process of skipping a loop-block. In this case, we ignore the command and increment the IP immediately and reset the cycle counter: INC, RS2, CR.
+In our implementation of the IO-module (see \ref{sec:implementation:io}), both modes are supported and can be selected from in the options menu.
 
 \begin{figure}[H]
   \centering
@@ -195,8 +192,8 @@ The NOP instruction does nothing. It simply increments the IP and resets the cyc
 \subsubsection{\texttt{WAIT\_EXT}}
 The WAIT\_EXT instruction (\emph{wait for external device}) should be the first instruction in the program binary and simply loops on the K-flag, waiting for an external peripheral to set it to 1. When this happens, the CU immediately resets the flag using the CLR\_K signal. Both the BF system and the IO module will now be ready for operation:
 \begin{itemize}
- \item K = 0: CR
- \item K = 1: CLR\_K, K\_REC, INC, RS2, CR
+ \item (K = 0): CR
+ \item (K = 1): CLR\_K, K\_REC, INC, RS2, CR
 \end{itemize}
 
 \begin{figure}[H]
@@ -210,15 +207,15 @@ The WAIT\_EXT instruction (\emph{wait for external device}) should be the first 
 \subsubsection{\texttt{INIT}} \label{sec:sequences:init}
 In any BF program it is assumed that all memory is zero-initialized. In practice, SRAM-modules will contain random values at startup, so the assembler must add a preamble to the main code (after the initial WAIT\_EXT handshake) in order to initialize the RAM (or at least part of it) to 0. While this can be handled using canonical BF commands, initializing one cell at a time using a sequence of \texttt{[-]} commands, it is much faster to write directly to RAM. This is the purpose of the INIT instruction: for each INIT instruction, a contiguous chunk of 256 memory-cells will be zero-initialized. Since it is guaranteed that the D register contains a zero after reset, this value can directly be written into RAM on the first cycle of INIT while also incrementing the LS and DP registers. DP is incremented to move through the memory-space whereas LS is incremented in order to be able to count to 256, at which point the S flag will go low again due to the LS register overflowing back to 0. If more memory needs to be initialized, the assembler can simply concatenate multiple INIT instructions.
 \begin{enumerate}
-\item EN\_D, WE\_RAM, INC, RS0, RS2
-\item LD\_FB, INC, RS1
-\item
+\item Write a zero to the current cell: EN\_D, WE\_RAM, INC, RS0, RS2
+\item Increment the LS-register: LD\_FB, INC, RS1
+\item Depending on whether the LS-register wrapped around (256 cells initialized), either move to the next cell or finalize by incrementing the IP and resetting the cycle-counter.
   \begin{itemize}
-  \item S = 0: INC, RS2, CR
-  \item S = 1: CR
+  \item (S = 0): INC, RS2, CR
+  \item (S = 1): CR
   \end{itemize}
 \end{enumerate}
-After the appropriate number of INIT instructions have been execured, the HOME instruction (see \ref{seq:sequences:home} must be called in order for the DP to return back to the start of the memory (0x0100).
+After the appropriate number of INIT instructions have been execured, the HOME instruction (see \ref{sec:sequences:home} must be called in order for the DP to return back to the start of the memory (0x0100).
 
 \subsubsection{\texttt{HOME}} \label{sec:sequences:home}
 In order for the datapointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the datapointer using the DPR signal.
