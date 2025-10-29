@@ -218,7 +218,7 @@ In any BF program it is assumed that all memory is zero-initialized. In practice
 After the appropriate number of INIT instructions have been execured, the HOME instruction (see \ref{sec:sequences:home} must be called in order for the DP to return back to the start of the memory (0x0100).
 
 \subsubsection{\texttt{HOME}} \label{sec:sequences:home}
-In order for the datapointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the datapointer using the DPR signal.
+In order for the datapointer to return to its starting position after initialization (and before the main program runs), the \texttt{HOME} instruction is provided. The only thing it does is send the reset signal to the datapointer using the CLR\_DP signal.
 
 \subsubsection{\texttt{HLT}}
 The \texttt{HLT} instruction halts the clock and (temporarily) stops the program by asserting the HLT signal. The assembler will place a HLT instruction after initialization (\texttt{INIT}) and after the final instruction of the main program. This former allows the user to manually start the program after the system has been fully set up and the latter prevents the program from continuing into invalid memory after it has executed its final command. Furthermore, the assembler can interpret an exclamation mark (\texttt{!}) as a \texttt{HLT} in the BF-code to set breakpoints for debugging.

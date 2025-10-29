@@ -15,7 +15,7 @@
   RS2
   INC
   DEC
-  DPR
+  CLR_DP
   EN_SP
 
   OE_RAM
@@ -189,7 +189,7 @@
   HALT:1:()                     -> HLT
   HALT:2:()                     -> NEXT
 
-  HOME:1:()                     -> DPR, NEXT
+  HOME:1:()                     -> CLR_DP, NEXT
 
   catch                         -> ERR, HLT
 }

@@ -48,6 +48,27 @@
   rangesuffix=----------
 }
 
+\lstdefinelanguage{Mugen}{
+  morekeywords=[1]{rom, address, signals, macros, opcodes, microcode, catch},
+  sensitive=true,
+  morecomment=[l]{\#},           % line comment starts with #
+}
+
+\lstdefinestyle{MugenStyle}{
+  language=Mugen,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=10pt,
+  tabsize=4,
+  showstringspaces=false,
+  breaklines=true,
+}
+
 \newfloat{lstfloat}{htbp}{lop}
 \floatname{lstfloat}{Listing}
 \def\lstfloatautorefname{Listing}
@@ -87,15 +108,30 @@
 \end{flushright}
 
 \newpage
-\tableofcontents
 
-\include{introduction}
-\include{brainfck}
-\include{architecture}
-\include{control_sequences}
-\include{implementation}
-\include{utilities}
-\include{conclusion}
-\include{bom}
-\include{references}            
+\mbox{}
+\vfill
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{img/full_board}
+\end{figure}
+\vfill
+
+\section*{Acknowledgements}
+I would like to express my sincere gratitude to Artur Topal, a former student of mine, with whom this project first began. Together, we set out on this journey when he was looking for a project for his \textit{profielwerkstuk}---a kind of final high school research project in the Netherlands. Artur played a vital role in the early stages of the design, from theoretical planning and debugging to constructing logic circuits and keeping the project’s momentum alive. His sharp mind, perseverance, and enthusiasm were invaluable and have significantly contributed to the eventual success of this project.\\[1em]
+\textbf{Thank you, Artur.}
+\newpage
+
+\tableofcontents
+\newpage
+
+\input{introduction}
+\input{brainfck}
+\input{architecture}
+\input{control_sequences}
+\input{implementation}
+\input{utilities}
+\input{conclusion}
+\newpage \input{bom}
+\newpage \input{references}            
 \end{document}
