@@ -1,6 +1,6 @@
 *
 !*/
-!compress.sh
+!build.sh
 !*.tex
 !report.pdf
 !.gitignore
