@@ -131,7 +131,7 @@ A full schematic is provided on the next page.
 \begin{figure}[H]
   % TODO: add annotations to the image
   \centering
-  \includegraphics[width=0.6\textwidth]{img/dregistercloseup}
+  \includegraphics[width=0.45\textwidth]{img/dregistercloseup}
   \caption{Close up of the Data Register Module.}
   \label{fig:dregcloseup}
 \end{figure}
@@ -347,9 +347,40 @@ The software was written in such a way that most common LCD character screens (c
 \subsubsection{Keyboard}
 The IO module can only handle input from PS/2 compatible keyboards. A modified version of the \texttt{PS2Keyboard} library was used to implement the keyboard driver.
 
-\subsubsection{Software}
-The full source code for the IO module can be found on Github: \url{https://github.com/jorenheit/bfcpu/tree/main/src/io_module}.
 
 \subsubsection{Schematic}
 A full schematic is provided on the next page.
 \includepdf[landscape=true]{schematics/iomodule.pdf}
+
+
+\subsection{IO Module Firmware}
+To ensure minimal latency and efficient CPU--peripheral communication, several low-level optimizations were applied to both the interrupt routine and the main execution loop of the module's firmware. 
+
+\subsubsection{Ring Buffers}
+\paragraph{Overview} The IO module employs a set of custom ring buffers that provide high-speed, non-blocking data transfer between the asynchronous microcontroller firmware and the synchronous TTL-based CPU. The ring buffer (or circular buffer) is a fixed-size, first-in-first-out (FIFO) data structure that uses two indices, commonly called the \texttt{head} and \texttt{tail}. The \texttt{head} marks the position where the next incoming element will be written, while the \texttt{tail} indicates the position of the next element to be read. When either index reaches the end of the buffer, it wraps around to the beginning, forming a logical ring in memory. This structure eliminates the need for memory allocation or data shifting, providing constant-time access for both enqueue and dequeue operations. See Figure \ref{fig:ringbuffer}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.3\textwidth]{img/ringbuffer}
+  \caption{In this ring buffer, the value 18 (pointed to by \texttt{tail}) will be returned on the next query. Data entering the ringbuffer will be stored at the cell pointed to by \texttt{head}. The value 42 is the first value to be overwritten when the \texttt{head} pointer wraps around to the top of the buffer.}
+  \label{fig:ringbuffer}
+\end{figure}
+
+
+In the Synapse-191 I/O module, one ring buffer is dedicated to temporaroly storing incoming data (bytes coming from the CPU that need to be written to the LCD screen), the screen-buffer, and another is used for outgoing data (keyboard input that needs to be put on the data bus), the keyboard-buffer. The main loop periodically flushes the screen-buffer to the display and refills the keyboard-buffer with new data when it arrives. Meanwhile, the interrupt service routine (ISR) accesses these buffers asynchronously to satisfy CPU read and write requests. Since all the heavy lifting (interpreting incoming data, managing the LCD screen, decoding keyboard scan-codes) is done in the main-loop, the ISR is kept very compact.
+
+\paragraph{Optimizations} The ring buffer is implemented as a templated C++ class, parameterized by buffer size and value type. Several compile-time and runtime techniques were employed to maximize performance and memory efficiency. A combination of compile-time specialization and minimal arithmetic overhead allows the ring buffers to perform deterministic, low-overhead enqueue and dequeue operations, which is essential for keeping up with the `high' frequency external system clock of the Synapse-191 CPU.
+
+\begin{itemize}
+\item \textbf{Index Type Specialization:} The index-type (datatype used to store the \texttt{head} and \texttt{tail} indices, is selected automatically at compile time using template metaprogramming. For small buffers, 8-bit indices are used instead of 16- or 32-bit counters, reducing instruction count, register usage and thus ensuring the fastest possible integer operations on out 8-bit MCU.
+\item \textbf{Integer Wrapping Optimization:} For buffers that are exactly as big as the maximum number representable by some type, that type is used to index the buffers as per the logic above. For example, a 256 byte buffer can be indexed fully using an 8-bit type like \texttt{unsigned char}. A value of 255 represented by this type will automatically wrap around when incremented, rendering any additional modular arithmetic to wrap around to the start of the buffer unnecessary.
+\item \textbf{Power-of-Two Optimization:} When the buffer size does not match the condition above, but \emph{is} a power of two, the modulo operation used for index wrapping is replaced with a simple bitwise \texttt{AND} operation: \texttt{i -> (i + 1) \& (N - 1)}. This reduces the naive modulo operation from multiple CPU cycles to a single instruction.
+\end{itemize}
+
+\paragraph{Volatile Access and Memory Barriers} The \texttt{head}, \texttt{tail}, and data array are declared \texttt{volatile} to prevent compiler reordering and ensure consistency between the ISR and the main loop. Additionally, an inline assembly memory barrier guarantees that writes to the buffer are completed before the corresponding index is updated, avoiding race conditions.
+
+\subsubsection{Direct Port Access} The ISR itself is further optimized using \emph{direct port manipulation}. Instead of relying on Arduino’s \texttt{digitalRead()}, \texttt{digitalWrite()} and \texttt{pinMode()} functions, which incur significant overhead, the firmware performs raw register accesses (\texttt{PORTX} for writing \texttt{PINX} for reading and \texttt{DDRX} for setting their modes) through custom inline functions. This facilitates faster control over timing-sensitive pins.
+
+\subsubsection{Compile-time Menu Structure} Finally, the on-screen configuration interface uses a statically defined menu tree that is fully constructed at compile time using template metaprogramming techniques. This eliminates dynamic memory allocation and object initialization overhead during runtime, minimizing both execution latency and memory footprint. Together, these optimizations produce a maintainable, fast, and memory-efficient IO subsystem capable of operating reliably at high clock speeds of the CPU core.
+\vfill
+\lstinputlisting[language=c++,firstline=65,lastline=99,firstnumber=1]{../src/io\_module/lcdmenu.h}
