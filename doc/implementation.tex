@@ -60,7 +60,7 @@ The frequency of the astable 555 is halved by sending it through a JK flip-flop 
   \label{tab:frequencycontrol}
 \end{table}
 
-\paragraph{Frequency Display:} To be able to see the clockfrequency as well as the instruction-frequency (number of BF instructions executed per second), the module clock (M\_CLK) and INC(IP) signals are connected through a switch to the input of an ICM7226B timer chip\cite{?}, which is configured as an 8-digit frequency timer. It drives two 4-digit 7-segment displays at a 1 second interval (the frequency is measured and updated every second). 
+\paragraph{Frequency Display:} To be able to see the clockfrequency as well as the instruction-frequency (number of BF instructions executed per second), the module clock (M\_CLK) and INC(IP) signals are connected through a switch to the input of an ICM7226B timer chip \cite{7226B}, which is configured as an 8-digit frequency timer. It drives two 4-digit 7-segment displays at a 1 second interval (the frequency is measured and updated every second). 
 
 \subsection{Reset/Resume} \label{sec:resetresume}
 \paragraph{Reset.} The Reset/Resume module is located directly underneath the clock and contains logic necessary to reset the computer (necessary after applying power) or resume the clock after it has been halted. The HLT signal coming from the decoder is latched into a register (74LS173) from which the corresponding output bit is connected to the HLT input of the clock module. When the system is reset (using the reset button) or when the resume button is pressed, the HLT bit is cleared and the clock output is enabled again. This allows for pausing and resuming the computer, effectively adding breakpoints to the code. The reset button itself is debounced in the same way as the manual clock button to ensure a stable transition with a debounce time of around 300ms.
@@ -91,7 +91,7 @@ Full schematics for the clock module, reset/resume circuitry and the frequency d
 \end{figure}
 
 \subsubsection{Overview}
-The register driver is responsible for driving the U- and D-inputs of the 74LS193 counting registers that are used to implement the D, DP, SP, IP and LS register modules. To increment the '193, its D-input needs to be held high whileproviding a low pulse to the U-input. As explained in section \ref{sec:architecture:cu}, a centralized driver was used to limit the number of logic IC's necessary to drive the registers and the total number of control signals necessary.
+The register driver is responsible for driving the U- and D-inputs of the 74LS193 counting registers that are used to implement the D, DP, SP, IP and LS register modules. To increment the '193, its D-input needs to be held high while providing a low pulse to the U-input. As explained in section \ref{sec:architecture:cu}, a centralized driver was used to limit the number of logic IC's necessary to drive the registers and the total number of control signals necessary.
 
 The driver module uses a pair of 74LS138 decoders: one to drive the U-inputs and the other to drive the D-inputs of the '193. The '138 takes 3 address bits (A, B, and C) to select one of 8 outputs (Y0-Y7), which will be pulled low when selected (all other outputs remain high). Two gate-inputs G1 (active high) G2 (active low) are used to enable the outputs of the chip; the selected output is activated (pulled low) only when both gates are active. This is very convenient given the fact that the 74LS193 needs a low pulse to increment or decrement its value:
 \begin{itemize}

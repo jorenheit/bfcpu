@@ -114,7 +114,7 @@ The Loop Skip (LS) register is a counter that indicates whether or not we're in 
 \end{itemize}
 
 \subsection{Flag Registers (FA and FB)} \label{sec:architecture:flags}
-The first flag register (FA) holds two flag values A and V which are used to indicate that either the address or value respectively has changed during one of the previous instructions. For instance, is D was incremented, the V-flag is set to indicate a change of the \emph{value} being pointed to (the value in RAM is now outdated). For a more detailed description of the function and application of these flags, refer to Section \ref{sec:sequences:+-} and \ref{sec:sequences:<>}. On the zeroth cycle of every instruction, these flags are latched into the FB register together with the Z and S flags (set by the D and LS registers) for a total of 4 flags. The previously mentioned K-flag is specific to interactions with the IO-module and will be discussed in Sections \ref{sec:sequences:output} and \ref{sec:sequences:input}.
+The first flag register (FA) holds two flag values A and V which are used to indicate that either the address or value respectively has changed during one of the previous instructions. For instance, if D was incremented, the V-flag is set to indicate a change of the \emph{value} being pointed to (the value in RAM is now outdated). For a more detailed description of the function and application of these flags, refer to Section \ref{sec:sequences:+-} and \ref{sec:sequences:<>}. On the zeroth cycle of every instruction, these flags are latched into the FB register together with the Z and S flags (set by the D and LS registers) for a total of 4 flags. The previously mentioned K-flag is specific to interactions with the IO-module and will be discussed in Sections \ref{sec:sequences:output} and \ref{sec:sequences:input}.
 
 \subsubsection*{Inputs}
 \begin{itemize}
@@ -150,7 +150,7 @@ The instruction register I buffers the current instruction pointed to by the IP.
 
 
 \subsection{Register Driver} \label{sec:architecture:registerdriver}
-Rather that having a seperate signal for each of the INC/DEC-inputs of each register (e.g.~ INC\_D, INC\_LS, etc), a driver module was designed (see \ref{sec:implementation:registerdriver}) to drive register modules that support modification of their contents. In addition to a universal INC/DEC signal, three Register Select (RS) bits are used to index the target-register. This approach has two advantages:
+Rather than having a separate signal for each of the INC/DEC-inputs of each register (e.g.~ INC\_D, INC\_LS, etc), a driver module was designed (see \ref{sec:implementation:registerdriver}) to drive register modules that support modification of their contents. In addition to a universal INC/DEC signal, three Register Select (RS) bits are used to index the target-register. This approach has two advantages:
 \begin{enumerate}
 \item It decreases the amount of control signals needed;
 \item The logic needed to drive the counting registers (74LS193) only needs to be implemented once.
