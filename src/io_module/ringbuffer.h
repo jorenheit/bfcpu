@@ -77,9 +77,9 @@ public:
 
   inline Result get() {
     if (head == tail) return Result{ValueType{}, false};
-    Result result{buffer[tail], true};
+    ValueType value = buffer[tail];
     tail = Derived::next(tail);
-    return result;
+    return {value, true};
   }
 
   inline Result peek() const {
