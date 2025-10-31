@@ -37,7 +37,7 @@ Even though the computer is designed to run BF natively, we can't just burn any 
 \end{figure}
 
 
-\subsection{Programmer} \label{sec:utilities:bflash}
+\subsection{Programmer: \texttt{bflash}} \label{sec:utilities:bflash}
 
 \begin{figure}[H]
   \centering
@@ -46,7 +46,20 @@ Even though the computer is designed to run BF natively, we can't just burn any 
   \label{fig:programmer}
 \end{figure}
 
+\subsubsection{Overview}
 Given that there are four EEPROM chips embedded in the computer (one containing the program and three containing the microcode), we had to develop a toolkit for programming these. Specialized programmers can be pretty expensive and relatively hard to acquire, so an Arduino Nano was used to carry out that task. It waits for a serial connection and transfers incoming data byte per byte to the EEPROM chip. This serial connection is established by a Python script that accepts a binary blob and passes this on to the Arduino. The Python utility is called \texttt{bflash} (although it's not really BF-specific); its source and the Arduino sketch can be found at \url{https://github.com/jorenheit/bfcpu/tree/main/src/bflash}. A schematic for the programmer hardware (Figure \ref{fig:programmer}) is shown on the next page.
+
+\subsubsection{Flashing the AT28C64B}
+The AT28C64B 8x8K EEPROM chip is used for both microcode as program storage. A value can be written to a specific address by asserting  using the following sequence of inputs:
+\begin{enumerate}
+\item Assert the value and address onto the data and address lines of the EEPROM.
+\item Set WE (Write Enable) low and OE (Output Enable) high. Both of these pins are active low, so this puts the chip in write-mode.
+\item Hold CE (Chip Enable) low for at least 100ns; we chose 1$\mu$s because this is the smallest delay that can be performed using standard Arduino library functions.
+\end{enumerate}
+
+\subsubsection{Shift Register}
+Because of the large number of connections to the EEPROM chip (13 address lines, 8 data lines and 3 control lines), two shift registers (74HC595) were used to buffer the address and WE/OE control lines.
+
 
 \includepdf[landscape=true]{schematics/eeprom_programmer.pdf}
 

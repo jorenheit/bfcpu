@@ -18,7 +18,10 @@
 \usepackage{multicol}
 \usepackage{tabularx}
 \usepackage{url}
+\usepackage{enumitem}
+\usepackage{xparse}
 \usepackage[margin=1in]{geometry}
+\usepackage[bottom]{footmisc}
 
 \VerbatimFootnotes
 
@@ -70,10 +73,29 @@
   breaklines=true,
 }
 
+\NewDocumentEnvironment{labeledenum}{m O{1}}{%
+  \begin{enumerate}[
+    label=\textbf{#1~\arabic*:},   % e.g. "Cycle 1:"
+    start=#2,             % optional start value
+    labelsep=0.75em,      % space between label and text
+    labelwidth=*,         % auto adjust label width
+    labelindent=2em,      % indentation of the entire list
+    leftmargin=!,         % compute left margin from labelwidth+labelsep
+    rightmargin=2em,      % indent from the right
+    align=left,           % left-align the labels
+    itemindent=0pt,       % no hanging indent
+    listparindent=0pt,    % align wrapped lines with first letter
+    parsep=0pt,
+    topsep=0.5ex
+  ]%
+}{%
+  \end{enumerate}
+}
+
 \newfloat{lstfloat}{htbp}{lop}
 \floatname{lstfloat}{Listing}
 \def\lstfloatautorefname{Listing}
-\captionsetup{font=footnotesize,format=hang}
+\captionsetup{width=.75\textwidth,font=footnotesize,format=hang}
 \newcommand{\nocontentsline}[3]{}
 \definecolor{Gray}{gray}{0.9}
 \definecolor{White}{gray}{1}
@@ -127,12 +149,12 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 \newpage
 
 \input{introduction}
-\input{brainfck}
+\newpage\input{brainfck}
 \input{architecture}
 \input{control_sequences}
 \input{implementation}
 \input{utilities}
-\input{conclusion}
+\newpage \input{conclusion}
 \newpage \input{bom}
 \newpage \input{references}            
 \end{document}

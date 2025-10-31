@@ -23,16 +23,7 @@ The commands then modify the contents of memory or the pointer as follows:
 Although the instruction set is minimal, it has been proven to be sufficient for performing any possible computation or program, also known as Turing-completeness \cite{esolangs-bf}. The catch is that this requires an unbounded (or infinite) amount of memory, which is obviously impossible. However, the same caveat holds for traditional systems, so we should be safe to assume that BF is Turing complete for all practical purposes.
 
 \subsection{Interpreters}
-To run a BF program, one usually feeds these commands into an interpreter written in a more common language. These interpreters are very straightforward to write. Listing \ref{lst:bfint} shows a very simple implementation (about 40 lines) a BF-interpreter written in C. This implementation initializes a block of memory to zero and defines a pointer to its first element. This pointer can be incremented or decremented to move along the array, increment/decrement value it's pointing or print it to the standard output. Most of its complexity is embedded in the handling of the loop-operators. When an opening bracket is encountered, the index of this instruction is stored in a jump-table. When the matching closing bracket is encountered and it is determined that flow should loop back, this stored index is reloaded. When a loop is being skipped, all commands within it are being skipped until the matching closing brace is found.
-
-When the Hello World program from Wikipedia \cite{bfwiki} is fed into this program, it prints out the string \texttt{Hello World!}, as expected.
-\vspace{1cm}
-\begin{lstlisting}
-  $ ./bfint "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-] \
-  >>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-Hello World!
-\end{lstlisting}
-
+To run a BF program, one usually feeds these commands into an interpreter written in a more common language. These interpreters are very straightforward to write. Listing \ref{lst:bfint} shows a very basic implementation (about 40 lines) a BF-interpreter written in C. This implementation initializes a block of memory to zero and defines a pointer to its first element. This pointer can be incremented or decremented to move along the array, increment/decrement value it's pointing or print it to the standard output. Most of its complexity is embedded in the handling of the loop-operators. When an opening bracket is encountered, the index of this instruction is stored in a jump-table. When control reaches its matching closing bracket and the value of the cell pointed to is nonzero, this stored index is reloaded in order to return to the start of the loop. When a loop is being skipped (the current cell holds a zero when the opening bracket is evaluated), all commands up to and including the matching closing bracket are skipped.
 
 \begin{lstfloat}[H]
   \lstinputlisting[linerange={bfint\_begin-bfint\_end}, language=C]{../src/simple_int/bfint.c}  
@@ -40,10 +31,19 @@ Hello World!
 \label{lst:bfint}
 \end{lstfloat}
 
+When the Hello World program from Wikipedia \cite{bfwiki} is fed into the function of Listing \ref{lst:bfint}, it prints out the string \texttt{Hello World!}, as expected.
+\vspace{0.5cm}
+\begin{lstlisting}[language=bash]
+  $ ./bfint "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.> \
+             ---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+Hello World!
+\end{lstlisting}
+
+
 
 
 \subsection{Brainf*ck Architecture}
-\paragraph{Von Neumann.} Modern computers are built according to the von Neumann architecture \cite{vonneumann-wiki}, which specifies a CPU (containing registers and an ALU), a single unit of memory and input/output devices (Figure \ref{fig:vonneumann}). The registers of the CPU can be loaded with data from the memory unit and operated on by the ALU (Arithmetic and Logic Unit). Typical about this kind of architecture is the fact that not only data, but also the instructions (the program) are stored in memory. The program is therefore just as much part of the data as the data itself and can even be modified by itself.
+\paragraph{Von Neumann} Modern computers are built according to the von Neumann architecture \cite{vonneumann-wiki}, which specifies a CPU (containing registers and an ALU), a single unit of memory and input/output devices (Figure \ref{fig:vonneumann}). The registers of the CPU can be loaded with data from the memory unit and operated on by the ALU (Arithmetic and Logic Unit). Typical about this kind of architecture is the fact that not only data, but also the instructions (the program) are stored in memory. The program is therefore just as much part of the data as the data itself and can even be modified by itself.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{img/vonneumann}
@@ -51,7 +51,7 @@ Hello World!
   \label{fig:vonneumann}
 \end{figure}
 
-\paragraph{Harvard.} Unlike within the Von Neumann architecture, the Harvard architecture specifies two kinds of memory: program memory and data memory (Figure \ref{fig:harvard}). The program memory contains only the instructions to be carried out and cannot be modified at runtime. Other than that, the architecture is similar to Von Neumann, in that it consists of a CPU (again containing registers and an ALU), memory (program and data) and input/output devices.
+\paragraph{Harvard} The Harvard architecture specifies two kinds of memory: program memory and data memory (Figure \ref{fig:harvard}). Program memory contains just the instructions that make up the program and cannot be modified at runtime. Other than that, the architecture is similar to Von Neumann, in that it consists of a CPU (again containing registers and an ALU), memory (program and data) and input/output devices.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{img/harvard}
@@ -59,9 +59,9 @@ Hello World!
   \label{fig:harvard}
 \end{figure}
 
-The architecture assumed by the BF language is similar to the Harvard architecture, in that the memory does not contain the program itself. This implies that the program is stored somewhere else and cannot be addressed by the pointer, like in Listing \ref{lst:bfint}, where the program was stored in a separate array to the data. The ALU is very limited and can only perform increment, decrement and comparison to zero.
+\paragraph{BF Architecture} The architecture assumed by the BF language is similar to the Harvard architecture, in that the memory does not contain the program itself. This implies that the program is stored somewhere else and cannot be addressed by the pointer, like in Listing \ref{lst:bfint}, where the program was stored in memory separate from the data. The ALU is very limited and can only increment values, decrement values and compare values to zero.
 
 
 \subsection{BF Instruction Set}
-Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above. An instruction set of size 8 is truly tiny compared to more traditional instruction sets such as those implemented by modern processors or even microcontrollers and older 8-bit systems. Broadly speaking, Complex Instruction Set Computers (CISC) are designed to do as much work as possible in the least number of clock cycles, whereas Reduced Instruction Set Computers (RISC) focus on having a small instruction set with basic operations. For comparison, the x86 instruction set is massive with over 1500 instructions implemented in hardware, whereas RISC processors only need to implement 50 to 100 instructions. Even compared to RISC, the BF instruction set is tiny even compared to the smallest instruction sets in use today. This isn't necessarily a good thing; a smaller number of instructions simply means you need more of them to perform meaningful computations, which is reflected by the fact that complex BF programs are typically very large in size.
+Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above. An instruction set of size 8 is truly tiny compared to more traditional instruction sets such as those implemented by modern processors or even microcontrollers and older 8-bit systems. Broadly speaking, Complex Instruction Set Computers (CISC) are designed to do as much work as possible in the least number of clock cycles, whereas Reduced Instruction Set Computers (RISC) focus on having a small instruction set with basic operations. For comparison, the x86 instruction set is massive with over 2000 instructions implemented in hardware (depending on the way you count, \cite{stefanheule}), whereas RISC-V processors have a fixed opcode with of only 7 bytes, allowing for a maximum of 128 different opcodes \cite{danielmangum}. Even compared to RISC, the BF instruction set is tiny even compared to the smallest instruction sets in use today. This isn't necessarily a good thing; a smaller number of instructions simply means you need more of them to perform meaningful computations, which is reflected by the fact that complex BF programs are typically very large in size.
 

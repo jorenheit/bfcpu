@@ -20,9 +20,42 @@ This section will discuss the implementation of each module and the way they int
   \label{fig:prototype}
 \end{figure}
 
+%%%%%%% WIRING
+
+\newpage\subsection{Wiring}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\textwidth]{img/wiring}
+  \caption{Close up of the wiring inside the CU.}
+  \label{fig:wiring}
+\end{figure}
+
+\subsubsection{Breadboards}
+The entire system was implemented on 830 hole breadboards. When the project started, relatively cheap breadboards were used, which had segmented power rails. These had to be bridged with jumper wires but these connections proved somewhat unreliable, introducing subtle points of failure. This is why in a later stage of the build we moved to more expensive but more reliable breadboards with continuous power rails.
+
+\subsubsection{Wires} Most of the longer wires were cut from spools of either 22AWG or 20AWG wire. While 22AWG proved reliable enough almost all the time, the thicker 20AWG had noticibly stronger connections to the breadboards and has been used mainly to make reliable power and ground connections. Thinner jumper wires have been used for short connections, e.g.~connections from IC's VCC and GND pins to the power rails. These are very convenient to use - cutting and stripping short wires is a tedious hob - but have sometimes been the source of hard-to-identify unstabilities that were eventually identified as bad connections to ground, caused by these jumper wires.
+
+\subsubsection{Busses}
+In Ben Eater's implementation of the 8-bit CPU, power rails cut loose from breadboards were used to build the central bus, which makes it easy for modules to connect to it. Because our system has two busses (8 and 16 bits wide), this would have been impractical to replicate.
+
+\subsubsection{Bus Pull-Down}
+The data bus can be written to by 3 diffent modules: D, IP and the input device (usually KB). To prevent floating bits at times when none of these devices are active, each of the 8 bus-lines is connected to ground through a 1K resistor. Even though the microcode implementation prevents any module from reading from the bus when no other module is enabled, this was done anyway in the spirit of good practice. The 16-bit address lines are guaranteed to be in a valid state since either the DP or the SP has its outputs enabled at any time during execution. Therefore, no pull-down resistors were used on the address bus.
+
+\subsubsection{Power}
+Power is supplied by a 5V, 3A power supply (the system draws around 930mA), connected power rails that run around the perimeter of the system and in between the breadboards. As many interconnections between different parts of the power rails were made to ensure that all segments of the board receive a stable power supply and connection to ground. At short intervals, 100nF capacitors were placed across the rails to filter high-frequency noise.
+
+\subsubsection{Clock and Reset}
+Many of the modules need a connection to the clock and reset lines, which is why power lines cut loose from spare breadboards were repurposed to function as clock/reset rails that run around the perimeter of the board. This provides easy access to those lines even for modules at the opposite end of the system relative to the clock and reset modules.
+
+\subsubsection{LED Indicators}
+To be able to monitor the state of the machine visual (and for dramatic effect), many LED indicators have been installed across the board. LED bars were used to visualize the register contents and control signals, while single LED's were used to show the status of flags and enable-signals. Each LED is wired in series with a 470$\Omega$ resistor to ground.
+
+Additionally, two 7-segment displays, each driven by a 74LS48, are connected to the instruction register and cycle counter to display the current instruction and cycle as decimal numbers (e.g.~4.2 for cycle 2 of the \texttt{>} instruction, see \ref{sec:utilities:bfasm}). Unfortunately, the '48 does not support values over 9 (no hexadecimal representation) so non-BF opcodes like INIT lead to a blank display. 
+
+
 %%%%%%% CLOCK
 
-\subsection{Clock} \label{sec:clock}
+\newpage\subsection{Clock} \label{sec:clock}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/clockmodulecloseup}
@@ -62,7 +95,7 @@ The frequency of the astable 555 is halved by sending it through a JK flip-flop 
 
 \paragraph{Frequency Display:} To be able to see the clockfrequency as well as the instruction-frequency (number of BF instructions executed per second), the module clock (M\_CLK) and INC(IP) signals are connected through a switch to the input of an ICM7226B timer chip \cite{7226B}, which is configured as an 8-digit frequency timer. It drives two 4-digit 7-segment displays at a 1 second interval (the frequency is measured and updated every second). 
 
-\subsection{Reset/Resume} \label{sec:resetresume}
+\subsubsection{Reset/Resume} \label{sec:resetresume}
 \paragraph{Reset.} The Reset/Resume module is located directly underneath the clock and contains logic necessary to reset the computer (necessary after applying power) or resume the clock after it has been halted. The HLT signal coming from the decoder is latched into a register (74LS173) from which the corresponding output bit is connected to the HLT input of the clock module. When the system is reset (using the reset button) or when the resume button is pressed, the HLT bit is cleared and the clock output is enabled again. This allows for pausing and resuming the computer, effectively adding breakpoints to the code. The reset button itself is debounced in the same way as the manual clock button to ensure a stable transition with a debounce time of around 300ms.
 
 \paragraph{Resume.} The Resume button needs more sophisticated debounce circuitry due to the following scenario: when multiple HLT instructions are seperated by a relatively small amount of other instructions, a pulse in the order of milliseconds (like the reset and pulse debouncers) will be far too long at high clock frequencies. The resume-signal will still be high when a second (or third, fourth, ...) HLT instruction is encountered, causing control flow to simply skip over these instructions. To remedy this situation, a debouncing circuit is required that first produces a pulse of equal width of the clock pulses (Figure \ref{fig:clocktiming}), followed by a guaranteed period where the signal is low, even when the button bounces after the pulse. This is achieved by creating a feedback loop between the two monostable vibrators present on the 74LS123. The first one will produce a 200ns pulse on the rising edge of the button. This pulse is sent to the reset of the register that holds the HLT signal in order to clear it, but is also connected to the second monostable vibrator. When the initial (short) pulse goes low, the second vibrator generates a much longer pulse that is connected to the reset-input of the first one, making sure it cannot be re-activated for some time. By selecting a 680K resistor and a 4.7$\mu F$ capacitor, a cooldown period of around 1 second is achieved. Figure \ref{fig:resumedebounce} shows a timing diagram to illustrate this process in more detail. 
@@ -82,7 +115,7 @@ Full schematics for the clock module, reset/resume circuitry and the frequency d
 
 %%%%%%% REGISTER DRIVER
 
-\subsection{Register Driver} \label{sec:implementation:registerdriver}
+\newpage\subsection{Register Driver} \label{sec:implementation:registerdriver}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/registerdrivercloseup}
@@ -95,7 +128,7 @@ The register driver is responsible for driving the U- and D-inputs of the 74LS19
 
 The driver module uses a pair of 74LS138 decoders: one to drive the U-inputs and the other to drive the D-inputs of the '193. The '138 takes 3 address bits (A, B, and C) to select one of 8 outputs (Y0-Y7), which will be pulled low when selected (all other outputs remain high). Two gate-inputs G1 (active high) G2 (active low) are used to enable the outputs of the chip; the selected output is activated (pulled low) only when both gates are active. This is very convenient given the fact that the 74LS193 needs a low pulse to increment or decrement its value:
 \begin{itemize}
-\item The register-selects signals RS0, RS1 and RS2 are connected to A, B, and C to select the required output.
+\item The register-select signals RS0, RS1 and RS2 are connected to A, B, and C to select the required output.
 \item The INC and DEC signals are connected through inverters to the G2 gate.
 \item The module-clock signal is connected to G1: when pulsed, the selected output will produce a pulse that is effectively an inverted clock pulse (high-low-high) which is exactly what the '193 expects. 
 \end{itemize}
@@ -106,7 +139,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% DATA POINTER REGISTER
 
-\subsection{DP Register} \label{sec:implementation:dp}
+\newpage\subsection{DP Register} \label{sec:implementation:dp}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/dpregistercloseup}
@@ -127,7 +160,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% DATA REGISTER
 
-\subsection{D Register}
+\newpage\subsection{D Register}
 \begin{figure}[H]
   % TODO: add annotations to the image
   \centering
@@ -141,7 +174,7 @@ The data register (D) holds (a copy of) the value in memory currently pointed to
 
 \paragraph{Enabling Output. } The outputs of the '193s are buffered by a single 8-bit tristate buffer (74LS245) before being connected to the databus. Because the databus is 16-bit wide (necessary to store IP-values on the stack), the high-byte is set explicitly to 0 when D is enabled by a second buffer that always outputs zero's. Storing nonzero values in the high-byte of the datasection would not have any consequences for the computation, but would be visually confusing. The buffers are set to output-mode only (even though the register is able to read from the bus as well) because the 193 chips have seperate pins for incoming and outgoing data. The incoming data is read from the bus directly without needing to go through a buffer.
 
-\paragraph{Z-Flag.} This module also produces the Z flag, indicating that it is currently containing the value 0. This is achieved by connecting its outputs through an 8-input NOR gate (MC14078B). The output of this gate is then connected to the FB flag register where it can be latched in by the CU in order to determine the next course of action.
+\paragraph{Z-Flag.} This module also produces the Z-flag, indicating that it is currently containing the value 0. This is achieved by connecting its outputs through an 8-input NOR gate (MC14078B). The output of this gate is then connected to the FB flag register where it can be latched in by the CU in order to determine the next course of action.
 
 \paragraph{Loading Data.} Because the '193 loads asynchronously, the clock has to be gated with the LD\_D signal through a NAND gate in order to load synchronously with the clock when the LD\_D signal is high (the load-pin on the '193 is active low). The necessity of a NAND gate meant it was easier to also implement any inverters needed in the circuit in terms of NAND gates.
 
@@ -152,7 +185,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% INSTRUCTION POINTER REGISTER
 
-\subsection{IP Register}
+\newpage\subsection{IP Register}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/ipregistercloseup}
@@ -173,7 +206,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% STACK POINTER REGISTER
 
-\subsection{SP Register}
+\newpage\subsection{SP Register}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/spregistercloseup}
@@ -192,7 +225,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% LS Register
 
-\subsection{LS Register}
+\newpage\subsection{LS Register}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.3\textwidth]{img/lsregistercloseup}
@@ -201,7 +234,7 @@ A full schematic is provided on the next page.
 \end{figure}
 
 \subsubsection{Overview}
-The Loop Skip Register (LS) is used to produce the loop-skip-flag (S, see \ref{sec:architecture:ls}). It is implemented using two 74LS193 binary counters and is connected to register driver at address 5 (0b101). Like the Z-flag, the S-flag is produced by sending the outputs of the binary counters through an 8-input NOR-gate, the output of which is then inverted and connected to the FB flag-register. When any of these bits are high, the S flag will be raised, indicating that the computer is in the process of skipping the current loop.
+The Loop Skip Register (LS) is used to produce the loop-skip-flag (S, see \ref{sec:architecture:ls}). It is implemented using two 74LS193 binary counters and is connected to register driver at address 5 (0b101). Like the Z-flag, the S-flag is produced by sending the outputs of the binary counters through an 8-input NOR-gate, the output of which is then inverted and connected to the FB flag-register. When any of these bits are high, the S-flag will be raised, indicating that the computer is in the process of skipping the current loop.
 
 
 \subsubsection{Schematic}
@@ -211,7 +244,7 @@ A full schematic is provided on the next page.
 
 %%%%%%%%%%% FA/FB
 
-\subsection{Flag Registers}
+\newpage\subsection{Flag Registers}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/flagregistercloseup}
@@ -220,7 +253,7 @@ A full schematic is provided on the next page.
 \end{figure}
 
 \subsubsection{Overview}
-There are two stages of flag-buffering; the first stage is the FA register (in which the A and V flags are stored) and the second the FB register (in which all flags except K are latched when the instruction is loaded). Both of these registers have been implemented using a 74LS173 4-bit register. The A and V flag are stored in FA by the CU whenever the value in D is changed (V) or whenever the pointer is changing its position (A). This can happen mid-instruction without changing the address on the microcode EEPROMs because the flag lines leading into those come from the FB register. At each cycle 0, the buffered A and V flags are loaded into FB, together with S and Z coming from the LS and D registers respectively. Since this always happens in conjunction with loading the instruction from program ROM into the instruction register (see \ref{sec:implementation:cu}), the control signal has been named LD\_FBI. The flags in the FB register will (mostly) remain constant during the execution of an opcode.
+There are two stages of flag-buffering; the first stage is the FA register (in which the A and V-flags are stored) and the second the FB register (in which all flags except K are latched when the instruction is loaded). Both of these registers have been implemented using a 74LS173 4-bit register. The A and V-flag are stored in FA by the CU whenever the value in D is changed (V) or whenever the pointer is changing its position (A). This can happen mid-instruction without changing the address on the microcode EEPROMs because the flag lines leading into those come from the FB register. At each cycle 0, the buffered A and V-flags are loaded into FB, together with S and Z coming from the LS and D registers respectively. Since this always happens in conjunction with loading the instruction from program ROM into the instruction register (see \ref{sec:implementation:cu}), the control signal has been named LD\_FBI. The flags in the FB register will (mostly) remain constant during the execution of an opcode.
 
 \subsubsection{Schematic}
 A full schematic is provided on the next page.
@@ -229,7 +262,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% RAM Module
 
-\subsection{RAM}
+\newpage\subsection{RAM}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/ramcloseup}
@@ -248,7 +281,7 @@ A full schematic is provided on the next page.
 
 %%%%%%% CONTROL UNIT
 
-\subsection{Control Unit}\label{sec:implementation:cu}
+\newpage\subsection{Control Unit}\label{sec:implementation:cu}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/controlunitcloseup}
@@ -280,7 +313,7 @@ The control unit is responsible for sending the appropriate control-signals to e
 
 \paragraph{Instruction Nibbles.} The actual BF program is stored in another 8K EEPROM chip (AT28C64) and is addressed by the instruction pointer as mentioned before. Since each BF instruction only needs 4 bits to be encoded (there are less than 16 different opcodes), we can store up to 16K instruction in the chip by packing 2 consecutive instructions together in a single byte (handled by the assembler, \texttt{bfasm}). Rather than using bit 0 from the IP directly as address bit 0 on the EEPROM, it is used as the data-select signal to a 74LS157 multiplexer. This multiplexer takes 1 select-bit and two sets of 4 databits. Depending on the value of the select-bit, one of the sets of 4-bit data is sent to its outputs. This allows us to select either the low or high nibble of the data in the EEPROM, effectively doubling the amount of instructions that can be stored and retrieved.
 
-\paragraph{Instruction Register.} The seleted nibble is loaded into the instruction register (I) at the same time as the V, A, S and Z flags are loaded into the FB register. For this reason both the FB and I registers can operate on the same control-signal: LD\_FBI. The I register is implemented using the 74LS161, which is actually a counting register, because at the time there was no '173 available anymore and these chips are functionally almost identical when counting is disabled on the '161. Initially, the outputs of the multiplexer ('157) were directly connected to the address lines of the microcode EEPROMs but when it turned out that this could cause instabilities in some rare occasions, the I register was added to buffer the instruction for the entire duration of the opcode execution.
+\paragraph{Instruction Register.} The seleted nibble is loaded into the instruction register (I) at the same time as the V, A, S and Z-flags are loaded into the FB register. For this reason both the FB and I registers can operate on the same control-signal: LD\_FBI. The I register is implemented using the 74LS161, which is actually a counting register, because at the time there was no '173 available anymore and these chips are functionally almost identical when counting is disabled on the '161. Initially, the outputs of the multiplexer ('157) were directly connected to the address lines of the microcode EEPROMs but when it turned out that this could cause instabilities in some rare occasions, the I register was added to buffer the instruction for the entire duration of the opcode execution.
  
 \paragraph{Cycle Counter.} The cycle counter is implemented by a 74LS161 binary counter that simply increments on every M\_CLK signal up and sends its outputs (bits 0-2) to address lines 0-2 of the microcode EEPROM chips. It is reset when it receives the CR signal (which becomes active when after an instruction has completed).
 
@@ -290,7 +323,7 @@ A full schematic is provided on the next page.
 \includepdf[landscape=true]{schematics/controlunit.pdf}
 
 %%%%%%% IO Module
-\subsection{IO Module} \label{sec:implementation:io}
+\newpage\subsection{IO Module} \label{sec:implementation:io}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.6\textwidth]{img/iomodulecloseup}
@@ -327,9 +360,9 @@ The IO system is handled by an ATMEGA328P microprocessor, commonly found in the 
 
 
 \subsubsection{Handshake Protocol}
-\paragraph{Output} The \texttt{M\_CLK} signal is connected to an interrupt pin of the MCU. On every interrupt triggered by the clock, when the system is in its IDLE state, it will check the EN\_IN and EN\_OUT lines to determine if it should initiate a read or write sequence to the databus. When EN\_OUT is found to be high, it will copy the byte currently present on the bus into its screen-buffer, set the K flag and change its state to WAIT\_SYS. On every subsequent clock pulse, while in the WAIT\_SYS state, it will check if the K flag has been reset by the control unit. If so, the handshake has been completed and the module returns to its IDLE state (see Figure \ref{fig:isrflow}).
+\paragraph{Output} The \texttt{M\_CLK} signal is connected to an interrupt pin of the MCU. On every interrupt triggered by the clock, when the system is in its IDLE state, it will check the EN\_IN and EN\_OUT lines to determine if it should initiate a read or write sequence to the databus. When EN\_OUT is found to be high, it will copy the byte currently present on the bus into its screen-buffer, set the K-flag and change its state to WAIT\_SYS. On every subsequent clock pulse, while in the WAIT\_SYS state, it will check if the K-flag has been reset by the control unit. If so, the handshake has been completed and the module returns to its IDLE state (see Figure \ref{fig:isrflow}).
 
-\paragraph{Input} If the EN\_IN signal is found to be asserted, the system has two possible courses of action, depending on the input-mode currently set by the user (through the on-screen settings menu). In (the default) buffered mode, the system will change its state to WAIT\_KB and wait for a byte to become available in the keyboard-buffer. As soon as it does, it will provide this value onto the bus and notify the CU by setting the K flag. It then moves into the WAIT\_SYS state to await confirmation by the CU (which in turn resets the K flag). In immediate mode, all zeros will be written to the bus and the K flag is set immediately even when the keyboard-buffer is still empty. If, in addition to EN\_IN, EN\_OUT is asserted as well, a random byte is put onto the bus (see Figure \ref{fig:isrflow}).
+\paragraph{Input} If the EN\_IN signal is found to be asserted, the system has two possible courses of action, depending on the input-mode currently set by the user (through the on-screen settings menu). In (the default) buffered mode, the system will change its state to WAIT\_KB and wait for a byte to become available in the keyboard-buffer. As soon as it does, it will provide this value onto the bus and notify the CU by setting the K-flag. It then moves into the WAIT\_SYS state to await confirmation by the CU (which in turn resets the K-flag). In immediate mode, all zeros will be written to the bus and the K-flag is set immediately even when the keyboard-buffer is still empty. If, in addition to EN\_IN, EN\_OUT is asserted as well, a random byte is put onto the bus (see Figure \ref{fig:isrflow}).
 
 \begin{figure}[H]
   \centering
@@ -353,11 +386,11 @@ A full schematic is provided on the next page.
 \includepdf[landscape=true]{schematics/iomodule.pdf}
 
 
-\subsection{IO Module Firmware}
+\newpage\subsection{IO Module Firmware}
 To ensure minimal latency and efficient CPU--peripheral communication, several low-level optimizations were applied to both the interrupt routine and the main execution loop of the module's firmware. 
 
 \subsubsection{Ring Buffers}
-\paragraph{Overview} The IO module employs a set of custom ring buffers that provide high-speed, non-blocking data transfer between the asynchronous microcontroller firmware and the synchronous TTL-based CPU. The ring buffer (or circular buffer) is a fixed-size, first-in-first-out (FIFO) data structure that uses two indices, commonly called the \texttt{head} and \texttt{tail}. The \texttt{head} marks the position where the next incoming element will be written, while the \texttt{tail} indicates the position of the next element to be read. When either index reaches the end of the buffer, it wraps around to the beginning, forming a logical ring in memory. This structure eliminates the need for memory allocation or data shifting, providing constant-time access for both enqueue and dequeue operations. See Figure \ref{fig:ringbuffer}.
+\paragraph{Overview} The IO module employs a set of custom ring buffers that provide high-speed, non-blocking data transfers between the asynchronous microcontroller firmware and the synchronous TTL-based CPU. The ring buffer (or circular buffer) is a fixed-size, first-in-first-out (FIFO) data structure that uses two indices, commonly called the \texttt{head} and \texttt{tail}. The \texttt{head} marks the position where the next incoming element will be written, while the \texttt{tail} indicates the position of the next element to be read. When either index reaches the end of the buffer, it wraps around to the beginning, forming a logical ring in memory. This structure eliminates the need for memory allocation or data shifting, providing constant-time access for both enqueue and dequeue operations. See Figure \ref{fig:ringbuffer}.
 
 \begin{figure}[H]
   \centering
@@ -369,7 +402,7 @@ To ensure minimal latency and efficient CPU--peripheral communication, several l
 
 In the Synapse-191 I/O module, one ring buffer is dedicated to temporaroly storing incoming data (bytes coming from the CPU that need to be written to the LCD screen), the screen-buffer, and another is used for outgoing data (keyboard input that needs to be put on the data bus), the keyboard-buffer. The main loop periodically flushes the screen-buffer to the display and refills the keyboard-buffer with new data when it arrives. Meanwhile, the interrupt service routine (ISR) accesses these buffers asynchronously to satisfy CPU read and write requests. Since all the heavy lifting (interpreting incoming data, managing the LCD screen, decoding keyboard scan-codes) is done in the main-loop, the ISR is kept very compact.
 
-\paragraph{Optimizations} The ring buffer is implemented as a templated C++ class, parameterized by buffer size and value type. Several compile-time and runtime techniques were employed to maximize performance and memory efficiency. A combination of compile-time specialization and minimal arithmetic overhead allows the ring buffers to perform deterministic, low-overhead enqueue and dequeue operations, which is essential for keeping up with the `high' frequency external system clock of the Synapse-191 CPU.
+\paragraph{Optimizations} The ring buffer is implemented as a templated C++ class, parameterized by buffer size and value type. Several compile-time and runtime techniques were employed to maximize performance and memory efficiency. A combination of compile-time specialization and minimal arithmetic overhead allows the ring buffers to perform low-overhead enqueue and dequeue operations, which is essential for keeping up with the `high' frequency external system clock of the Synapse-191 CPU.
 
 \begin{itemize}
 \item \textbf{Index Type Specialization:} The index-type (datatype used to store the \texttt{head} and \texttt{tail} indices, is selected automatically at compile time using template metaprogramming. For small buffers, 8-bit indices are used instead of 16- or 32-bit counters, reducing instruction count, register usage and thus ensuring the fastest possible integer operations on out 8-bit MCU.
@@ -379,7 +412,7 @@ In the Synapse-191 I/O module, one ring buffer is dedicated to temporaroly stori
 
 \paragraph{Volatile Access and Memory Barriers} The \texttt{head}, \texttt{tail}, and data array are declared \texttt{volatile} to prevent compiler reordering and ensure consistency between the ISR and the main loop. Additionally, an inline assembly memory barrier guarantees that writes to the buffer are completed before the corresponding index is updated, avoiding race conditions.
 
-\subsubsection{Direct Port Access} The ISR itself is further optimized using \emph{direct port manipulation}. Instead of relying on Arduino’s \texttt{digitalRead()}, \texttt{digitalWrite()} and \texttt{pinMode()} functions, which incur significant overhead, the firmware performs raw register accesses (\texttt{PORTX} for writing \texttt{PINX} for reading and \texttt{DDRX} for setting their modes) through custom inline functions. This facilitates faster control over timing-sensitive pins.
+\subsubsection{Direct Port Access} The ISR itself is further optimized using \emph{direct port manipulation}. Instead of relying on Arduino’s \texttt{digitalRead()}, \texttt{digitalWrite()} and \texttt{pinMode()} functions, which incur significant overhead, the firmware performs raw register accesses (\texttt{PORTX} for writing \texttt{PINX} for reading and \texttt{DDRX} for changing modes) through custom inline functions. This facilitates faster control over timing-sensitive pins.
 
 \subsubsection{Compile-time Menu Structure} Finally, the on-screen configuration interface uses a statically defined menu tree that is fully constructed at compile time using template metaprogramming techniques. This eliminates dynamic memory allocation and object initialization overhead during runtime, minimizing both execution latency and memory footprint. Together, these optimizations produce a maintainable, fast, and memory-efficient IO subsystem capable of operating reliably at high clock speeds of the CPU core.
 \vfill
