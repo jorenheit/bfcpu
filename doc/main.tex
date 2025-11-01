@@ -1,5 +1,6 @@
 \documentclass{article}
 
+\usepackage[toc,page]{appendix}
 \usepackage{listings}
 \usepackage{float}
 \usepackage{graphicx}
@@ -152,9 +153,18 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 \newpage\input{brainfck}
 \input{architecture}
 \input{control_sequences}
-\input{implementation}
+\newpage\input{implementation}
 \input{utilities}
 \newpage \input{conclusion}
-\newpage \input{bom}
-\newpage \input{references}            
+
+\newpage
+\begin{appendices}
+  \input{microcode_table}
+  \newpage \input{bfcpu_mu}
+  \newpage \input{bom}
+  \newpage \input{schematics}
+\end{appendices}
+
+\newpage \input{references}
+
 \end{document}

@@ -10777,6 +10777,16 @@
 		)
 		(uuid "9ffb1e14-dcf6-4c3f-ac81-9b449241d9b3")
 	)
+	(text "CONTROL UNIT"
+		(exclude_from_sim no)
+		(at 233.934 175.006 0)
+		(effects
+			(font
+				(size 4 4)
+			)
+		)
+		(uuid "a9b57b95-2ee9-425b-ac19-030d15318ad2")
+	)
 	(global_label "INC"
 		(shape output)
 		(at 273.05 81.28 0)
@@ -13748,19 +13758,19 @@
 			)
 		)
 		(pin "11"
-			(uuid "ea6c736a-65b2-44d1-ade4-a1181a767d07")
+			(uuid "ea6c736a-65b2-44d1-ade4-a1181a767d08")
 		)
 		(pin "9"
-			(uuid "5322b36c-a2b8-403a-aa0f-ea3a6a034fb8")
+			(uuid "5322b36c-a2b8-403a-aa0f-ea3a6a034fb9")
 		)
 		(pin "14"
-			(uuid "ce2fb335-fa0b-4e26-a922-5786061e408a")
+			(uuid "ce2fb335-fa0b-4e26-a922-5786061e408b")
 		)
 		(pin "7"
-			(uuid "2d470ede-2ab9-426b-9246-71934e3000d9")
+			(uuid "2d470ede-2ab9-426b-9246-71934e3000da")
 		)
 		(pin "4"
-			(uuid "15f52b1e-5d09-4248-a527-54c3f536cec8")
+			(uuid "15f52b1e-5d09-4248-a527-54c3f536cec9")
 		)
 		(pin "2"
 			(uuid "6c72050a-4f70-43c2-984f-b042cf965550")
@@ -13769,25 +13779,25 @@
 			(uuid "8328fed0-4ed1-4bf2-8aab-5e71d5831862")
 		)
 		(pin "5"
-			(uuid "7f05d473-3406-4bea-88fb-296adf775da1")
+			(uuid "7f05d473-3406-4bea-88fb-296adf775da2")
 		)
 		(pin "12"
-			(uuid "efb4578b-fd56-42c0-8cfd-0479210aa8ec")
+			(uuid "efb4578b-fd56-42c0-8cfd-0479210aa8ed")
 		)
 		(pin "6"
-			(uuid "2e0cd93c-ad4e-4654-b5bc-330be7176105")
+			(uuid "2e0cd93c-ad4e-4654-b5bc-330be7176106")
 		)
 		(pin "8"
-			(uuid "7510fd4a-0611-45c3-9762-3a724cf0d22e")
+			(uuid "7510fd4a-0611-45c3-9762-3a724cf0d22f")
 		)
 		(pin "13"
-			(uuid "06f1810f-9b73-4401-9cb4-4bb3c0a5cf4b")
+			(uuid "06f1810f-9b73-4401-9cb4-4bb3c0a5cf4c")
 		)
 		(pin "10"
-			(uuid "93d9bf3a-86ae-46c4-be57-623a1fdee2a4")
+			(uuid "93d9bf3a-86ae-46c4-be57-623a1fdee2a5")
 		)
 		(pin "3"
-			(uuid "5b7263bf-17bb-4faf-bbeb-0510f41affcb")
+			(uuid "5b7263bf-17bb-4faf-bbeb-0510f41affcc")
 		)
 		(instances
 			(project "control_unit"

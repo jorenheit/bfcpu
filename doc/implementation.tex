@@ -1,5 +1,5 @@
 \section{Implementation} \label{sec:implementation}
-This section will discuss the implementation of each module and the way they integrate together to make the computer. Figure \ref{fig:prototypea} shows the computer as it was in February 2025. The overlays shown in Figure \ref{fig:prototypeb} show where each of the modules described in previous sections is located on the computer.
+This section will discuss the implementation of each module and the way they integrate together to make the computer. Figure \ref{fig:prototypea} shows the computer as it was in February 2025. The overlays shown in Figure \ref{fig:prototypeb} show where each of the modules described in previous sections is located on the computer. Schematics for each of the modules can be found in Appendix \ref{sec:appendix:schematics}.
 
 \begin{figure}[H]
   \centering
@@ -33,7 +33,7 @@ This section will discuss the implementation of each module and the way they int
 \subsubsection{Breadboards}
 The entire system was implemented on 830 hole breadboards. When the project started, relatively cheap breadboards were used, which had segmented power rails. These had to be bridged with jumper wires but these connections proved somewhat unreliable, introducing subtle points of failure. This is why in a later stage of the build we moved to more expensive but more reliable breadboards with continuous power rails.
 
-\subsubsection{Wires} Most of the longer wires were cut from spools of either 22AWG or 20AWG wire. While 22AWG proved reliable enough almost all the time, the thicker 20AWG had noticibly stronger connections to the breadboards and has been used mainly to make reliable power and ground connections. Thinner jumper wires have been used for short connections, e.g.~connections from IC's VCC and GND pins to the power rails. These are very convenient to use - cutting and stripping short wires is a tedious hob - but have sometimes been the source of hard-to-identify unstabilities that were eventually identified as bad connections to ground, caused by these jumper wires.
+\subsubsection{Wires} Most of the longer wires were cut from spools of either 22AWG or 20AWG wire. While 22AWG proved reliable enough almost all the time, the thicker 20AWG had noticeably stronger connections to the breadboards and has been used mainly to make reliable power and ground connections. Thinner jumper wires have been used for short connections, e.g.~connections from IC's VCC and GND pins to the power rails. These are very convenient to use - cutting and stripping short wires is a tedious job - but have sometimes been the source of hard-to-identify unstabilities that were eventually identified as bad connections to ground, caused by these jumper wires.
 
 \subsubsection{Busses}
 In Ben Eater's implementation of the 8-bit CPU, power rails cut loose from breadboards were used to build the central bus, which makes it easy for modules to connect to it. Because our system has two busses (8 and 16 bits wide), this would have been impractical to replicate.
@@ -98,7 +98,7 @@ The frequency of the astable 555 is halved by sending it through a JK flip-flop 
 \subsubsection{Reset/Resume} \label{sec:resetresume}
 \paragraph{Reset.} The Reset/Resume module is located directly underneath the clock and contains logic necessary to reset the computer (necessary after applying power) or resume the clock after it has been halted. The HLT signal coming from the decoder is latched into a register (74LS173) from which the corresponding output bit is connected to the HLT input of the clock module. When the system is reset (using the reset button) or when the resume button is pressed, the HLT bit is cleared and the clock output is enabled again. This allows for pausing and resuming the computer, effectively adding breakpoints to the code. The reset button itself is debounced in the same way as the manual clock button to ensure a stable transition with a debounce time of around 300ms.
 
-\paragraph{Resume.} The Resume button needs more sophisticated debounce circuitry due to the following scenario: when multiple HLT instructions are seperated by a relatively small amount of other instructions, a pulse in the order of milliseconds (like the reset and pulse debouncers) will be far too long at high clock frequencies. The resume-signal will still be high when a second (or third, fourth, ...) HLT instruction is encountered, causing control flow to simply skip over these instructions. To remedy this situation, a debouncing circuit is required that first produces a pulse of equal width of the clock pulses (Figure \ref{fig:clocktiming}), followed by a guaranteed period where the signal is low, even when the button bounces after the pulse. This is achieved by creating a feedback loop between the two monostable vibrators present on the 74LS123. The first one will produce a 200ns pulse on the rising edge of the button. This pulse is sent to the reset of the register that holds the HLT signal in order to clear it, but is also connected to the second monostable vibrator. When the initial (short) pulse goes low, the second vibrator generates a much longer pulse that is connected to the reset-input of the first one, making sure it cannot be re-activated for some time. By selecting a 680K resistor and a 4.7$\mu F$ capacitor, a cooldown period of around 1 second is achieved. Figure \ref{fig:resumedebounce} shows a timing diagram to illustrate this process in more detail. 
+\paragraph{Resume.} The Resume button needs more sophisticated debounce circuitry due to the following scenario: when multiple HLT instructions are seperated by a relatively small amount of other instructions, a pulse in the order of milliseconds (like the reset and pulse debouncers) will be far too long at high clock frequencies. The resume-signal will still be high when a second (or third, fourth, ...) HLT instruction is encountered, causing control flow to simply skip over these instructions. To remedy this situation, a debouncing circuit is required that first produces a pulse of equal width of the clock pulses (Figure \ref{fig:clocktiming}), followed by a guaranteed period where the signal is low, even when the button bounces after the pulse. This is achieved by creating a feedback loop between the two monostable vibrators present on the 74LS123. The first one will produce a 200ns pulse on the rising edge of the button. This pulse is sent to the reset of the register that holds the HLT signal in order to clear it, but is also connected to the second monostable vibrator. When the initial (short) pulse goes low, the second vibrator generates a much longer pulse that is connected to the reset-input of the first one, making sure it cannot be re-activated for some time. By selecting a 680K resistor and a 4.7$\mu F$ capacitor, a cool-down period of around 1 second is achieved. Figure \ref{fig:resumedebounce} shows a timing diagram to illustrate this process in more detail. 
 
 \begin{figure}[H]
   \centering
@@ -107,11 +107,6 @@ The frequency of the astable 555 is halved by sending it through a JK flip-flop 
   \label{fig:resumedebounce}
 \end{figure}
 
-
-\subsubsection{Schematic}
-Full schematics for the clock module, reset/resume circuitry and the frequency display section are provided on the next pages.
-\includepdf[landscape=true]{schematics/masterclock.pdf}
-\includepdf[landscape=true]{schematics/frequencydisplay.pdf}
 
 %%%%%%% REGISTER DRIVER
 
@@ -124,7 +119,7 @@ Full schematics for the clock module, reset/resume circuitry and the frequency d
 \end{figure}
 
 \subsubsection{Overview}
-The register driver is responsible for driving the U- and D-inputs of the 74LS193 counting registers that are used to implement the D, DP, SP, IP and LS register modules. To increment the '193, its D-input needs to be held high while providing a low pulse to the U-input. As explained in section \ref{sec:architecture:cu}, a centralized driver was used to limit the number of logic IC's necessary to drive the registers and the total number of control signals necessary.
+The register driver is responsible for driving the U- and D-inputs of the 74LS193 counting registers that are used to implement the D, DP, SP, IP and LS register modules. To increment the '193, its D-input needs to be held high while providing a low pulse to the U-input. As explained in Section \ref{sec:architecture:cu}, a centralized driver was used to limit the number of logic IC's necessary to drive the registers and the total number of control signals necessary.
 
 The driver module uses a pair of 74LS138 decoders: one to drive the U-inputs and the other to drive the D-inputs of the '193. The '138 takes 3 address bits (A, B, and C) to select one of 8 outputs (Y0-Y7), which will be pulled low when selected (all other outputs remain high). Two gate-inputs G1 (active high) G2 (active low) are used to enable the outputs of the chip; the selected output is activated (pulled low) only when both gates are active. This is very convenient given the fact that the 74LS193 needs a low pulse to increment or decrement its value:
 \begin{itemize}
@@ -132,10 +127,6 @@ The driver module uses a pair of 74LS138 decoders: one to drive the U-inputs and
 \item The INC and DEC signals are connected through inverters to the G2 gate.
 \item The module-clock signal is connected to G1: when pulsed, the selected output will produce a pulse that is effectively an inverted clock pulse (high-low-high) which is exactly what the '193 expects. 
 \end{itemize}
-
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/registerdriver.pdf}
 
 %%%%%%% DATA POINTER REGISTER
 
@@ -152,11 +143,7 @@ The DP Register Module is the module that is responsible for managing the data-p
 
 \paragraph{Reset Vector.} Since the data section in RAM starts at 0x0100 (0x0000 through 0x00ff are reserved for the stack), this is the value that the register should start at right after booting up the system (all other registers start out with an initial value of zero). To achieve this, the global reset line of the system is connected to the reset pin of the 193's corresponding to nibbles 0, 1 and 3, but to the load-pin of nibble 2, who's inputs have been hardcoded to 0b0001 (0x1). This register is also special in the sense that it is the only register that needs to reset at runtime (through the CLR\_DP signal), without resetting any of the other modules. After all, after initializing its memory to 0 by looping through (part of) its addressable space, the DP needs to be brought home to the start of the datasection before the main program starts (see also Sections \ref{sec:sequences:init} and \ref{sec:sequences:home}). The global RESET signal is therefor OR'd with the CLR\_DP signal before going to the reset (and load) pins of the IC's.
 
-\paragraph{Enabling Output.} Perhaps somewhat confusingly, the schematic (see below) shows that the SP\_EN signal is used to enable the buffers. Because the DP shares the address-bus with only the stack pointer (SP) -and their outputs should be mututally exclusive- the same signal can be used to enable and disable their respective buffers: when the stack pointer is enabled, the data pointer should be disabled and vice versa. Given that the output-enable-pin of the 74LS245 is active low, the SP\_EN signal can be fed directly into the enable-pin of the DP buffers. On the side of the SP, the same signal goes through an inverter before going into the enable-pin of its respective buffer. By default, when the SP is not enabled, the DP will provide its address to RAM. The address-bus will therefore never be left floating, which has the nice side-effect of always being able to visually see the current value in RAM by the LED's connected to its outputs. 
-
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/datapointerregister.pdf}
+\paragraph{Enabling Output.} Perhaps somewhat confusingly, the schematic (see below) shows that the SP\_EN signal is used to enable the buffers. Because the DP shares the address-bus with only the stack pointer (SP) -and their outputs should be mutually exclusive- the same signal can be used to enable and disable their respective buffers: when the stack pointer is enabled, the data pointer should be disabled and vice versa. Given that the output-enable-pin of the 74LS245 is active low, the SP\_EN signal can be fed directly into the enable-pin of the DP buffers. On the side of the SP, the same signal goes through an inverter before going into the enable-pin of its respective buffer. By default, when the SP is not enabled, the DP will provide its address to RAM. The address-bus will therefore never be left floating, which has the nice side-effect of always being able to visually see the current value in RAM by the LED's connected to its outputs. 
 
 %%%%%%% DATA REGISTER
 
@@ -179,10 +166,6 @@ The data register (D) holds (a copy of) the value in memory currently pointed to
 \paragraph{Loading Data.} Because the '193 loads asynchronously, the clock has to be gated with the LD\_D signal through a NAND gate in order to load synchronously with the clock when the LD\_D signal is high (the load-pin on the '193 is active low). The necessity of a NAND gate meant it was easier to also implement any inverters needed in the circuit in terms of NAND gates.
 
 
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/dataregister.pdf}
-
 %%%%%%% INSTRUCTION POINTER REGISTER
 
 \newpage\subsection{IP Register}
@@ -200,10 +183,6 @@ The instruction pointer register holds a 16-bit value representing the address o
 
 \paragraph{Reading and Writing Data.} The IP is connected to the databus through two tristate buffers (74LS245) to avoid bus contention with the DP and IO-module. It is connected to this bus in order to write its value to the stack when a loop is entered. When exiting from a loop, a value is read back into the register through a direct connection to this bus (without going through a buffer). Because loading is done asynchronously on the '193, the load signal is NAND'ed with the clock to make loading synchronous again.
 
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/instructionpointerregister.pdf}
-
 %%%%%%% STACK POINTER REGISTER
 
 \newpage\subsection{SP Register}
@@ -216,11 +195,6 @@ A full schematic is provided on the next page.
 
 \subsubsection{Overview}
 The stack pointer (SP) holds an 8-bit value in the range 0x00 - 0xff, which corresponds to addresses within the stack-space of RAM, where IP values can be stored and loaded from when the system sees the \texttt{[} and \texttt{]} loop-instructions. When a loop is entered, the IP register stores its value on the stack at the address pointed to by the SP. The SP then increments its value, ready for the next value to be stored on the stack when a nested loop is encountered. It is therefore implemented using the 74LS193 binary counter and connected to the register driver at address 3 (0b011). The SP module is connected to the same RAM address bus as the DP, which means it should go through a tristate buffer to avoid bus contention. As mentioned before (\ref{sec:implementation:dp}), the SP buffer shares its enable-line (though inverted) with the DP. A second buffer that, when enabled, only outputs zero's on the address-bus is used to make sure that only the stack is addressed by the SP and no accidental reads or write happen in the datasection. 
-
-
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/stackpointerregister.pdf}
 
 
 %%%%%%% LS Register
@@ -237,11 +211,6 @@ A full schematic is provided on the next page.
 The Loop Skip Register (LS) is used to produce the loop-skip-flag (S, see \ref{sec:architecture:ls}). It is implemented using two 74LS193 binary counters and is connected to register driver at address 5 (0b101). Like the Z-flag, the S-flag is produced by sending the outputs of the binary counters through an 8-input NOR-gate, the output of which is then inverted and connected to the FB flag-register. When any of these bits are high, the S-flag will be raised, indicating that the computer is in the process of skipping the current loop.
 
 
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/loopskipregister.pdf}
-
-
 %%%%%%%%%%% FA/FB
 
 \newpage\subsection{Flag Registers}
@@ -254,10 +223,6 @@ A full schematic is provided on the next page.
 
 \subsubsection{Overview}
 There are two stages of flag-buffering; the first stage is the FA register (in which the A and V-flags are stored) and the second the FB register (in which all flags except K are latched when the instruction is loaded). Both of these registers have been implemented using a 74LS173 4-bit register. The A and V-flag are stored in FA by the CU whenever the value in D is changed (V) or whenever the pointer is changing its position (A). This can happen mid-instruction without changing the address on the microcode EEPROMs because the flag lines leading into those come from the FB register. At each cycle 0, the buffered A and V-flags are loaded into FB, together with S and Z coming from the LS and D registers respectively. Since this always happens in conjunction with loading the instruction from program ROM into the instruction register (see \ref{sec:implementation:cu}), the control signal has been named LD\_FBI. The flags in the FB register will (mostly) remain constant during the execution of an opcode.
-
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/loopskipregister.pdf}
 
 
 %%%%%%% RAM Module
@@ -272,12 +237,26 @@ A full schematic is provided on the next page.
 
 \paragraph{Capacity} The RAM module is mainly used to store the 8-bit data of the BF memory-tape. However its secondary purpose is to also store the instruction-pointer values when loops are handled, which are 16-bit in size. Therefore the RAM module contains two 512K x 8-bit SRAM chips (AS6C4008) for a total of 512K 16-bit memory-cells. The second chip is therefor only used to store the high-byte of the IP's stored on the stack (at most 256 values). The remainder of the capacity of this chip is not used at all, since the datavalues are only 8 bits in size.
 
-\paragraph{Buffering} The AS6C4008 already provides a Chip Enable input which is supposed to be used when the data is connected to a databus. When this input is inactive, its outputs are in a high impedance state to avoid bus contention with other devices. However, in this project we need the data currently pointed to to be visible on an array of LED's, which means that the chip should be enabled basically at all times (except when writing to it). Additional logic is used in conjunction with a pair of 74LS245 tristate buffers to intercept the outputs before making them available on the bus through the buffers. The truthtable for this logic is incorporated in the schematics below. The LED's are not shown in the schematic, but can be connected directly to the datalines of the RAM in this configuration. 
+\paragraph{Buffering} The AS6C4008 already provides a Chip Enable input which is supposed to be used when the data is connected to a databus. When this input is inactive, its outputs are in a high impedance state to avoid bus contention with other devices. However, in this project we need the data currently pointed to to be visible on an array of LED's, which means that the chip should be enabled basically at all times (except when writing to it). Additional logic is used in conjunction with a pair of 74LS245 tristate buffers to intercept the outputs before making them available on the bus through the buffers. The truthtable for this logic is shown in Table \ref{tab:ramlogic}. The LED's are not shown in the schematic, but have been connected directly to the datalines of the RAM in this configuration. 
 
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/rammodule.pdf}
-
+\begin{table}[H]
+  \centering
+  \begin{tabular}{ccc|ccc|cc|l}
+    \multicolumn{3}{c}{Module} & \multicolumn{3}{c}{RAM} & \multicolumn{2}{c}{Buffers} & \\ 
+    OE & WE & CLK & CE\# & OE\# & WE\# & A$\rightarrow$B & EN &  \\ \hline
+    0 & 0 & 0    & 0 & 0 & 1 & 1 & 0   & Show data, but do not send to the bus. \\
+    0 & 0 & 1    & 0 & 0 & 1 & 1 & 0   & Show data, but do not send to the bus. \\
+    0 & 1 & 0    & 1 & 1 & 0 & 0 & 1   & Prepare to load value from the bus. \\
+    0 & 1 & 1    & 0 & 1 & 0 & 0 & 1   & Load value from the bus. \\
+    1 & 0 & 0    & 0 & 0 & 1 & 1 & 1   & Send value to the bus. \\
+    1 & 0 & 1    & 0 & 0 & 1 & 1 & 1   & Send value to the bus. \\
+    1 & 1 & 0    & 1 & 1 & 0 & 0 & 0   & Should not happen (chip disabled). \\
+    1 & 1 & 1    & 1 & 1 & 0 & 0 & 0   & Should not happen (chip disabled). \\
+  \end{tabular}
+  
+  \caption{Truth table for the logic that drives the RAM in such a way that its output is always enabled, in order for the data to be visualized on LED's without enabling it to the data bus.}
+  \label{tab:ramlogic}
+\end{table}
 
 %%%%%%% CONTROL UNIT
 
@@ -305,10 +284,8 @@ The control unit is responsible for sending the appropriate control-signals to e
 \end{center}
 
 
-\paragraph{Generating and Programming Microcode.} The three EEPROM's have been programmed using a custom built EEPROM programmer based around an Arduino Nano, combined with a python script (\texttt{bflash.py}) that is able to send a binary image to the Nano over a serial connection. The images that store the microcode tables have been generated by Mugen (see \ref{sec:utilities:mugen}), a utility developed to make the microcode programming more maintainable. Mugen generates the images from a specification file. The relevant part of the specification for the Synapse-191 is shown in the listing below and is a direct representation of the microcode shown in Table \ref{tab:microcode}.
+\paragraph{Generating and Programming Microcode.} The three EEPROM's have been programmed using a custom built EEPROM programmer based around an Arduino Nano, combined with a python script (\texttt{bflash.py}) that is able to send a binary image to the Nano over a serial connection. The images that store the microcode tables have been generated by Mugen (see \ref{sec:utilities:mugen}), a utility developed to make the microcode programming more maintainable. Mugen generates the images from a specification file. The full Mugen specification listing the Synapse-191 is shown in Appendix \ref{sec:appendix:mugen}. This is a direct representation of the microcode shown in Table \ref{tab:microcode} (Appendix \ref{sec:appendix:microcode}).
 
-\newpage
-\lstinputlisting[style=MugenStyle, firstline=58, firstnumber=1]{../src/microcode/bfcpu.mu}
 
 
 \paragraph{Instruction Nibbles.} The actual BF program is stored in another 8K EEPROM chip (AT28C64) and is addressed by the instruction pointer as mentioned before. Since each BF instruction only needs 4 bits to be encoded (there are less than 16 different opcodes), we can store up to 16K instruction in the chip by packing 2 consecutive instructions together in a single byte (handled by the assembler, \texttt{bfasm}). Rather than using bit 0 from the IP directly as address bit 0 on the EEPROM, it is used as the data-select signal to a 74LS157 multiplexer. This multiplexer takes 1 select-bit and two sets of 4 databits. Depending on the value of the select-bit, one of the sets of 4-bit data is sent to its outputs. This allows us to select either the low or high nibble of the data in the EEPROM, effectively doubling the amount of instructions that can be stored and retrieved.
@@ -318,9 +295,6 @@ The control unit is responsible for sending the appropriate control-signals to e
 \paragraph{Cycle Counter.} The cycle counter is implemented by a 74LS161 binary counter that simply increments on every M\_CLK signal up and sends its outputs (bits 0-2) to address lines 0-2 of the microcode EEPROM chips. It is reset when it receives the CR signal (which becomes active when after an instruction has completed).
 
 
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/controlunit.pdf}
 
 %%%%%%% IO Module
 \newpage\subsection{IO Module} \label{sec:implementation:io}
@@ -360,6 +334,8 @@ The IO system is handled by an ATMEGA328P microprocessor, commonly found in the 
 
 
 \subsubsection{Handshake Protocol}
+\paragraph{K-Flag} The K-flag acts as an asynchronous barrier between the IO module and the rest of the system. It is implemented as a dual D-Flip-Flop (74LS74) of which the first flip-flop is set asynchronously by the IO module. The output of this flip-flop is then latched synchronously into the second flip-flop on every system clock edge (M\_CLK), the output of which it is fed into the CU together with the other flags. This same output is also fed back into the IO module so it can be monitored: the handshake procedure is completed as soon as it goes low again (done by the CU). 
+
 \paragraph{Output} The \texttt{M\_CLK} signal is connected to an interrupt pin of the MCU. On every interrupt triggered by the clock, when the system is in its IDLE state, it will check the EN\_IN and EN\_OUT lines to determine if it should initiate a read or write sequence to the databus. When EN\_OUT is found to be high, it will copy the byte currently present on the bus into its screen-buffer, set the K-flag and change its state to WAIT\_SYS. On every subsequent clock pulse, while in the WAIT\_SYS state, it will check if the K-flag has been reset by the control unit. If so, the handshake has been completed and the module returns to its IDLE state (see Figure \ref{fig:isrflow}).
 
 \paragraph{Input} If the EN\_IN signal is found to be asserted, the system has two possible courses of action, depending on the input-mode currently set by the user (through the on-screen settings menu). In (the default) buffered mode, the system will change its state to WAIT\_KB and wait for a byte to become available in the keyboard-buffer. As soon as it does, it will provide this value onto the bus and notify the CU by setting the K-flag. It then moves into the WAIT\_SYS state to await confirmation by the CU (which in turn resets the K-flag). In immediate mode, all zeros will be written to the bus and the K-flag is set immediately even when the keyboard-buffer is still empty. If, in addition to EN\_IN, EN\_OUT is asserted as well, a random byte is put onto the bus (see Figure \ref{fig:isrflow}).
@@ -381,9 +357,6 @@ The software was written in such a way that most common LCD character screens (c
 The IO module can only handle input from PS/2 compatible keyboards. A modified version of the \texttt{PS2Keyboard} library was used to implement the keyboard driver.
 
 
-\subsubsection{Schematic}
-A full schematic is provided on the next page.
-\includepdf[landscape=true]{schematics/iomodule.pdf}
 
 
 \newpage\subsection{IO Module Firmware}
@@ -400,7 +373,7 @@ To ensure minimal latency and efficient CPU--peripheral communication, several l
 \end{figure}
 
 
-In the Synapse-191 I/O module, one ring buffer is dedicated to temporaroly storing incoming data (bytes coming from the CPU that need to be written to the LCD screen), the screen-buffer, and another is used for outgoing data (keyboard input that needs to be put on the data bus), the keyboard-buffer. The main loop periodically flushes the screen-buffer to the display and refills the keyboard-buffer with new data when it arrives. Meanwhile, the interrupt service routine (ISR) accesses these buffers asynchronously to satisfy CPU read and write requests. Since all the heavy lifting (interpreting incoming data, managing the LCD screen, decoding keyboard scan-codes) is done in the main-loop, the ISR is kept very compact.
+In the Synapse-191 I/O module, one ring buffer is dedicated to temporarily storing incoming data (bytes coming from the CPU that need to be written to the LCD screen), the screen-buffer, and another is used for outgoing data (keyboard input that needs to be put on the data bus), the keyboard-buffer. The main loop periodically flushes the screen-buffer to the display and refills the keyboard-buffer with new data when it arrives. Meanwhile, the interrupt service routine (ISR) accesses these buffers asynchronously to satisfy CPU read and write requests. Since all the heavy lifting (interpreting incoming data, managing the LCD screen, decoding keyboard scan-codes) is done in the main-loop, the ISR is kept very compact.
 
 \paragraph{Optimizations} The ring buffer is implemented as a templated C++ class, parameterized by buffer size and value type. Several compile-time and runtime techniques were employed to maximize performance and memory efficiency. A combination of compile-time specialization and minimal arithmetic overhead allows the ring buffers to perform low-overhead enqueue and dequeue operations, which is essential for keeping up with the `high' frequency external system clock of the Synapse-191 CPU.
 
