@@ -21,6 +21,8 @@ But even as it stands, the BFCPU has been a fantastic experiment—one that turn
 
 \paragraph{Using AI} LLM's like ChatGPT have proven a valuable tool while designing and debugging the system. Let's be clear: no LLM's have been used to generate the text of this document or even write a single line of supporting code in the toolchain. It was however a valuable brainstorming partner when trying to find subtle logic bugs in both software and hardware. It almost never got it right completely on the first try, but it almost always inspired new avenues to explore. This more then often led to us identifying the problem eventually. Thinking out loud together with a partner will often lead to new insights and believe it or not; it is hard to find (human) sparring partners on a specialized project like this one.
 
+\paragraph{IO Module: Cheating?} Should using an MCU in the implementation of the IO module be considered cheating? We set out to implement a BF computer without using any programmable chips, so clearly we broke our own rule, right? No. The entire BF core was implemented true to our mission goals: all BF commands are handled by TTL, RAM and ROM chips. The IO Module should be considered an abstract external device; its inner workings are irrelevant to the BF core logic in the same way that the BF language does not specify how user input is aquired or how data is displayed when issuing the \texttt{,} and \texttt{.} commands. Modern monitors and other peripherals often contain embedded driver chips that handle communication protocols or, in the case of monitors, display settings; this is no different.
+
 \newpage
 \mbox{}
 \vfill
