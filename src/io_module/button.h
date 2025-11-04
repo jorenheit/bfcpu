@@ -130,24 +130,27 @@ namespace ButtonPair {
   class ButtonPair_;
 
   template <typename Button1, typename Button2>
-  inline ButtonPair_<Button1, Button2> create(Button1 const &b1, Button2 const &b2) {
+  inline ButtonPair_<Button1, Button2> create(Button1 &b1, Button2 &b2) {
     return ButtonPair_<Button1, Button2>{b1, b2};
   }
 
   template <typename Button1, typename Button2>
   class ButtonPair_: public ButtonBase_<ButtonPair_<Button1, Button2>> {
     friend class ButtonBase_<ButtonPair_<Button1, Button2>>;
-    friend ButtonPair_ create<Button1, Button2>(Button1 const &, Button2 const &);
+    friend ButtonPair_ create<Button1, Button2>(Button1 &, Button2 &);
 
-    Button1 const &button1;
-    Button2 const &button2;
+    Button1 &button1;
+    Button2 &button2;
 
-    ButtonPair_(Button1 const &b1, Button2 const &b2):
+    ButtonPair_(Button1 &b1, Button2 &b2):
       button1(b1),
       button2(b2)
     {}
 
-    inline void begin_() {}
+    inline void begin_() {
+      button1.begin();
+      button2.begin();
+    }
 
     inline bool active() const {
       return button1.isDown() && button2.isDown();

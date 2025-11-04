@@ -31,7 +31,6 @@ void setup() {
   pinMode(K_OUT_PIN, OUTPUT);
   pinMode(K_IN_PIN, INPUT);
   digitalWrite<K_OUT_PIN, LOW>();
-  //attachPCINT(digitalPinToPCINT(K_IN_PIN), setKReceivedFlag, FALLING);
   setIOPinsToInput();
 
   // Initialize buttons
@@ -148,17 +147,21 @@ void onSystemClock() {
     state = WAIT_SYS;
   };
 
-  if (state == WAIT_SYS) {
-    if (!digitalRead<K_IN_PIN>()) {
-      setIOPinsToInput();
-      state = IDLE;
+  switch (state) {
+    case IDLE: break;
+    case WAIT_SYS: {
+      if (!digitalRead<K_IN_PIN>()) {
+        setIOPinsToInput();
+        state = IDLE;
+      }
+      return;      
     }
-    return;
-  } else if (state == WAIT_KB) {
-    if (kbBuffer.available()) {
-      writeByteToBusAndWait(kbBuffer.get());
+    case WAIT_KB: {
+      if (kbBuffer.available()) {
+        writeByteToBusAndWait(kbBuffer.get());
+      }
+      return;     
     }
-    return;
   }
 
   bool const EN_OUT = digitalRead<DISPLAY_ENABLE_PIN>();
@@ -170,11 +173,11 @@ void onSystemClock() {
     }
     case 0b10: {
       if (settings.inputMode == IMMEDIATE || kbBuffer.available()) {
-        writeByteToBusAndWait(kbBuffer.get());  
+        return writeByteToBusAndWait(kbBuffer.get());  
       } else {
         state = WAIT_KB;
+        return;
       }
-      return;
     }
     case 0b11: {
       return writeByteToBusAndWait(rng.get());
