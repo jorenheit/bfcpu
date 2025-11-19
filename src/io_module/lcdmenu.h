@@ -41,6 +41,7 @@ class LCDMenu {
   SubMenu(HexMode,     "Hexadecimal",   { actions.setDisplayMode(HEXADECIMAL); });
   SubMenu(SetRNGSeed,  "Set RNG Seed",  { /* No action on select */            });
   SubMenu(InputMode,   "Input Mode",    { /* No action on select */            });
+  SubMenu(SelectSlot,  "Select Slot",   { /* No action on select */            });
 
   // Define leaf nodes
   MenuLeaf(Clear,          "Clear Buffers", item.exit(),   { actions.clear();                     });
@@ -59,10 +60,16 @@ class LCDMenu {
   MenuLeaf(Exit,           "Exit",          item.exit(),   { /* No action on select */            });
   
   // Value-select menu for the RNG seed
-  ValueSelect(SeedSelecter, rngSeedPtr, 1, 100);  
+  ValueSelect(SeedSelecter, rngSeedPtr, RNG_MIN_SEED, RNG_MAX_SEED);  
+
+  // Value-select menu for the Slot selection
+  ValueSelect(SlotSelecter, slotPtr, 0, N_SLOTS - 1);
 
   // Build the final menu-type:
   using Menu = MainMenu <
+    SelectSlot<
+      SlotSelecter
+    >,
     Clear,
     Echo<
       EchoOn,

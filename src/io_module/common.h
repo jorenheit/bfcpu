@@ -2,6 +2,7 @@
 
 extern volatile size_t tickCount;
 extern int *rngSeedPtr;
+extern int *slotPtr;
 
 inline void tic() {
   tickCount = 0;

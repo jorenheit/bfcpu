@@ -6,10 +6,11 @@ The Brainf*ck\footnote{The asterisk was inserted by the authors and is not part 
 Our goal was to build this BF-CPU without making use of any programmable chips; only use Transistor-Transistor-Logic (TTL) chips such as registers, buffers and (de)multiplexers in addition to the necessary RAM and ROM. The computer was to be implemented entirely on breadboards, as it was inspired by Ben Eater's 8-bit breadboard computer \cite{beneater}. It should be able to run any compliant BF program directly, as long as it fits in the program ROM and does not exhaust the available amount of memory or stack-space. In other words: the computer should be capable of running canonical BF without doing any preprocessing steps like pre-calculating jump-addresses.
 
 \paragraph{Outcome}
-Over roughly 2.5 years (intermittently), the design evolved into a stable microcoded CPU with a Harvard-like memory map, a two-phase clock that can drive the system at over 200kHz, and a supporting software toolchain (assembler, EEPROM programmer, microcode compiler and emulation library) that makes prototyping, editing, assembling, and flashing programs and microcode practical. It has a sophisticated IO module that handles both input (both random numbers and keyboard input) and output (to a 4x20 character LCD display). This IO module is driven by an Atmega328P to be able to manage IO buffers, implement the PS2 protocol and drive the screen, in addition to managing all the IO settings (echo, autoscroll, output-modes, etc). A deliberate choice was made to use a programmable chip in this case, since it is not really part of the CPU itself and makes the IO capabilities a lot more advanced and convenient. To the CPU core, the outside world is a black box that accepts certain control signals and acts accordingly; similar to the fact that the BF input and output commands (\texttt{.} and \texttt{,}) are interacting with an abstract external world.
+Over roughly 2.5 years (intermittently), the design evolved into a stable microcoded CPU with a Harvard-like memory map, a two-phase clock that can drive the system at over 200kHz, and a supporting software toolchain (assembler, EEPROM programmer, microcode compiler and emulation library) that makes prototyping, editing, assembling, and flashing programs and microcode practical. It has a sophisticated IO module that handles both input (both random numbers and keyboard input) and output (to a 4x20 character LCD display). This IO module is driven by an Atmega328P to be able to manage IO buffers, implement the PS2 protocol and drive the screen, in addition to managing all the IO settings (echo, autoscroll, output-modes, etc) and to provide a user interface to select the active program at runtime. A deliberate choice was made to use a programmable chip in this case, since it is not really part of the CPU itself and makes the IO capabilities a lot more advanced and convenient. To the CPU core, the outside world is a black box that accepts certain control signals and acts accordingly; similar to the fact that the BF input and output commands (\texttt{.} and \texttt{,}) are interacting with an abstract external world.
 
 The machine has been tested by running many different BF programs on it that can be found online, validating its stability and BF-standard conformity (if such a thing even exists). The source code for all supporting software is available on Github at \url{https://github.com/jorenheit/bfcpu}.
 
+\newpage
 \paragraph{Document structure}
 \begin{itemize} \setlength\itemsep{0em}
   \item Section~\ref{sec:brainfck} recaps the BF programming language: how does this language work, what does a simple interpreter look like and how does it relate to the architecture of Synapse-191?
@@ -19,3 +20,9 @@ The machine has been tested by running many different BF programs on it that can
   \item Section~\ref{sec:utilities} covers supporting utilities, like the assembler, microcode compiler, EEPROM programming utilities, etc. 
   \item We conclude in Section~\ref{sec:conclusion} with a brief recap and results.
 \end{itemize}
+
+\vfill
+\begin{center}
+  \includegraphics[width=.9\textwidth]{img/pics/1000041100}
+\end{center}
+

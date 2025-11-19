@@ -1,5 +1,5 @@
 \section{Architecture} \label{sec:architecture}
-\subsection{Overview} \label{sec:architecture:overview}
+\subsection{Hardware Overview} \label{sec:architecture:overview}
 In simple terms, a BF machine consists of an array of memory-cells and a pointer pointing to one of these cells. The pointer can move along the array while modifying its contents one step at a time. Figure \ref{fig:simplerepresentation} illustrates an example intermediate state of such a system. Consider the BF program ``\texttt{>>>>>+.}'', applied to the initial conditions shown in the example. The pointer would take 5 steps to the right, landing on cell 9 which contains the number 41. It will then increment and output this value, displaying 42 on the screen (assuming a screen of some sort is used as the output device and it is displaying numbers directly rather than interpreting them as ASCII).
 
 \begin{figure}[H]
@@ -19,12 +19,24 @@ The physical BF core needs three basic building blocks to implement the machiner
   \label{fig:architecture}
 \end{figure}
 
+\subsection{Flags}
+The state of the system is encoded using five flags: K, V, A, S, and Z. These flags were introduced to simplify control logic and enable performance optimizations during execution. Each flag serves a specific purpose, as explained below:
+
+\paragraph{K-Flag} The K-flag is used for communication between the system and the IO Module, which run asynchronously. The flag is set by the IO Module and reset by the system to let each other know when certain data transactions have been completed.
+
+\paragraph{A-Flag} The A-flag is set when the value in the DP register was modified, i.e.~when the data pointer has been shifted to a new cell. This is an architectural optimization to minimize the number of reads from and writes to RAM. Consider a long sequence of \texttt{+} or \texttt{-} instructions, which are very common in BF programs. A naive implementation of, for example, the \texttt{+} instruction, would consist of 3 steps: read the current value from RAM into D, increment the value in D, write the result back to RAM. However, when it is known that the data pointer has not been changed, we can keep operating on the copy in D. Only when the address has been changed (A was set), should we load the new value into D before modifying it.
+
+\paragraph{V-Flag} The V-flag allows for another optimization, similar to that of the A-flag. Whenever the value in the D register has been modified, the V-flag is set. When the DP is about to change its value, through the \texttt{<} and \texttt{>} commands, the V-flag is checked. If set, we store the modified value back into RAM before moving the pointer. If not, the value hasn't changed and does not need to be synchronized into RAM. The number of cycles to complete long sequences of pointer move-commands is decreased substantially using this approach.
+
+\paragraph{S-Flag} The S-flag is used to skip over blocks of code, primarily when skipping over loop-blocks. It is set when a loop should not be entered, causing all following commands to be ignored until the matching closing bracket is reached. Similarly, it is used at boot to skip over entire programs until the selected program is reached (when multiple BF programs have been written to the same program ROM).
+
+\paragraph{Z-Flag} The Z-flag is set by the D register whenever it contains the value zero. This allows control-flow to branch on the value of the current cell, allowing for the implementation of loops.
 
 \subsection{Data Pointer Register (DP)} \label{sec:architecture:dp}
 The data-pointer corresponds to the pointer as specified in the BF-language. It points to some value in memory beyond the stack ($\ge$ 0x0100, see \ref{sec:architecture:sp}) and can be either incremented (moved right) or decremented (moved left) using the \texttt{>} and \texttt{<} instructions. Whenever the value pointed to by DP is modified by \texttt{+} or \texttt{-}, it is loaded into the D-register (see \ref{sec:architecture:d}), where it can be modified before being stored back into RAM.
 
 \subsubsection*{Inputs}
-The DP should be able to increment and decrement (corresponding to the \texttt{<} and \texttt{>} commands), and should be able to be enabled/disabled because of its connection to the address bus of the RAM (the Stack Pointer (SP, see \ref{sec:architecture:sp}, is also connected to this bus). While all other modules have the ability to be reset, the DP is the only register that can be reset (to 0x0100) at runtime. This is necessary during boot, when all the datacells need to be initialized to 0 (see \ref{seq:sequences:nonbf}).
+The DP should be able to increment and decrement (corresponding to the \texttt{<} and \texttt{>} commands), and should be able to be enabled/disabled because of its connection to the address bus of the RAM (the Stack Pointer (SP, see \ref{sec:architecture:sp}, is also connected to this bus). While all other modules have the ability to be reset, the DP is the only register that can be reset (to 0x0100) at runtime. This is necessary during boot, when all the datacells need to be initialized to 0 (see \ref{sec:sequences:bootloading}).
 
 \begin{enumerate}
 \itemsep0em 
@@ -198,12 +210,12 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
 
 
 \subsection{Cycle Counter (CC)} \label{sec:architecture:cc}
-Almost every BF instruction requires multiple cycles to complete. Therefore, in addition to the instruction and state, a cycle counter is used to determine the control signals that should be sent out at each step of the instruction. This cycle counter is implemented as a 3-bit counting register (allowing for at most 8 cycles per instruction) that increments on every clock cycle and sends its output to the control unit. Its only control signal is the Cycle Reset (CR) signal which resets the count to 0, in order to fetch the next instruction.
+Almost every BF instruction requires multiple cycles to complete. Therefore, in addition to the instruction and state, a cycle counter is used to determine the control signals that should be sent out at each step of the instruction. This cycle counter is implemented as a 3-bit counting register (allowing for at most 8 cycles per instruction) that increments on every clock cycle and sends its output to the control unit. Its only control signal is the clear signal (CLR) which resets the count to 0, in order to fetch the next instruction.
 
 \subsubsection*{Inputs}
 \begin{enumerate}
 \itemsep0em
-\item CR - Cycle Reset - Reset the count to 0;
+\item CLR - Cycle Reset - Reset the count to 0;
 \end{enumerate}
 
 \subsubsection*{Outputs}
@@ -297,7 +309,7 @@ Each of the aforementioned components/modules has one or more control inputs tha
 \item RS2 - Register Select, bit 2
 \item INC - Increment selected register
 \item DEC - Decrement selected register
-\item CLR - Reset DP
+\item CLR\_DP - Reset DP
 \item EN\_SP- Enable SP to address bus \footnote{Note that there is no EN\_DP since this signal is mutually exclusive with EN\_SP; whenever one is set, the other is unset and vice versa.}
 \item OE\_RAM - Output Enable RAM
 \item WE\_RAM - Write Enable RAM
@@ -305,14 +317,15 @@ Each of the aforementioned components/modules has one or more control inputs tha
 \item EN\_OUT - Enable output device
 \item SET\_V - Set V-flag in FA
 \item SET\_A - Set A-flag in FA
-\item LD\_FB - Load FB
+\item LD\_FBI - Load FB and I
 \item LD\_FA - Load FA
 \item EN\_IP - Enable IP
 \item EN\_D - Enable D to databus
 \item LD\_D - Load D
 \item LD\_IP - Load IP
-\item CR - Cycle Reset
+\item CLR\_CC - Reset Cycle Counter
 \item CLR\_K - Clear the K-flag in the IO module
+\item END - Program End Signal
 \item ERR - Error Signal
 \end{enumerate}
 

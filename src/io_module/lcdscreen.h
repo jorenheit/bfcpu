@@ -4,14 +4,14 @@
 #include "settings.h"
 
 class LCDScreen {
-  Settings settings;
+  Settings const &settings;
   LiquidCrystal_74HC595 lcd;
   unsigned long tempTimeout = 0;
 
 public:
   LCDScreen(Settings const &s);
 
-  void begin(char const *msg = 0);
+  void begin();
   void display(LCDBuffer::View const &view, bool forced = false); 
   void displayTemp(char const *lines[], uint8_t const n, size_t const timeout);
   void displayFrequency();

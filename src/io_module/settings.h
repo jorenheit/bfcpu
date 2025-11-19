@@ -59,7 +59,13 @@ enum ButtonPrams: int {
 };
 
 enum RNGParams: int {
-  RNG_DEFAULT_SEED = 69
+  RNG_DEFAULT_SEED = 69,
+  RNG_MIN_SEED = 0,
+  RNG_MAX_SEED = 100
+};
+
+enum ProgramSlots: uint8_t {
+  N_SLOTS = 10
 };
 
 enum LCDParams: int {
@@ -121,6 +127,7 @@ struct Settings {
   bool echoEnabled = ECHO_DEFAULT_SETTING;
   char delimiter = DELIMITER_DEFAULT_SETTING;
   int rngSeed = RNG_DEFAULT_SEED;
+  int programSlot = 0; 
 
   bool operator==(Settings const &other) const {
     return (displayMode == other.displayMode) &&
@@ -128,7 +135,8 @@ struct Settings {
            (autoscrollEnabled == other.autoscrollEnabled) &&
            (echoEnabled == other.echoEnabled) &&
            (delimiter == other.delimiter) && 
-           (rngSeed == other.rngSeed);
+           (rngSeed == other.rngSeed) && 
+           (programSlot == other.programSlot);
   }
 
   bool operator!=(Settings const &other) const {

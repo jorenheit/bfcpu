@@ -33,7 +33,7 @@
   LD_D
   CR
   CLR_K
-  -
+  END  
   ERR  
 }
 
@@ -48,9 +48,11 @@
   LOOP_START    = 0x07
   LOOP_END      = 0x08
   RAND          = 0x09
-  WAIT_EXT      = 0x0c  
+  PROG_START    = 0x0a  
+  PROG_END      = 0x0b  
+  LOAD_SLOT     = 0x0c  
   INIT          = 0x0d
-  HOME          = 0x0e
+  INIT_FINISH   = 0x0e
   HALT          = 0x0f
 }
 
@@ -94,6 +96,8 @@
 }  
 
 [microcode] {
+
+  # Most opcodes do the same thing in cycle 0: load the new instruction into I and latch flags into FB  
   NOP:0:()                      -> LD_FBI
   PLUS:0:()                     -> LD_FBI
   MINUS:0:()                    -> LD_FBI
@@ -103,9 +107,11 @@
   LOOP_START:0:()               -> LD_FBI
   LOOP_END:0:()                 -> LD_FBI
   RAND:0:()                     -> LD_FBI
-  WAIT_EXT:0:()                 -> LD_FBI
   INIT:0:()                     -> LD_FBI
-  HOME:0:()                     -> LD_FBI
+  INIT_FINISH:0:()              -> LD_FBI
+  LOAD_SLOT:0:()                -> LD_FBI
+  PROG_START:0:()               -> LD_FBI
+  PROG_END:0:()                 -> LD_FBI
   HALT:0:()                     -> LD_FBI
 
   # When OUT is spinning, EN_D must be kept high in cycle 0
@@ -177,19 +183,31 @@
   RAND:1:(K=1,S=0)              -> LD_D, SET_V
   RAND:2:(K=1,S=0)              -> CLR_K, NEXT
 
-  WAIT_EXT:1:(K=0)              -> CR
-  WAIT_EXT:1:(K=1)              -> CLR_K, NEXT
 
-  INIT:1:(Z=1)                  -> STORE_D, INC_LS
-  INIT:2:(Z=1)                  -> LD_FBI, INC, R_DP
-  INIT:3:(Z=1,S=0)              -> NEXT
-  INIT:3:(Z=1,S=1)              -> CR
-  
+  # HOUSEKEEPING   
   NOP:1:()                      -> NEXT
-  HALT:1:()                     -> HLT
-  HALT:2:()                     -> NEXT
+  HALT:1:(S=0)                  -> HLT
+  HALT:2:(S=0)                  -> NEXT
+  HALT:1:(S=1)                  -> NEXT  
+  
+  INIT:1:(K=0)                  -> CR # Wait for IO module to set K (bus is safe to use)  
+  INIT:1:(K=1, Z=1)             -> STORE_D, INC, R_LS
+  INIT:2:(K=1, Z=1)             -> LD_FBI, INC, R_DP
+  INIT:3:(K=1, Z=1, S=1)        -> CR
+  INIT:3:(K=1, Z=1, S=0)        -> NEXT
 
-  HOME:1:()                     -> CLR_DP, NEXT
+  INIT_FINISH:1:(K=1)           -> CLR_DP, CLR_K, NEXT
+
+  LOAD_SLOT:1:(K=0)             -> CR
+  LOAD_SLOT:1:(K=1)             -> LD_D, INC, R_LS
+  LOAD_SLOT:2:(K=1)             -> CLR_K, NEXT  # write slot to D and go into skip mode
+
+  PROG_START:1:(Z=0, S=1)       -> DEC, R_D
+  PROG_START:1:(Z=1, S=1)       -> DEC, R_LS
+  PROG_START:2:(S=1)            -> NEXT
+
+  PROG_END:1:(S=0)              -> END, HLT
+  PROG_END:1:(S=1)              -> NEXT  
 
   catch                         -> ERR, HLT
 }

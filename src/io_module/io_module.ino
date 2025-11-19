@@ -17,6 +17,7 @@ Random rng;
 
 // Pointer to RNG seed value needed to update from menu
 int *rngSeedPtr = &settings.rngSeed;
+int *slotPtr = &settings.programSlot;
 
 // Buttons
 auto scrollUpButton = Button::create<SCROLL_UP_PIN>();
@@ -85,7 +86,7 @@ void handleButtons() {
                                                      menuButton.state());
 
   if (menuButton.isJustPressed()) return lcdMenu.enter();
-  if (menuButton.isHold()) return lcdScreen.displayFrequency();
+  if (menuButton.isHold())        return lcdScreen.displayFrequency();
 
   // No menu or frequency stuff going on -> buttons are used for scrolling the buffer
   scroll();
@@ -114,12 +115,24 @@ void setK() {
   digitalWrite<K_OUT_PIN, HIGH>();
   __asm__ __volatile__("nop\n\t");
   digitalWrite<K_OUT_PIN, LOW>();
+  while(!digitalRead<K_IN_PIN>()) {} // make sure the feedback pin is high before exit
 }
 
 void handshake() {
-  delay(HANDSHAKE_STARTUP_DELAY_MILLIS);
+  delay(HANDSHAKE_STARTUP_DELAY_MILLIS); // probably not necessary anymore
+
+  // Phase 1: wait for CPU to finish initialization (cannot claim the bus while it is still at INIT)
   setK();
-  while (digitalRead<K_IN_PIN>()) {}
+  while(digitalRead<K_IN_PIN>()) {}
+
+  // Phase 2: CPU has cleared K -> it is waiting for the program slot
+  setIOPinsToOutput();
+  writeByteToBus(settings.programSlot);
+  setK();
+  while(digitalRead<K_IN_PIN>()) {}
+
+  // Phase 3: CPU has cleared K again -> done
+  setIOPinsToInput();
 }
 
 volatile size_t tickCount = 0;

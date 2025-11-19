@@ -5,19 +5,12 @@ LCDScreen::LCDScreen(Settings const &s):
   lcd(LINE_SIZE, VISIBLE_LINES)
 {}
 
-void LCDScreen::begin(char const *msg) {
+void LCDScreen::begin() {
   lcd.begin();
-
-  char line[LINE_SIZE + 1];
-  uint8_t const msgLen = strlen(msg);
-  uint8_t const padLeft = (LINE_SIZE - msgLen) / 2;
-  uint8_t const padRight = LINE_SIZE - msgLen - padLeft;
-  for (uint8_t i = 0; i != padLeft;  ++i) line[i] = ' ';
-  for (uint8_t i = 0; i != msgLen;   ++i) line[padLeft + i] = msg[i];
-  for (uint8_t i = 0; i != padRight; ++i) line[padLeft + msgLen + i] = ' ';
-  line[LINE_SIZE] = 0;
-
-  if (msg) displayTemp(TEMP_MESSAGE_TIMEOUT, line);
+  static char line[LINE_SIZE + 1];
+  memset(line, 0, LINE_SIZE + 1);
+  sprintf(line, "Loading slot: %d", settings.programSlot);
+  displayTemp(TEMP_MESSAGE_TIMEOUT, line);
 }
 
 void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
