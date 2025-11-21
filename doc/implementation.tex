@@ -414,8 +414,8 @@ In the Synapse-191 I/O module, one ring buffer is dedicated to temporarily stori
 \subsubsection{Compile-time Menu Structure} Finally, the on-screen configuration interface uses a statically defined menu tree that is fully constructed at compile time using template metaprogramming techniques. This eliminates dynamic memory allocation and object initialization overhead during runtime, minimizing both execution latency and memory footprint. Together, these optimizations produce a maintainable, fast, and memory-efficient IO subsystem capable of operating reliably at high clock speeds of the CPU core.
 \vfill
 
-\begin{figure}[H]
+\begin{lstfloat}[H]
   \lstinputlisting[basicstyle=\ttfamily\footnotesize, language=c++,firstline=69,lastline=106,firstnumber=1]{../src/io\_module/lcdmenu.h}
   \caption{The IO system's menu tree is defined as a type and built at compile-time.}
   \label{lst:menu}
-\end{figure}
+\end{lstfloat}

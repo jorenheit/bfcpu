@@ -32,6 +32,16 @@ The state of the system is encoded using five flags: K, V, A, S, and Z. These fl
 
 \paragraph{Z-Flag} The Z-flag is set by the D register whenever it contains the value zero. This allows control-flow to branch on the value of the current cell, allowing for the implementation of loops.
 
+\paragraph{Performance Gains} The number of cycles saved from using the A and V flags depends on the program that is running; programs with long and frequent sequences of \texttt{+}, \texttt{-}, \texttt{<} or \texttt{>} commands will benefit more than ones with less or shorter sequences. To investigate the actual impact, a test suite of BF programs was put together and run in an emulator (a modified version of the C example shown in Listing \ref{lst:bfint}). The BF source for each of these programs is shown in Appendix \ref{sec:appendix:testsuite}. The modified interpreter contains a table of the number of cycles necessary to execute each instruction, depending on the aforementioned flags. This allows for a quantitative comparison between the naive implementation (load, modify, store) versus the cache-like approach using the A and V flags. The results are shown in Figure \ref{fig:avresults}; a 16 to 22\% decrease was observerd when using the A and V flags. 
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{img/avresults}
+  \caption{The number of cycles per BF instruction drops by around 20\% when using the A and V flags.}
+  \label{fig:avresults}
+\end{figure}
+
+
 \subsection{Data Pointer Register (DP)} \label{sec:architecture:dp}
 The data-pointer corresponds to the pointer as specified in the BF-language. It points to some value in memory beyond the stack ($\ge$ 0x0100, see \ref{sec:architecture:sp}) and can be either incremented (moved right) or decremented (moved left) using the \texttt{>} and \texttt{<} instructions. Whenever the value pointed to by DP is modified by \texttt{+} or \texttt{-}, it is loaded into the D-register (see \ref{sec:architecture:d}), where it can be modified before being stored back into RAM.
 
