@@ -3,6 +3,10 @@
 #include <fstream>
 #include <algorithm>
 #include <cassert>
+#include <sstream>
+
+std::string gen_bf(std::string const &str);
+
 
 enum Opcode {
   NOP	      = 0x00,
@@ -27,13 +31,13 @@ struct Options
 {
   bool halt;
   std::vector<std::string> inputFiles;
-  std::vector<std::istream*> inStreams;
   std::ostream *outStream;
   bool echo;
   bool debug;
   bool rand;
   int maxDepth;
   bool allowUnbalanced;
+  bool printFilename;
   int init;
 };
 
@@ -47,6 +51,7 @@ void printHelp(std::string const &progName)
 	    << "-g, --debug             Place a breakpoint (!) after each instruction.\n"
 	    << "-e, --echo              Follow each input command (,) up by an output command (.) to echo keyboard input.\n"
 	    << "-d, --max-depth         Maximum nesting depth of []-pairs.\n"
+	    << "-p, --print-filename    Add BF code to print the source filename before the program starts.\n"
 	    << "-z [N]                  Initialize N chunks of 256 bytes with zero\'s. Default: N = 1.\n"
 	    << "-u, --allow-unbalanced-loops\n"
 	    << "                        By default, the assembler will refuse to produce a program with unbalanced\n"
@@ -64,7 +69,6 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
 
   opt.halt = false;
   opt.init = 1;
-  opt.inStreams = {};
   opt.outStream = &std::cout;
   opt.inputFiles = {};
   opt.echo = false;
@@ -72,6 +76,7 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
   opt.maxDepth = 255;
   opt.allowUnbalanced = false;
   opt.rand = false;
+  opt.printFilename = false;
 
   size_t idx = 1;
   
@@ -104,6 +109,11 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     else if (args[idx] == "-u" || args[idx] == "--allow-unbalanced-loops")
     {
       opt.allowUnbalanced = true;
+      ++idx;
+    }
+    else if (args[idx] == "-p" || args[idx] == "--print-filename")
+    {
+      opt.printFilename = true;
       ++idx;
     }
     else if (args[idx] == "-d" || args[idx] == "--max-depth")
@@ -181,15 +191,6 @@ std::pair<Options, int> parseCmdLine(int argc, char **argv)
     return {opt, 1};
   }
 
-  for (std::string const &file: opt.inputFiles) {
-    auto *in = new std::ifstream(file, std::ios::binary);
-    if (!in->good()) {
-      std::cerr << "ERROR: could not open input-file " << file << ".\n";
-      return {opt, 1};
-    }
-    opt.inStreams.push_back(in);
-  }
-  
   if (!opt.outStream || !opt.outStream->good()) {
     std::cerr << "ERROR: Output file not set. Use -o to specifiy stdout or a file.\n";
     return {opt, 1};
@@ -204,70 +205,89 @@ void emit(Opcode opcode) {
   result.push_back(opcode);
 }
 
-int processFile(std::istream &in, Options const &opt) {
+int processFile(std::string const &filename, Options const &opt) {
 
-  // Program header
+  auto emit_opcodes = [&](std::istream &in) -> int {
+    int nestingDepth = 0;  
+    while (in) {
+      char c = in.get();
+      switch (c)
+      {
+      case '+': emit(PLUS);  break;
+      case '-': emit(MINUS); break; 
+      case '<': emit(LEFT);  break; 
+      case '>': emit(RIGHT); break; 
+      case '.': emit(OUT);   break;
+      case ',': {
+	emit(IN);
+	if (opt.echo) emit(OUT);
+	break;
+      }
+      case '[': {
+	emit(LOOP_START);
+	if (++nestingDepth > opt.maxDepth)
+	{
+	  std::cerr << "ERROR: Nesting depth exceeds maximum value (" << opt.maxDepth << ").\n"
+		    << "You can change the maximum depth using the -d option.\n";
+	  return 1;
+	}
+	break;
+      }
+      case ']': {
+	emit(LOOP_END);
+	--nestingDepth;
+	break;
+      }
+      case '!': {
+	if (opt.halt) emit(HLT);
+	break;
+      }
+      case '?': {
+	if (opt.rand) emit(RAND);
+	break;
+      }
+      default:
+	continue;
+      }
+	
+      if (opt.debug) {
+	emit(HLT);
+      }
+    }
+
+    if (not opt.allowUnbalanced && nestingDepth != 0) {
+      std::cerr << "ERROR: " << filename << " contains unbalanced loops. Use the -u option to ignore.\n";
+      return 1;
+    }
+    
+    return 0;
+  };
+
+  // Program Start
   emit(PROG_START);
+
+  // Print program name
+  if (opt.printFilename) {
+    std::string bf = gen_bf(filename) + ">++++++++++.>";
+    std::istringstream iss(bf);    
+    if (emit_opcodes(iss)) return 1;
+  }
+
+  // Reached program -> wait for user to start
   emit(HLT);
 
   // Program body
-  int nestingDepth = 0;  
-  while (in) {
-    char c = in.get();
-    switch (c)
-    {
-    case '+': emit(PLUS); break;
-    case '-': emit(MINUS); break; 
-    case '<': emit(LEFT); break; 
-    case '>': emit(RIGHT); break; 
-    case '.': {
-      emit(OUT);
-      break;
-    }
-    case ',': {
-      emit(IN);
-      if (opt.echo) emit(OUT);
-      break;
-    }
-    case '[': {
-      emit(LOOP_START);
-      if (++nestingDepth > opt.maxDepth)
-      {
-	std::cerr << "ERROR: Nesting depth exceeds maximum value (" << opt.maxDepth << ").\n"
-		  << "You can change the maximum depth using the -d option.\n";
-	return 1;
-      }
-      break;
-    }
-    case ']': {
-      emit(LOOP_END);
-      --nestingDepth;
-      break;
-    }
-    case '!': {
-      if (opt.halt) emit(HLT);
-      break;
-    }
-    case '?': {
-      if (opt.rand) emit(RAND);
-      break;
-    }
-    default:
-      continue;
-    }
-	
-    if (opt.debug) {
-      emit(HLT);
-    }
+  std::ifstream file(filename, std::ios::binary);
+  if (!file.good()) {
+    std::cerr << "ERROR: could not open input-file " << filename << ".\n";
+    return 1;
   }
-
+  
+  if (emit_opcodes(file)) return 1;
+  
   // Program tail
   emit(PROG_END);
 
-  if (not opt.allowUnbalanced && nestingDepth != 0) {
-    std::cerr << "ERROR: program contains unbalanced loops. Use the -u option to ignore.\n";
-    return 1;
-  }
 
   return 0;
 }
@@ -289,10 +309,10 @@ int assemble(Options const &opt)
 
   // Load program slot into memory
   emit(LOAD_SLOT);
-  
+
   // Compile program(s) and append to result
-  for (std::istream *in: opt.inStreams) {
-    int err = processFile(*in, opt);
+  for (std::string file: opt.inputFiles) {
+    int err = processFile(file, opt);
     if (err) return err;
   }
   
