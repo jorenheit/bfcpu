@@ -1,0 +1,117 @@
+\section{Runtime Results}
+In this section we show snapshots of the output during the execution of each of the BF programs listed in Appendix \ref{sec:appendix:testsuite}. Each of these programs is run multiple times at different clock speeds up to 250 kHz to investigate the stability of the system. All of the statistics have been collected in a modified version of the interpreter shown in Listing \ref{lst:bfint}:
+
+\begin{itemize}
+\item \emph{Program Size} - the number of BF commands in the program.
+\item \emph{Memory Cells Required} - the minimum number of memory cells required to execute the program. In our case, this corresponds to the minimal amount of cells to zero-initialize at startup.
+\item \emph{Runtime Instructions} - the number of BF instructions that are executed when the program is run. Due to the existence of loops, this number differs (for most programs) from the program size.
+\item \emph{Runtime Clock Cycles} - the number of clock cycles necessary to run the prgram.
+\item \emph{Cycles per Instruction} - the average number of clock cycles needed to execute a single BF instruction. This value changes from program to program and depends on the structure of the program, the number of skipped loops, commonality of command sequences that leverage the A and V flags, etc. These values have been measured in the interpreter but have been verified on the physical hardware.
+\end{itemize}
+
+
+\subsection{Hello World}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/helloclose.jpeg}
+  \caption{\emph{Hello World}}
+  \label{fig:hello}
+\end{figure}
+
+It should be obvious why \emph{Hello World} is the first program to test. The output is simply the string \emph{``Hello World!''} followed by a newline. This program performed as expected on any selected clock frequency within the supported range (and maybe even beyond).
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 112 \\
+    Memory Cells Required & 4 \\
+    Runtime Instructions & 390 \\
+    Runtime Clock Cycles & 1273 \\
+    Cycles per Instruction & 3.3 \\
+  \end{tabular}
+  \caption{Properties of \texttt{hello.bf}, see Appendix \ref{sec:appendix:testsuite:hello}}
+  \label{tab:hello}
+\end{table}
+
+
+\subsection{Calculating Euler's Number}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/eulerclose.jpeg}
+  \caption{\emph{Calculating Euler's Number}}
+  \label{fig:euler}
+\end{figure}
+
+The Euler number ($e$) is an irrational number, so calculating its digits is an infinite process; the \texttt{euler.bf} program never ends. Running this program for a long time exposes a weakness of the system; more often than not will the system get into some erroneous state and go haywire. It is still not fully understood what causes this to happen. Among the most probable causes are bad connections to ground. We observed that some connections to ground have a resistance in the order of 10's of Ohms, where a value close to 0 would be expected. At high frequencies, this might cause issues especially in longer running programs. However, this hypothesis was not thoroughly tested as it proved very difficult todiagnose or get rid of these problems altogether.
+
+Since this programs runs indefinitely, there was no bound to the number of runtime instructions. The number of memory cells required also keeps growing with time; it was found to grow proportional to the square root of the number of BF instructions that had been executed up to that point according to $M = 0.36\sqrt{N}$. A quick back-of-the-envelope calculation shows that for our case, with 64K ($2^{16}$ cells) of RAM available (the stack is negligible in comparison), we'd be able to execute $\left(\frac{2^{16}}{0.36}\right)^2 = 3.3\times10^{10}$ BF instructions, which would take $1.1\times 10^{11}$ cycles to complete (using the measured value of 3.4 cycles per instruction), or $4.5\times 10^5$ seconds at 250 kHz (over 124 hours). It's probably safe to assume that those limits won't be reached any time soon.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 1424 \\
+    Memory Required & $\sim\sqrt{N}$ \\
+    Runtime Instructions & $\infty$ \\
+    Runtime Clock Cycles & $\infty$ \\
+    Cycles per Instruction & 3.4 \\
+  \end{tabular}
+  \caption{Properties of \texttt{euler.bf}, see Appendix \ref{sec:appendix:testsuite:euler}}
+  \label{tab:euler}
+\end{table}
+
+
+\subsection{Calculating the Golden Ration ($\phi$)}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/phiclose.jpeg}
+  \caption{\emph{Calculating $\phi$}}
+  \label{fig:euler}
+\end{figure}
+
+Like $e$, the Golden Ration $\phi = \frac{1+\sqrt{5}}{2}$ is irrational and thus has infinitely many digits. The \texttt{phi.bf} program runs indefinitely and has growing memory demands when it runs for a longer amount of time. Again, the number of memory cells requires grows as the square root of the number of BF commands executed according to $M=71+0.033\sqrt{N}$. This number grows even slower than that required to calculate Euler's number, so there won't be any memory issues here neither.
+
+In practice, this was the most difficult program to execute due to stability issues. Sometimes it would run for a long time without any problems; other times it would start going all over the place after only a few digits.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 1950 \\
+    Memory Required & $\sim\sqrt{N}$ \\
+    Runtime Instructions & $\infty$ \\
+    Runtime Clock Cycles & $\infty$ \\
+    Cycles per Instruction & 3.6 \\
+  \end{tabular}
+  \caption{Properties of \texttt{phi.bf}, see Appendix \ref{sec:appendix:testsuite:phi}}
+  \label{tab:phi}
+\end{table}
+
+\subsection{Factorials}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/factorialclose.jpeg}
+  \caption{\emph{Calculating increasingly larger factorials}}
+  \label{fig:euler}
+\end{figure}
+
+Another program that runs indefinitely is \texttt{factorial.bf}; it calculates $n!$ for ever increasing $n$ ad infinitum. The program runs more stable than for example \texttt{phi.bf}, but ultimately suffers from the same problems that the other long runners do.
+
+The memory requirement grows according to a cube root, so this program can run for an even longer time compared to \texttt{phi.bf} and indeed \texttt{euler.bf} before memory runs out (provided it runs without issue): $M = 12.5 \sqrt[3]{N}$.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 964 \\
+    Memory Required & $\sim\sqrt[3]{N}$ \\
+    Runtime Instructions & $\infty$ \\
+    Runtime Clock Cycles & $\infty$ \\
+    Cycles per Instruction & 3.6 \\
+  \end{tabular}
+  \caption{Properties of \texttt{factorial.bf}, see Appendix \ref{sec:appendix:testsuite:factorial}}
+  \label{tab:factorial}
+\end{table}
+
+
