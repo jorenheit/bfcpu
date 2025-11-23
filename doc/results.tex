@@ -1,4 +1,4 @@
-\section{Runtime Results}
+\section{Runtime Results} \label{sec:results}
 In this section we show snapshots of the output during the execution of each of the BF programs listed in Appendix \ref{sec:appendix:testsuite}. Each of these programs is run multiple times at different clock speeds up to 250 kHz to investigate the stability of the system. All of the statistics have been collected in a modified version of the interpreter shown in Listing \ref{lst:bfint}:
 
 \begin{itemize}
@@ -10,7 +10,7 @@ In this section we show snapshots of the output during the execution of each of 
 \end{itemize}
 
 
-\subsection{Hello World}
+\subsection{\texttt{hello.bf}}
 
 \begin{figure}[H]
   \centering
@@ -35,7 +35,7 @@ It should be obvious why \emph{Hello World} is the first program to test. The ou
 \end{table}
 
 
-\subsection{Calculating Euler's Number}
+\subsection{\texttt{euler.bf}}
 
 \begin{figure}[H]
   \centering
@@ -62,7 +62,7 @@ Since this programs runs indefinitely, there was no bound to the number of runti
 \end{table}
 
 
-\subsection{Calculating the Golden Ration ($\phi$)}
+\subsection{\texttt{phi.bf}}
 
 \begin{figure}[H]
   \centering
@@ -88,7 +88,7 @@ In practice, this was the most difficult program to execute due to stability iss
   \label{tab:phi}
 \end{table}
 
-\subsection{Factorials}
+\subsection{\texttt{factorial.bf}}
 
 \begin{figure}[H]
   \centering
@@ -114,7 +114,7 @@ The memory requirement grows according to a cube root, so this program can run f
   \label{tab:factorial}
 \end{table}
 
-\subsection{Primes}
+\subsection{\texttt{primes.bf}}
 
 \begin{figure}[H]
   \centering
@@ -139,7 +139,7 @@ Found on Reddit by the user Troemax \cite{primes}, this program checks primality
 \end{table}
 
 
-\subsection{Primes 2}
+\subsection{\texttt{primes2.bf}}
 
 \begin{figure}[H]
   \centering
@@ -162,7 +162,7 @@ Like the former prime generating program, this program calculates all primes bel
   \caption{Properties of \texttt{primes.bf}, see Appendix \ref{sec:appendix:testsuite:primes2}}{tab:primes2}
 \end{table}
 
-\subsection{Tic Tac Toe}
+\subsection{\texttt{tictactoe.bf}}
 
 \begin{figure}[H]
   \centering

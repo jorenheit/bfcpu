@@ -50,19 +50,18 @@ void printHelp(std::string const &progName)
 	    << "-r, --rand-enable       Interpret '?' as RAND in the BF code\n"
 	    << "-g, --debug             Place a breakpoint (!) after each instruction.\n"
 	    << "-e, --echo              Follow each input command (,) up by an output command (.) to echo keyboard input.\n"
-	    << "-d, --max-depth         Maximum nesting depth of []-pairs.\n"
+	    << "-d, --max-depth [N]     Maximum nesting depth of []-pairs.\n"
 	    << "-p, --print-filename    Add BF code to print the source filename before the program starts.\n"
 	    << "-z [N]                  Initialize N chunks of 256 bytes with zero\'s. Default: N = 1.\n"
 	    << "-u, --allow-unbalanced-loops\n"
 	    << "                        By default, the assembler will refuse to produce a program with unbalanced\n"
 	    << "                        loops ([ and ] do not match). Using this option will allow for this to occur.\n"
 	    << "-o [file, stdout]       Specify the output stream/file (default stdout).\n\n"
-	    << "Example: " << progName << " -o program.bin program.bf\n";
+	    << "Example: " << progName << " -p -o image.bin program1.bf program2.bf\n";
 }
 
 
-std::pair<Options, int> parseCmdLine(int argc, char **argv)
-{
+std::pair<Options, int> parseCmdLine(int argc, char **argv) {
   std::vector<std::string> const args{argv, argv + argc};
   
   Options opt;

@@ -43,21 +43,22 @@ The \texttt{bfasm} utility provides the following features:
 
 \vspace{1cm}
 \begin{lstlisting}
-Usage: ./bfasm [options] <file1, file2, ...>
+Usage: ./src/bfasm/bfasm [options] <file1, file2, ...>
 Options:
 -h, --help              Display this text.
 -H, --halt-enable       Interpret '!' as HLT in the BF code
 -r, --rand-enable       Interpret '?' as RAND in the BF code
 -g, --debug             Place a breakpoint (!) after each instruction.
 -e, --echo              Follow each input command (,) up by an output command (.) to echo keyboard input.
--d, --max-depth         Maximum nesting depth of []-pairs.
+-d, --max-depth [N]     Maximum nesting depth of []-pairs.
+-p, --print-filename    Add BF code to print the source filename before the program starts.
 -z [N]                  Initialize N chunks of 256 bytes with zero's. Default: N = 1.
 -u, --allow-unbalanced-loops
                         By default, the assembler will refuse to produce a program with unbalanced
                         loops ([ and ] do not match). Using this option will allow for this to occur.
 -o [file, stdout]       Specify the output stream/file (default stdout).
 
-Example: ./bfasm -o program.bin program.bf
+Example: ./src/bfasm/bfasm -p -o image.bin program1.bf program2.bf
 \end{lstlisting}
 
 \newpage
