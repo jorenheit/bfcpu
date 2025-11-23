@@ -19,7 +19,7 @@ In this section we show snapshots of the output during the execution of each of 
   \label{fig:hello}
 \end{figure}
 
-It should be obvious why \emph{Hello World} is the first program to test. The output is simply the string \emph{``Hello World!''} followed by a newline. This program performed as expected on any selected clock frequency within the supported range (and maybe even beyond).
+It should be obvious why \emph{Hello World} is the first program to test. The output is simply the string \emph{``Hello World!''} followed by a newline. This program performed as expected on any selected clock frequency within the supported range (and maybe even beyond). This program was taken straight from the Wikipedia page on Brainfuck \cite{hello}.
 
 \begin{table}[H]
   \centering
@@ -44,7 +44,7 @@ It should be obvious why \emph{Hello World} is the first program to test. The ou
   \label{fig:euler}
 \end{figure}
 
-The Euler number ($e$) is an irrational number, so calculating its digits is an infinite process; the \texttt{euler.bf} program never ends. Running this program for a long time exposes a weakness of the system; more often than not will the system get into some erroneous state and go haywire. It is still not fully understood what causes this to happen. Among the most probable causes are bad connections to ground. We observed that some connections to ground have a resistance in the order of 10's of Ohms, where a value close to 0 would be expected. At high frequencies, this might cause issues especially in longer running programs. However, this hypothesis was not thoroughly tested as it proved very difficult todiagnose or get rid of these problems altogether.
+The Euler number ($e$) is an irrational number, so calculating its digits is an infinite process; the \texttt{euler.bf} program (written by the notorious BF developer Daniel Cristofani \cite{euler}) never ends. Running this program for a long time exposes a weakness of the system; more often than not will the system get into some erroneous state and go haywire. It is still not fully understood what causes this to happen. Among the most probable causes are bad connections to ground. We observed that some connections to ground have a resistance in the order of 10's of Ohms, where a value close to 0 would be expected. At high frequencies, this might cause issues especially in longer running programs. However, this hypothesis was not thoroughly tested as it proved very difficult todiagnose or get rid of these problems altogether.
 
 Since this programs runs indefinitely, there was no bound to the number of runtime instructions. The number of memory cells required also keeps growing with time; it was found to grow proportional to the square root of the number of BF instructions that had been executed up to that point according to $M = 0.36\sqrt{N}$. A quick back-of-the-envelope calculation shows that for our case, with 64K ($2^{16}$ cells) of RAM available (the stack is negligible in comparison), we'd be able to execute $\left(\frac{2^{16}}{0.36}\right)^2 = 3.3\times10^{10}$ BF instructions, which would take $1.1\times 10^{11}$ cycles to complete (using the measured value of 3.4 cycles per instruction), or $4.5\times 10^5$ seconds at 250 kHz (over 124 hours). It's probably safe to assume that those limits won't be reached any time soon.
 
@@ -71,7 +71,7 @@ Since this programs runs indefinitely, there was no bound to the number of runti
   \label{fig:euler}
 \end{figure}
 
-Like $e$, the Golden Ration $\phi = \frac{1+\sqrt{5}}{2}$ is irrational and thus has infinitely many digits. The \texttt{phi.bf} program runs indefinitely and has growing memory demands when it runs for a longer amount of time. Again, the number of memory cells requires grows as the square root of the number of BF commands executed according to $M=71+0.033\sqrt{N}$. This number grows even slower than that required to calculate Euler's number, so there won't be any memory issues here neither.
+Like $e$, the Golden Ration $\phi = \frac{1+\sqrt{5}}{2}$ is irrational and thus has infinitely many digits. The \texttt{phi.bf} program \cite{phi} runs indefinitely and has growing memory demands when it runs for a longer amount of time. Again, the number of memory cells requires grows as the square root of the number of BF commands executed according to $M=71+0.033\sqrt{N}$. This number grows even slower than that required to calculate Euler's number, so there won't be any memory issues here neither.
 
 In practice, this was the most difficult program to execute due to stability issues. Sometimes it would run for a long time without any problems; other times it would start going all over the place after only a few digits.
 
@@ -97,7 +97,7 @@ In practice, this was the most difficult program to execute due to stability iss
   \label{fig:euler}
 \end{figure}
 
-Another program that runs indefinitely is \texttt{factorial.bf}; it calculates $n!$ for ever increasing $n$ ad infinitum. The program runs more stable than for example \texttt{phi.bf}, but ultimately suffers from the same problems that the other long runners do.
+Another program that runs indefinitely is \texttt{factorial.bf}; it calculates $n!$ for ever increasing $n$ ad infinitum. The program runs more stable than for example \texttt{phi.bf}, but ultimately suffers from the same problems that the other long runners do. Unfortunately, this program was found and downloaded long before this report ever needed to mention it; we were unable to trace and credit its source at the time of writing.
 
 The memory requirement grows according to a cube root, so this program can run for an even longer time compared to \texttt{phi.bf} and indeed \texttt{euler.bf} before memory runs out (provided it runs without issue): $M = 12.5 \sqrt[3]{N}$.
 
@@ -114,4 +114,74 @@ The memory requirement grows according to a cube root, so this program can run f
   \label{tab:factorial}
 \end{table}
 
+\subsection{Primes}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/primesclose.jpeg}
+  \caption{\emph{Calculating primes $<20$.}}
+  \label{fig:euler}
+\end{figure}
+
+Found on Reddit by the user Troemax \cite{primes}, this program checks primality for all numbers $\le 20$ (this value can be adjusted by changing the number of \texttt{+} commands at the very start of the program). It runs stable at all tested clock speeds up to 250 kHz. The algorithm reuses memory very efficiently during the course of its execution, requiring only 18 cells.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 790 \\
+    Memory Required & 18 \\
+    Runtime Instructions & 3.6M \\
+    Runtime Clock Cycles & 12M \\
+    Cycles per Instruction & 3.3 \\
+  \end{tabular}
+  \caption{Properties of \texttt{primes.bf}, see Appendix \ref{sec:appendix:testsuite:primes}}
+  \label{tab:primes}
+\end{table}
+
+
+\subsection{Primes 2}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/primes2close.jpeg}
+  \caption{\emph{Calculating primes $<20$ (entered at runtime).}}
+  \label{fig:euler}
+\end{figure}
+
+Like the former prime generating program, this program calculates all primes below 20. The difference between between \texttt{primes.bf} and \texttt{primes2.bf} is that the latter asks for the upper bound at runtime (expecting keyboard input). The program was posted on the codegolf section of Stackexchange by user Alexandru, challenging other users to implement small interpreters that can successfully run it. For yet unknown reasons, the input is not aquired reliably at clock speeds over 125kHz. We expected the handshake algorithms including the K-flag to mitigate these types of problems and have not been able to identify the flaw that causes the system to misbehave at higher clocks.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 3880 \\
+    Memory Required & 10 \\
+    Runtime Instructions & 5K \\
+    Runtime Clock Cycles & 1.8M \\
+    Cycles per Instruction & 3.5 \\
+  \end{tabular}
+  \caption{Properties of \texttt{primes.bf}, see Appendix \ref{sec:appendix:testsuite:primes2}}{tab:primes2}
+\end{table}
+
+\subsection{Tic Tac Toe}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/tictactoeclose.jpeg}
+  \caption{\emph{Playing Tic Tac Toe against Synapse-191.}}
+  \label{fig:tictactoe}
+\end{figure}
+
+Found on Github \cite{tictactoe}, from a developer by the username Mixtela \cite{tictactoe}, we found a BF program that actually implements a game of Tic Tac Toe, including a very capable `AI' opponent. Like \texttt{primes2.bf}, the clock is bottlenecked by the input-commands such that it will only run properly at clocks below 125 kHz. The statistics in Table \ref{tab:tictactoe} have been gathered by playing a single game (which ended in a draw).
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 6880 \\
+    Memory Required & 72 \\
+    Runtime Instructions & 224K \\
+    Runtime Clock Cycles & 774K \\
+    Cycles per Instruction & 3.5 \\
+  \end{tabular}
+  \caption{Properties of \texttt{tictactoe.bf}, see Appendix \ref{sec:appendix:testsuite:tictactoe}}
+  \label{tab:tictactoe}
+\end{table}
