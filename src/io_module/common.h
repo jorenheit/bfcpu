@@ -1,39 +1,7 @@
 #pragma once
 
-extern volatile size_t tickCount;
 extern int *rngSeedPtr;
 extern int *slotPtr;
-
-inline void tic() {
-  tickCount = 0;
-}
-
-inline size_t toc() {
-  return tickCount;
-}
-
-double measureFrequency() {
-  static double lastKnownFrequency = 0;
-  static unsigned long lastMeasured = 0;
-
-  unsigned long currentTime = millis();
-  if (lastMeasured && currentTime - lastMeasured < FREQUENCY_UPDATE_INTERVAL) {
-    return lastKnownFrequency;
-  }
-
-  tic();
-  while (millis() - currentTime < FREQUENCY_MEASUREMENT_TIME) {}
-  uint32_t const count = toc();
-
-  lastMeasured = currentTime + FREQUENCY_MEASUREMENT_TIME;
-  return (lastKnownFrequency = static_cast<double>(count) / FREQUENCY_MEASUREMENT_TIME);
-}
-
-template <unsigned long(TimeFunc)() = millis>
-inline void interruptable_delay(size_t const t) {
-  unsigned long now = TimeFunc();
-  while (TimeFunc() - now < t) {}
-}
 
 inline void setIOPinsToOutput() {
   DDRC |= B00000001;

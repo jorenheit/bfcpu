@@ -6,6 +6,7 @@
 #include "button.h"
 #include "lcdmenu.h"
 #include "random.h"
+#include "timer1.h"
 
 // Global objects
 Settings settings;
@@ -19,14 +20,34 @@ Random rng;
 int *rngSeedPtr = &settings.rngSeed;
 int *slotPtr = &settings.programSlot;
 
+// Errors
+namespace Error {
+  volatile enum ErrorType : uint8_t { 
+    NONE,
+    REACHED_DEFAULT_1,
+    REACHED_DEFAULT_2,
+    REACHED_DEFAULT_3
+  } errno = NONE;
+
+  void assert(ErrorType err = Error::NONE) {
+    if (Error::errno == err) return;
+    lcdScreen.displayTemp(-1, "I/O Error: %d", Error::errno);
+    while (true) {};
+  }
+}
+
 // Buttons
 auto scrollUpButton = Button::create<SCROLL_UP_PIN>();
 auto scrollDownButton = Button::create<SCROLL_DOWN_PIN>();
 auto menuButton = ButtonPair::create(scrollUpButton, scrollDownButton);
 
+namespace ISR {
+  void onTimer();
+  void onKCleared();
+}
+
 void setup() {
   // Setup for the pins
-  pinMode(SYSTEM_CLOCK_INTERRUPT_PIN, INPUT);
   pinMode(DISPLAY_ENABLE_PIN, INPUT);
   pinMode(KEYBOARD_ENABLE_PIN, INPUT);
   pinMode(K_OUT_PIN, OUTPUT);
@@ -55,11 +76,14 @@ void setup() {
   // Block until the handshake has been completed
   handshake();
 
-  // Start listening for incoming clocks
-  attachInterrupt(digitalPinToInterrupt(SYSTEM_CLOCK_INTERRUPT_PIN), onSystemClock, RISING);
+  // Start ISR timer and attach K-flag interrupt
+  attachInterrupt(digitalPinToInterrupt(K_IN_PIN), ISR::onKCleared, FALLING);
+  Timer1::start<ISR_FREQUENCY, ISR::onTimer>();
 }
 
 void loop() {
+  Error::assert();
+
   // Process raw data in the first ringbuffer of the keyboard. This
   // data will become available as ASCII characters through kbBuffer.get().
   kbBuffer.update();
@@ -86,7 +110,7 @@ void handleButtons() {
                                                      menuButton.state());
 
   if (menuButton.isJustPressed()) return lcdMenu.enter();
-  if (menuButton.isHold())        return lcdScreen.displayFrequency();
+  if (menuButton.isHold())        return /* no effect */;
 
   // No menu or frequency stuff going on -> buttons are used for scrolling the buffer
   scroll();
@@ -115,11 +139,11 @@ void setK() {
   digitalWrite<K_OUT_PIN, HIGH>();
   __asm__ __volatile__("nop\n\t");
   digitalWrite<K_OUT_PIN, LOW>();
-  while(!digitalRead<K_IN_PIN>()) {} // make sure the feedback pin is high before exit
+  __asm__ __volatile__("nop\n\t");
 }
 
 void handshake() {
-  delay(HANDSHAKE_STARTUP_DELAY_MILLIS); // probably not necessary anymore
+  delay(HANDSHAKE_STARTUP_DELAY_MILLIS); // TODO: check if necessary
 
   // Phase 1: wait for CPU to finish initialization (cannot claim the bus while it is still at INIT)
   setK();
@@ -135,67 +159,77 @@ void handshake() {
   setIOPinsToInput();
 }
 
-volatile size_t tickCount = 0;
 
 //----------isr_begin----------
-void onSystemClock() {
-  ++tickCount;
+namespace ISR {
+  void panic(Error::ErrorType err) {
+    Timer1::stop();
+    detachInterrupt(digitalPinToInterrupt(K_IN_PIN));
+    Error::errno = err;
+  }
 
-  static enum : uint8_t {
+  static volatile enum : uint8_t {
     IDLE,
-    WAIT_SYS,
-    WAIT_KB
+    WAIT_FOR_KEYBOARD,
+    WAIT_AFTER_WRITE,
+    WAIT_AFTER_READ
   } state = IDLE;
 
-  auto const writeByteToBusAndWait = [](uint8_t const value) -> void [[always_inline]] {
+  void onKCleared() {
+    switch (state) {
+      case IDLE: return;
+      case WAIT_AFTER_WRITE: setIOPinsToInput(); break;
+      case WAIT_AFTER_READ:  break;
+      default: return panic(Error::REACHED_DEFAULT_1);
+    }
+    state = IDLE;
+    Timer1::restart();
+  }
+
+  void writeByteToBusAndWait(uint8_t const value) {
+    Timer1::stop();
     setIOPinsToOutput();
     writeByteToBus(value);
     setK();
-    state = WAIT_SYS;
+    state = WAIT_AFTER_WRITE;
   };
 
-  auto const enqueueByteFromBusAndWait = []() -> void [[always_inline]] {
+  void enqueueByteFromBusAndWait() {
+    Timer1::stop();
     lcdBuffer.enqueue(readByteFromBus());
     setK();
-    state = WAIT_SYS;
+    state = WAIT_AFTER_READ;
   };
 
-  switch (state) {
-    case IDLE: break;
-    case WAIT_SYS: {
-      if (!digitalRead<K_IN_PIN>()) {
-        setIOPinsToInput();
-        state = IDLE;
+  void onTimer() {
+    switch (state) {
+      case IDLE: break;
+      case WAIT_FOR_KEYBOARD: {
+        if (kbBuffer.available()) {
+          writeByteToBusAndWait(kbBuffer.get());
+        }
+        return;     
       }
-      return;      
+      default: return panic(Error::REACHED_DEFAULT_2);
     }
-    case WAIT_KB: {
-      if (kbBuffer.available()) {
-        writeByteToBusAndWait(kbBuffer.get());
+
+    bool const EN_OUT = digitalRead<DISPLAY_ENABLE_PIN>();
+    bool const EN_IN = digitalRead<KEYBOARD_ENABLE_PIN>();
+
+    switch (EN_IN << 1 | EN_OUT) {
+      case 0b00: return;
+      case 0b01: return enqueueByteFromBusAndWait();
+      case 0b10: {
+        if (settings.inputMode == IMMEDIATE || kbBuffer.available()) {
+          return writeByteToBusAndWait(kbBuffer.get());  
+        } else {
+          state = WAIT_FOR_KEYBOARD;
+          return;
+        }
       }
-      return;     
+      case 0b11: return writeByteToBusAndWait(rng.get());
+      default:   return panic(Error::REACHED_DEFAULT_3);
     }
   }
-
-  bool const EN_OUT = digitalRead<DISPLAY_ENABLE_PIN>();
-  bool const EN_IN = digitalRead<KEYBOARD_ENABLE_PIN>();
-
-  switch (EN_IN << 1 | EN_OUT) {
-    case 0b01: {
-      return enqueueByteFromBusAndWait();
-    }
-    case 0b10: {
-      if (settings.inputMode == IMMEDIATE || kbBuffer.available()) {
-        return writeByteToBusAndWait(kbBuffer.get());  
-      } else {
-        state = WAIT_KB;
-        return;
-      }
-    }
-    case 0b11: {
-      return writeByteToBusAndWait(rng.get());
-    }
-    default: return; /* UNREACHABLE */
-  }
-}
+} // namespace ISR
 //----------isr_end----------

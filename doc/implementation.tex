@@ -289,6 +289,7 @@ There are two stages of flag-buffering; the first stage is the FA register (in w
   \label{fig:controlunitcloseup}
 \end{figure}
 
+\subsubsection{Overview}
 The control unit is responsible for sending the appropriate control-signals to each of the modules. The general idea is that the current instruction pointed to by the IP (4 bits) together with the state flags (another 5 bits: K, A, V, S and Z) and the cycle count (3 bits) combine together to form a 12-bit address into a set of three EEPROM chips (AT28C64B), each of which contains part the signal configuration corresponding to the current state of the system. When clocked by the decoder-clock (D\_CLK), the values currently at this address are loaded into six 74LS173 registers (two per EEPROM) and asserted onto their respective modules, which will act upon them on the next pulse of the M\_CLK signal.
 
 \paragraph{Address Layout} Based on the physical layout of the board, the following configuration was used to construct an address into the EEPROMs.
@@ -314,6 +315,8 @@ The control unit is responsible for sending the appropriate control-signals to e
  
 \paragraph{Cycle Counter} The cycle counter is implemented by a 74LS161 binary counter that simply increments on every M\_CLK signal up and sends its outputs (bits 0-2) to address lines 0-2 of the microcode EEPROM chips. It is reset when it receives the CR signal (which becomes active when after an instruction has completed).
 
+\subsubsection{Early Segmented Implementation}
+In the initial implementation of the CU, the entire microcode lookup-table was implemented in a single EEPROM chip. Two additional address bits, the segment bits, were included to address at most 4 different sections of the ROM (at the time, the K-flag did not exist yet, leaving the final two address bits 12 and 13 free to use for this purpose). Each section contained an 8-bit control word, such that rather than latching the entire 24-bit control word in a single clock, the logic was designed to access each of the 3 control words sequentially and latch them one by one before clocking the modules. This design choice was made back then because of the low availability of the AT28C64B chip; only two of these chips were acquired, one for storing the program and the other for storing the microcode. While chip-efficient, this approach requires 3 times as many clock cycles per instruction and was abandoned as soon as we got our hands on more EEPROM chips. Moreover, in our current implementation only one address bit (13) is free to use due to the K-flag being added in a later stage of the build, leaving no more room for segmentation even if we wanted to. Figure \ref{fig:firstbuild} in Appendix \ref{sec:appendix:flashback} shows the system at a point in time where the segmented CU was still present.
 
 
 %%%%%%% IO Module
@@ -342,7 +345,7 @@ The IO system is handled by an ATMEGA328P microprocessor, commonly found in the 
 \item Change the display-mode. By default, incoming data is interpreted as ASCII characters. When it should be displayed as raw numerical values (either in base 10 or 16), this option can be selected from the menu. When in either of these numerical modes, a delimiter character can be selected to separate bytes visually.
 \item Set autoscrolling on/off. By default the screen will scroll its contents when they overflow to always keep the most recent data in view. When new data is displayed, the screen is always scrolled to display this data. Setting autoscroll to `off' will disable these features.
 \item Echo on/off. When running an interactive program that requires keyboard input, the user probably wants to see what is being typed. This is the default behavior (echo on). If for some reason the keypresses should not be displayed, this option can be disabled.
-\item Set the input-mode. By default, the IO module will wait for the input-buffer to contain a value before putting anything on the bus and notifying the CU throught the K-flag (buffered input-mode). However, an alternative mode (immediate) can be selected, in which case the IO module will put a zero on the bus when the buffer is empty and set the K-flag regardless. This can be helpful if programs require real-time inputs (e.g. for simple games).
+\item Set the input-mode. By default, the IO module will wait for the input-buffer to contain a value before putting anything on the bus and notifying the CU through the K-flag (buffered input-mode). However, an alternative mode (immediate) can be selected, in which case the IO module will put a zero on the bus when the buffer is empty and set the K-flag regardless. This can be helpful if programs require real-time inputs (e.g. for simple games).
 \item Set the RNG seed. For programs that use the Random Number Generator as an input device, the seed can be set through this option. Since the same seed will produce the same sequence of numbers, this option can be used to control the randomness of the application. A `true' random seed can normally be emulated by seeding the generator with the reading of a floating analog input for example, but sadly no free analog inputs were left available on the MCU.
 \item Reset to default settings. Whenever settings have been changed, the new settings will be saved to the persistent EEPROM memory of the MCU and loaded back on startup to make the settings persist when the MCU is powered down. This option allows you to revert all changes and load the default settings back in.
 \end{enumerate}
@@ -360,13 +363,13 @@ The IO system is handled by an ATMEGA328P microprocessor, commonly found in the 
 
 \paragraph{Bootloading} The first transaction between the system and the IO module happens at boot: the IO module is expected to put the index of the program (selected by the user through the menu) onto the databus. However, when the system is reset, it will first initialize its memory. This process involves data transfers over the databus, so the IO module should wait for a signal from the system to indicate that the initialization is completed and the data bus can be used safely. To achieve this, the IO module enables the K-flag and waits for it to be set low by the system. Next, it will write the program index to the bus, again setting K to indicate that this value is ready. The system will then read this value from the bus and acknowlegde the transfer by resetting K once again. Once the IO module sees K going low again, it will disable its outputs and go to its normal operation, listening for input and output commands.
 
-\paragraph{Output} The \texttt{M\_CLK} signal is connected to an interrupt pin of the MCU. On every interrupt triggered by the clock, when the system is in its IDLE state, it will check the EN\_IN and EN\_OUT lines to determine if it should initiate a read or write sequence to the databus. When EN\_OUT is found to be high, it will copy the byte currently present on the bus into its screen-buffer, set the K-flag and change its state to WAIT\_SYS. On every subsequent clock pulse, while in the WAIT\_SYS state, it will check if the K-flag has been reset by the control unit. If so, the handshake has been completed and the module returns to its IDLE state (see Figure \ref{fig:isrflow}).
+\paragraph{Output} An interrupt attached to a timer fires on set interval. When the system is in its IDLE state, it will check the EN\_IN and EN\_OUT lines to determine if it should initiate a read or write sequence to the databus. When EN\_OUT is found to be high, it will copy the byte currently present on the bus into its screen-buffer, set the K-flag and wait for the CPU to reset K before waiting for the next instructio. When K is seen to go low, the handshake has been completed and the module returns to its IDLE state (see Figure \ref{fig:isrflow}).
 
-\paragraph{Input} If the EN\_IN signal is found to be asserted, the system has two possible courses of action, depending on the input-mode currently set by the user (through the on-screen settings menu). In (the default) buffered mode, the system will change its state to WAIT\_KB and wait for a byte to become available in the keyboard-buffer. As soon as it does, it will provide this value onto the bus and notify the CU by setting the K-flag. It then moves into the WAIT\_SYS state to await confirmation by the CU (which in turn resets the K-flag). In immediate mode, all zeros will be written to the bus and the K-flag is set immediately even when the keyboard-buffer is still empty. If, in addition to EN\_IN, EN\_OUT is asserted as well, a random byte is put onto the bus (see Figure \ref{fig:isrflow}).
+\paragraph{Input} If the EN\_IN signal is found to be asserted, the system has two possible courses of action, depending on the input-mode currently set by the user (through the on-screen settings menu). In (the default) buffered mode, the system will change its state to WAIT\_KB and wait for a byte to become available in the keyboard-buffer. As soon as it does, it will provide this value onto the bus and notify the CU by setting the K-flag. It then waits for K to go low again; confirmation by the CU that the value was taken from the bus and the module should release the bus again. In immediate mode, all zeros will be written to the bus and the K-flag is set immediately even when the keyboard-buffer is still empty. If, in addition to EN\_IN, EN\_OUT is asserted as well, a random byte is put onto the bus (see Figure \ref{fig:isrflow}).
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{img/isrflow}
+  \includegraphics[width=.9\textwidth]{img/isrflow}
   \caption{Control flow inside the ISR running on the microcontroller.}
   \label{fig:isrflow}
 \end{figure}
@@ -381,10 +384,12 @@ The software was written in such a way that most common LCD character screens (c
 The IO module can only handle input from PS/2 compatible keyboards. A modified version of the \texttt{PS2Keyboard} library was used to implement the keyboard driver.
 
 
-
-
-\newpage\subsection{IO Module Firmware}
+\subsection{IO Module Firmware}
 To ensure minimal latency and efficient CPU--peripheral communication, several low-level optimizations were applied to both the interrupt routine and the main execution loop of the module's firmware. 
+
+\subsubsection{Interrupts}
+To make sure the module remains responsive during operation, regardless of I/O throughput, its input signals (EN\_IN and EN\_OUT) are checked at regular intervals, triggered by a timer interrupt. This timer fires at a rate of 200Hz and triggers a highly optimized, low cost interrupt service routine (ISR) that inspects the input signals and performs the corresponding action. Even when the ISR triggers at only 200Hz, this will feel close to instantaneous to the user operating the computer. This leaves plenty of time for the microcontroller to drive the screen, handle the button-input and manage the menu-system. When the ISR is triggered by the timer and it is determined that some action needs to be taken, the K-flag is set to indicate to the external system that the action has been completed (see below). When finally K is cleared, the microcontroller needs to respond immediately because the system expects it to release control of the bus immediately after K is cleared (e.g.~after responding to the EN\_IN command). Therefore, the same 200Hz interrupt cannot be used for checking K. Instead, the timer is stopped before checking K and a second ISR is attached to the falling edge of K. This ISR will trigger immediately when K goes low, allowing the microcontroller to respond quickly and set its datapins back to a high impedance state (\texttt{pinMode(X, INPUT)} in Arduino nomenclature). It will then re-enable the timer to go back into normal operation. The C++ code that represents the state machine previously shown in Figure \ref{fig:isrflow} is shown in Listing \ref{lst:isr} (Appendix \ref{sec:appendix:isr}).
+
 
 \subsubsection{Ring Buffers}
 \paragraph{Overview} The IO module employs a set of custom ring buffers that provide high-speed, non-blocking data transfers between the asynchronous microcontroller firmware and the synchronous TTL-based CPU. The ring buffer (or circular buffer) is a fixed-size, first-in-first-out (FIFO) data structure that uses two indices, commonly called the \texttt{head} and \texttt{tail}. The \texttt{head} marks the position where the next incoming element will be written, while the \texttt{tail} indicates the position of the next element to be read. When either index reaches the end of the buffer, it wraps around to the beginning, forming a logical ring in memory. This structure eliminates the need for memory allocation or data shifting, providing constant-time access for both enqueue and dequeue operations. See Figure \ref{fig:ringbuffer}.
@@ -415,7 +420,7 @@ In the Synapse-191 I/O module, one ring buffer is dedicated to temporarily stori
 \vfill
 
 \begin{lstfloat}[H]
-  \lstinputlisting[basicstyle=\ttfamily\footnotesize, language=c++,firstline=69,lastline=106,firstnumber=1]{../src/io\_module/lcdmenu.h}
+  \lstinputlisting[basicstyle=\ttfamily\footnotesize, language=c++,firstline=67,lastline=104,firstnumber=1]{../src/io\_module/lcdmenu.h}
   \caption{The IO system's menu tree is defined as a type and built at compile-time.}
   \label{lst:menu}
 \end{lstfloat}

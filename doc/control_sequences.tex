@@ -204,41 +204,89 @@ These are by far the most complicated instructions that require lots of addition
 
 \subsection{Output: \texttt{.}} \label{sec:sequences:output}
 
-\paragraph{Handshake:} Due to the asynchronous nature of the output peripheral, it is necessary to enter into a handshake protocol whenever a byte is put on the bus for display. In this protocol, the K-flag is used to communicate between the CPU and the IO module: it is set by the IO module to indicate that it has read the data from the bus, and reset by the CU to indicate that the handshake has been received and completed:
+\paragraph{Handshake} Due to the asynchronous nature of the output peripheral, it is necessary to enter into a handshake protocol whenever a byte is put on the bus for display. In this protocol, the K-flag is used to communicate between the CPU and the IO module: it is set by the IO module to indicate that it has read the data from the bus, and reset by the CU to indicate that the handshake has been received and completed. The global step-by-step process is described below. The control sequences (on the side of the CU) that implement these steps follow after. Section \ref{sec:implementation:io} and the code in Appendix \ref{sec:appendix:isr} show how the IO Module's side is implemented.
 
 \begin{labeledenum}{Step}
-\item The CU asserts the EN\_OUT signal and enables the module that contains the current value (either D when A = 0 or RAM when A = 1), such that its contents appear on the databus:\\EN\_OUT, (EN\_D or OE\_RAM).
-\item The output module is notified of this through the EN\_OUT signal and reads this value from the bus. When done, it sets the K-flag.
-\item After enabling the data on the bus, the CU repeatedly checks the K-flag. When it becomes 1, the CU knows that the data has been successfully taken from the bus, at which point the supplying module (D or RAM) can disable its outputs. The CU then finalizes the handshake by resetting the K-flag. As soon as the output module notices that the K-flag was reset, it starts waiting for its next instruction.
-  
-  \begin{labeledenum}{Scenario}
-  \item (K = 0) - CR, (EN\_D or OE\_RAM)
-  \item (K = 1) - CLR\_K, INC, RS2, CR   
-  \end{labeledenum}
+\item First, the data is loaded into D if not already present (A=1). The CU then asserts the EN\_OUT signal and enables D such that its contents appear on the databus. It will keep EN\_OUT high and keep the data asserted onto the data bus for as long as necessary, as indicated by the K-flag. 
+\item The output module notices the EN\_OUT signal and reads the value from the bus. When done, it sets the K-flag.
+\item When K is seen to go high, the bus is de-asserted, K is reset and the transaction has finished.
 \end{labeledenum}
 
+\paragraph{Implementation}
+When the OUT instruction hits its first cycle, it will first synchronize D with RAM if the A-flag or V-flag is set. This is necessary because these flags are then both set to 1 to indicate a wait-state; synchronizing D allows these flags to both be safely reset when the instruction has finished. In cycle 2, A and V are latched into FB and the CC is reset, in order for the microcode to branch into the wait-loop on the next cycle 0. Now that the system is back in cycle 0 with both A and V set the system goes into a busy-loop. The EN\_OUT and EN\_D signals are continuously asserted for as long as the K-flag is still low; an immediate cycle reset leaves the system in cycle 0.  All other commands reload the flags and instruction in cycle 0; to maintain stable data on the bus without interruptions (due to resetting to the default cycle 0), we need the special A=V=1 state to encode this situation. When K finally goes high (K does not have to be latched, so its current value is always available), cycle 0 branches to a different sequence, where the A, V and K flag are cleared and the IP is incremented to move to the next instruction.
 
-\paragraph{Cycle Zero:} As mentioned briefly before, the OUT instruction is the only instruction that has a slightly different cycle 0 control sequence associated with it. This is because the waiting-loop is implemented by simply resetting the cycle count, such that the instruction is loaded in again but may now branch differently depending on the value of K, which might change in the meantime. However, the data on the bus should remain valid for the entire duration of the loop, since the output module may read from it asynchronously. To accommodate for this, the 0-cycle for the OUT instruction enables either D or RAM, depending on the value of the A-flag. This does no harm whenever the sequence is encountered outside of the loop, but does keep the data valid during one. 
+\begin{labeledenum}{Scenario}
+  \item (A = 0, V = 0) - No need to synchronize; go into wait-state by setting A and V to 1. Latch these in FB immediately to make them available on the next cycle 0.
+    \begin{labeledenum}{Cycle}
+    \item EN\_A, EN\_V, LD\_FA
+    \item LD\_FB, CR
+    \end{labeledenum}
 
-\begin{labeledenum}{Cycle}[0]
-\item LD\_FB, LD\_I, (EN\_D or EN\_RAM).
+  \item (A = 0, V = 1) - Synchronize D to RAM and go into the wait-state like before.
+    \begin{labeledenum}{Cycle}
+    \item EN\_A, EN\_V, LD\_FA, EN\_D, WE\_RAM
+    \item LD\_FB, CR
+    \end{labeledenum}
+
+  \item (A = 1, V = 0) - Synchronize RAM to D and go into the wait-state like before.
+    \begin{labeledenum}{Cycle}
+    \item EN\_A, EN\_V, LD\_FA, LD\_D, OE\_RAM
+    \item LD\_FB, CR
+    \end{labeledenum}
+
+  \item (A = 1, V = 1, K = 0) - Still waiting for K to go high; keep the data asserted and reset the cycle counter.
+    \begin{labeledenum}{Cycle}[0]
+    \item EN\_OUT, EN\_D, CR
+    \end{labeledenum}
+
+  \item (A = 1, V = 1, K = 1) - K has gone high; break out of the wait-state by clearing A and V (loading FA without asserting any signals) and move to the next instruction.
+    \begin{labeledenum}{Cycle}[0]
+    \item LD\_FA, CLR\_K, INC, RS2
+    \item LD\_FB, LD\_I, CR
+    \end{labeledenum}
 \end{labeledenum}
 
 \subsection{Input: \texttt{,}} \label{sec:sequences:input}
 \paragraph{Handshake:} Similar to the output command, the input command implements a handshake protocol to make sure that the databus is claimed by the input-device for the exact right amount of time, in order for the system to reliably read its contents. This happens using the same K-flag that was used in the output handshake.
 
 \begin{labeledenum}{Step}
-\item The CU asserts the EN\_IN signal to let the input-device know that it can claim ownership of the bus.
-\item The input-devices receives the EN\_IN signal and puts a value onto the bus (see below for the difference between immediate and buffered input-mode). When the data is ready, it sets the K-flag.
-\item After asserting the EN\_IN signal, the CU waits for the K-flag by continuously resetting the cycle counter and branching on the value of K. Once that becomes high, it loads the data into the D register and sets the V-flag:
-
-  \begin{labeledenum}{Scenario}
-  \item (K = 0) -  CR
-  \item (K = 1) - LD\_D, SET\_V, LD\_FA
-  \end{labeledenum}
-  
-\item To finalize the handshake, the K-flag is cleared by the CU by setting the CLR\_K signal.  
+\item The CU then asserts the EN\_IN signal and will keep this control line asserted until K is set by the IO module, indicating that the data is ready.
+\item The input module notices EN\_IN, waits until the keyboard buffer contains a value and puts this on the bus, then it sets K.
+\item When K is seen to go high, the value on the bus is loaded into D and K is cleared to complete the handshake.
 \end{labeledenum}
+
+\paragraph{Implementation}
+The microcode for the sequences described above is very similar to those of the OUT instruction. Again, the wait-state is encoded by setting A and V to 1, allowing the system to spin in cycle 0 while K is not yet set by the IO module. When K goes high, the data on the bus is latched into D, the A and K flags are cleared, V is set and the next instruction is reloaded. As was the case with the OUT instruction, we need an implicit LD\_FB before resetting the CC: to compensate for the fact that the flags have to be alredy up-to-date when cycle 0 loads in order to implement the busy-loop (all other commands refresh the flags in cycle 0). In this case, there is no need to synchronize D and RAM before setting the flags to the wait-state. Since we expect a new value to be read into D as a result of this instruction, the V-flag should be set and the A-flag should be reset regardless of the state of the computer on entering this instruction.
+
+\begin{labeledenum}{Scenario}
+  \item (A and V not both set) - Go into wait-state.
+    \begin{labeledenum}{Cycle}
+    \item EN\_A, EN\_V, LD\_FA
+    \end{labeledenum}
+
+  \item (A = 0, V = 1) - Go into wait-state.
+    \begin{labeledenum}{Cycle}
+    \item EN\_A, EN\_V, LD\_FA
+    \end{labeledenum}
+
+  \item (A = 0, V = 0) - Go into wait-state.
+    \begin{labeledenum}{Cycle}
+    \item EN\_A, EN\_V, LD\_FA
+    \end{labeledenum}
+
+  \item (A = 1, V = 1, K = 0) - Still waiting for K to go high; keep enable signal asserted and reset the cycle counter.
+    \begin{labeledenum}{Cycle}[0]
+    \item EN\_IN, CR
+    \end{labeledenum}
+
+  \item (A = 1, V = 1, K = 1) - K has gone high; load the data, break out of the wait-loop by setting V and resetting A, clear K and move to the next instruction.
+    \begin{labeledenum}{Cycle}[0]
+    \item LD\_D
+    \item EN\_V, LD\_FA, CLR\_K, INC, RS2
+    \item LD\_FB, LD\_I, CR
+    \end{labeledenum}
+\end{labeledenum}
+
 
 \paragraph{Input-Modes:} The input peripheral (probably) manages an internal buffer to serve subsequent bytes from to the system, which might be empty when the request for input arrives. When this happens, it is up to the peripheral to decide upon one of 2 options:
 
@@ -251,16 +299,16 @@ In our implementation of the IO-module (see \ref{sec:implementation:io}), both m
 \begin{figure}[h]
   \centering
   \mbox{}\hfill
-  \begin{subfigure}[t]{0.4\linewidth}
+  \begin{subfigure}[t]{0.45\linewidth}
     \centering
-    \includegraphics[scale=0.3]{img/outputalg}
+    \includegraphics[width=\linewidth]{img/outputalg}
     \caption{Block diagram for the output command.}
     \label{fig:inputbufalg}
   \end{subfigure}
   \hfill
-  \begin{subfigure}[t]{0.4\linewidth}
+  \begin{subfigure}[t]{0.45\linewidth}
     \centering
-    \includegraphics[scale=0.3]{img/inputalg}
+    \includegraphics[width=\linewidth]{img/inputalg}
     \caption{Block diagram for the input command.}
     \label{fig:inputimalg}
   \end{subfigure}

@@ -84,7 +84,7 @@
     }									                                                                       \
   };                                                                          
 
-#define DEFINE_MENU_ITEM_VALUE_SELECT(NAME, PTR, MIN, MAX)	                                 \
+#define DEFINE_MENU_ITEM_VALUE_SELECT(NAME, PTR)          	                                 \
   struct NAME##_ {							                                                             \
     static int* ptr() { return PTR; };                                                       \
     static char const *getLabel() { return "DUMMY"; }                                        \
@@ -93,7 +93,16 @@
     }									                                                                       \
   };
 
-#define MenuActions(ACTIONS) using Actions_ = ACTIONS;         
+#define MenuActions(ACTIONS) using Actions_ = ACTIONS;   \
+template <int *Ptr, int Min, int Max> \
+struct ValueSelect2 { \
+  static int* ptr() { return Ptr; };                                                       \
+  static char const *getLabel() { return "DUMMY"; }                                        \
+  static Menu::MenuItem<Actions> *select(Menu::MenuItem<Actions> &item, Actions &) {       \
+    return item.home();						                                                         \
+  }	\
+};
+
 
 #define MenuLeaf(NAME, LABEL, RETURN, ACTION_CODE) DEFINE_MENU_ITEM(NAME, LABEL, RETURN, ACTION_CODE); \
 using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_>;
@@ -102,6 +111,8 @@ using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_>;
 template <typename First, typename ... Rest>                                                 \
 using NAME = Menu::Helpers::MenuItemImpl<Actions_, NAME##_, First, Rest...>;
 
-#define ValueSelect(NAME, PTR, MIN, MAX) DEFINE_MENU_ITEM_VALUE_SELECT(NAME, PTR, MIN, MAX); \
-using NAME = Menu::Helpers::MenuItemImplValueSelect<Actions_, NAME##_, MIN, MAX>;
+#define ValueSelect(NAME, PTR) DEFINE_MENU_ITEM_VALUE_SELECT(NAME, PTR); \
+template <int Min, int Max> using NAME = Menu::Helpers::MenuItemImplValueSelect<Actions_, NAME##_, Min, Max>;
+
+
 

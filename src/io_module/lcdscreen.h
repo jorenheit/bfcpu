@@ -14,7 +14,6 @@ public:
   void begin();
   void display(LCDBuffer::View const &view, bool forced = false); 
   void displayTemp(char const *lines[], uint8_t const n, size_t const timeout);
-  void displayFrequency();
   void abortTemp();
   void enableCursor();
   void disableCursor();
@@ -22,7 +21,15 @@ public:
   template <typename ... Args>
   void displayTemp(size_t const timeout, Args ... args) {
     static_assert(sizeof ... (Args) <= VISIBLE_LINES, "Too many lines");
-    char const *lines[] = {args ...};
+    char const *lines[] = {args ...}; 
     displayTemp(lines, sizeof ... (args), timeout);
+  }
+
+  template <typename ... Args>
+  void displayTemp(size_t const timeout, char const *fmtString, Args ... args) {
+    char line[LINE_SIZE + 1];
+    memset(line, ' ', LINE_SIZE + 1);
+    snprintf(line, sizeof(line), fmtString, args ...);
+    displayTemp(timeout, line);
   }
 };

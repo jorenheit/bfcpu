@@ -59,16 +59,14 @@ class LCDMenu {
   MenuLeaf(ImmediateInput, "Immediate",     item.home(),   { actions.setInputMode(IMMEDIATE);     });
   MenuLeaf(Exit,           "Exit",          item.exit(),   { /* No action on select */            });
   
-  // Value-select menu for the RNG seed
-  ValueSelect(SeedSelecter, rngSeedPtr, RNG_MIN_SEED, RNG_MAX_SEED);  
-
-  // Value-select menu for the Slot selection
-  ValueSelect(SlotSelecter, slotPtr, 0, N_SLOTS - 1);
+  // Bind value-select menu's to variables that store the setting
+  ValueSelect(SeedSelecter, rngSeedPtr);  
+  ValueSelect(SlotSelecter, slotPtr);
 
   // Build the final menu-type:
   using Menu = MainMenu <
     SelectSlot<
-      SlotSelecter
+      SlotSelecter<0, N_SLOTS - 1>
     >,
     Clear,
     Echo<
@@ -99,7 +97,7 @@ class LCDMenu {
       ImmediateInput
     >,
     SetRNGSeed<
-      SeedSelecter
+      SeedSelecter<RNG_MIN_SEED, RNG_MAX_SEED>
     >,
     Defaults,
     Exit

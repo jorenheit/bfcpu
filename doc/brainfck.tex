@@ -36,32 +36,18 @@ When the Hello World program from Wikipedia \cite{bfwiki} is fed into the functi
 \begin{lstlisting}[language=bash]
   $ ./bfint "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.> \
              ---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-Hello World!
+  Hello World!
 \end{lstlisting}
 
 
+\subsection{Brainfuck Instruction Set}
+\paragraph{BISC} Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above; let's refer to this as a Brainf*ck Instruction Set Computer (BISC). A true BISC implementation would operate on the basis of only the 8 aforementioned instructions, which is truly tiny compared to more conventional instruction sets such as those implemented by modern processors or even microcontrollers and older 8-bit systems. Broadly speaking, Complex Instruction Set Computers (CISC) are designed to do as much work as possible in the least number of clock cycles, whereas Reduced Instruction Set Computers (RISC) focus on having a small instruction set with basic operations. For comparison, the x86 instruction set is massive with over 2000 instructions implemented in hardware (depending on the way you count, \cite{stefanheule}), whereas RISC-V processors have a fixed opcode width of only 7 bits, allowing for a maximum of 128 different opcodes \cite{danielmangum}.  BISC is therefore tiny even compared to the smallest instruction sets in use today. While compact, such a small instruction set inevitably leads to less efficient execution; a smaller number of instructions simply means you need more of them to perform meaningful computations, which is reflected by the fact that complex BF programs are typically very large in size.
 
+\paragraph{Harvard Architecture} Modern computers are built according to the von Neumann architecture \cite{vonneumann-wiki}, which specifies a CPU (containing registers and an ALU), a single unit of memory and input/output devices. In this architecture, both the program's instructions and data are stored in RAM. This allows for programs to change their own code at runtime (self-modifying code) because the program itself is data in a sense. This model does \emph{not} naturally fit the Brainf*ck model, which has a strict seperation between instructions and data; the data pointer can never point to the instructions that govern it. This is why a Harvard architecture was adopted. In the Harvard architecture two kinds of memory exist: program memory containing the instructions - stored in read-only memory (ROM) - and data memory - stored in random-access-memory (RAM) - containing the modifyable data (Figure \ref{fig:harvard}).
 
-\subsection{Brainf*ck Architecture}
-\paragraph{Von Neumann} Modern computers are built according to the von Neumann architecture \cite{vonneumann-wiki}, which specifies a CPU (containing registers and an ALU), a single unit of memory and input/output devices (Figure \ref{fig:vonneumann}). The registers of the CPU can be loaded with data from the memory unit and operated on by the ALU (Arithmetic and Logic Unit). Typical about this kind of architecture is the fact that not only data, but also the instructions (the program) are stored in memory. The program is therefore just as much part of the data as the data itself and can even be modified by itself.
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\textwidth]{img/vonneumann}
-  \caption{Schematic overview of the Von Neumann architecture.}
-  \label{fig:vonneumann}
-\end{figure}
-
-\paragraph{Harvard} The Harvard architecture specifies two kinds of memory: program memory and data memory (Figure \ref{fig:harvard}). Program memory contains just the instructions that make up the program and cannot be modified at runtime. Other than that, the architecture is similar to Von Neumann, in that it consists of a CPU (again containing registers and an ALU), memory (program and data) and input/output devices.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\textwidth]{img/harvard}
   \caption{Schematic overview of the Harvard architecture.}
   \label{fig:harvard}
 \end{figure}
-
-\paragraph{BF Architecture} The architecture assumed by the BF language is similar to the Harvard architecture, in that the memory does not contain the program itself. This implies that the program is stored somewhere else and cannot be addressed by the pointer, like in Listing \ref{lst:bfint}, where the program was stored in memory separate from the data. The ALU is very limited and can only increment values, decrement values and compare values to zero.
-
-
-\subsection{BF Instruction Set}
-Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above. An instruction set of size 8 is truly tiny compared to more traditional instruction sets such as those implemented by modern processors or even microcontrollers and older 8-bit systems. Broadly speaking, Complex Instruction Set Computers (CISC) are designed to do as much work as possible in the least number of clock cycles, whereas Reduced Instruction Set Computers (RISC) focus on having a small instruction set with basic operations. For comparison, the x86 instruction set is massive with over 2000 instructions implemented in hardware (depending on the way you count, \cite{stefanheule}), whereas RISC-V processors have a fixed opcode width of only 7 bits, allowing for a maximum of 128 different opcodes \cite{danielmangum}. Even compared to RISC, the BF instruction set is tiny even compared to the smallest instruction sets in use today. While compact, such a small instruction set inevitably leads to less efficient execution; a smaller number of instructions simply means you need more of them to perform meaningful computations, which is reflected by the fact that complex BF programs are typically very large in size.
-

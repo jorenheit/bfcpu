@@ -1,6 +1,6 @@
 \section{Architecture} \label{sec:architecture}
 \subsection{Hardware Overview} \label{sec:architecture:overview}
-In simple terms, a BF machine consists of an array of memory-cells and a pointer pointing to one of these cells. The pointer can move along the array while modifying its contents one step at a time. Figure \ref{fig:simplerepresentation} illustrates an example intermediate state of such a system. Consider the BF program ``\texttt{>>>>>+.}'', applied to the initial conditions shown in the example. The pointer would take 5 steps to the right, landing on cell 9 which contains the number 41. It will then increment and output this value, displaying 42 on the screen (assuming a screen of some sort is used as the output device and it is displaying numbers directly rather than interpreting them as ASCII).
+A true BISC implementation is a direct representation of the abstract BF machine described in Section \ref{sec:brainfck}, consisting of an array of memory-cells together with a pointer pointing to one of these cells. The pointer can move along the array while modifying its contents one step at a time. Figure \ref{fig:simplerepresentation} illustrates an example intermediate state of such a system. Consider the BF program ``\texttt{>>>>>+.}'', applied to the initial conditions shown in the example. The pointer would take 5 steps to the right, landing on cell 9 which contains the number 41. It will then increment and output this value, displaying 42 on the screen (assuming a screen of some sort is used as the output device and it is displaying numbers directly rather than interpreting them as ASCII).
 
 \begin{figure}[H]
   \centering
@@ -9,8 +9,29 @@ In simple terms, a BF machine consists of an array of memory-cells and a pointer
   \label{fig:simplerepresentation}
 \end{figure}
 
+In a physical system, the data-tape would be a large memory space in RAM and the data pointer is a register that holds a value representing an address within that space. The pointer is moved by simply changing the value stored in the data pointer register. Mofidying values in regular systems happens inside the ALU (Arithmetic and Logic Unit), which is capable of addition, subtraction, multiplication and my more mathematical and logical operations. No full-blown ALU is needed in a BISC implementation because of the simplicity of the modifying operations: values only need to be incremented or decremented (this goes for both the data pointer and the data itself), which can be done directly at the register level when up/down binary counters like the 74LS193 integrated circuit are used. The program (a sequence of BF instructions) is stored into Read Only Memory (ROM), whereas the data is stored in Random Access Memory (RAM). Instructions (4-bits) are fed from ROM into a control unit (CU) together with a set of flags (see \ref{sec:architecture:flags}) that encode the state of the machine. Depending on the state and current instruction, the CU sets the appropriate control signals for each of the modules (memory, registers and I/O) in order for the system to perform the appropriate actions. Table \ref{tab:modules} lists the components of this BISC implementation whereas Figure \ref{fig:architecture} shows the (conceptual) connections between those modules. In the sections below, each of these connections will be clarified further. The actual implementation on the logic/hardware level is described in Section \ref{sec:implementation}.
 
-The physical BF core needs three basic building blocks to implement the machinery described above: registers, memory and a control unit. The ALU is missing from this list because the only operations that it needs to perform are addition and subtraction of the value 1, which can be done directly at the register-level when using up/down binary counters like the 74LS193 integrated circuit. The program (a sequence of BF instructions) is stored into Read Only Memory (ROM), whereas the data is stored in Random Access Memory (RAM). Instructions (4-bits) are fed from ROM into the control unit (CU) together with five flags (K, A, V, S and Z) that encode the state of the machine. Depending on the state and current instruction, the CU sets the appropriate control signals for each of the modules in order for the system to perform the appropriate actions. Figure \ref{fig:architecture} shows how each of the modules is connected to other modules. In the sections below, each of these connections will be clarified further. The actual implementation on the logic/hardware level is described in Section \ref{sec:implementation}.
+\begin{table}[H]
+  \centering
+  \begin{tabulary}{\linewidth}{|C|C|C|}
+    \hline
+    \textbf{Full Name} & \textbf{Short Name} & \textbf{Description} \\
+    \hline
+    Data Memory & RAM & Represents the data tape in the BF model; this is where the data is stored. \\\hline
+    Program Memory & ROM & Seperate from RAM, which is where the program's instructions are stored. \\\hline
+    Data Pointer Register & DP & 16-Bit counting register that represents the pointer in the BF model; points to data in RAM. \\\hline
+    Data Register & D & 8-Bit counting register that represents the value currently pointed to by the DP. \\\hline
+    Instruction Pointer Register & IP & 16-Bit Counting register that contains the address of the current instruction; points to data in ROM.\\\hline
+    Stack Pointer Register & SP & 8-Bit counting register that holds a value pointing inside the stack-space in RAM; used to implement loops.\\\hline
+    Loop Skip Register & LS & 8-Bit counting register, used to skip over loops.\\\hline
+    Flag Registers A \& B & FA/FB & 4-Bit registers used to buffer flag values that encode the state of the system. \\\hline
+    Instruction Register & I & 4-Bit register that buffers the currently active instruction. \\\hline
+    Control Unit & CU & System that translates the current instruction to sequences control signals. \\\hline
+    Register Driver & RD & Subsystem of the CU that centralizes increment and decrement operations. \\\hline
+  \end{tabulary}
+  \caption{Overview of the modules that make up the physical BISC implementation.}
+  \label{tab:modules}
+\end{table}
 
 \begin{figure}[H]
   \centering
@@ -19,7 +40,7 @@ The physical BF core needs three basic building blocks to implement the machiner
   \label{fig:architecture}
 \end{figure}
 
-\subsection{Flags}
+\subsection{Flags} \label{sec:architecture:flags}
 The state of the system is encoded using five flags: K, V, A, S, and Z. These flags were introduced to simplify control logic and enable performance optimizations during execution. Each flag serves a specific purpose, as explained below:
 
 \paragraph{K-Flag} The K-flag is used for communication between the system and the IO Module, which run asynchronously. The flag is set by the IO Module and reset by the system to let each other know when certain data transactions have been completed.
@@ -32,7 +53,7 @@ The state of the system is encoded using five flags: K, V, A, S, and Z. These fl
 
 \paragraph{Z-Flag} The Z-flag is set by the D register whenever it contains the value zero. This allows control-flow to branch on the value of the current cell, allowing for the implementation of loops.
 
-\paragraph{Performance Gains} The number of cycles saved from using the A and V flags depends on the program that is running; programs with long and frequent sequences of \texttt{+}, \texttt{-}, \texttt{<} or \texttt{>} commands will benefit more than ones with less or shorter sequences. To investigate the actual impact, a test suite of BF programs was put together and run in an emulator (a modified version of the C example shown in Listing \ref{lst:bfint}). The BF source for each of these programs is shown in Appendix \ref{sec:appendix:testsuite}. The modified interpreter contains a table of the number of cycles necessary to execute each instruction, depending on the aforementioned flags. This allows for a quantitative comparison between the naive implementation (load, modify, store) versus the cache-like approach using the A and V flags. The results are shown in Figure \ref{fig:avresults}; a 16 to 22\% decrease was observerd when using the A and V flags. 
+\paragraph{Performance Gains} The number of cycles saved from using the A and V flags depends on the program that is running; programs with long and frequent sequences of \texttt{+}, \texttt{-}, \texttt{<} or \texttt{>} commands will benefit more than ones with less or shorter sequences. To investigate the actual impact, a test suite of BF programs was put together and run in an emulator (a modified version of the C example shown in Listing \ref{lst:bfint}). The BF source for each of these programs is shown in Appendix \ref{sec:appendix:testsuite}. The modified interpreter contains a table of the number of cycles necessary to execute each instruction, depending on the aforementioned flags. This allows for a quantitative comparison between the naive implementation (load, modify, store) versus the cache-like approach using the A and V flags. The results are shown in Figure \ref{fig:avresults}; a 16 to 22\% decrease was observed when using the A and V flags. 
 
 \begin{figure}[H]
   \centering
@@ -103,8 +124,8 @@ The IP Register stores the instruction pointer (16-bits), which keeps track of t
 
 
 \subsection{Stack Pointer Register (SP)} \label{sec:architecture:sp}
-The stack is the first part of RAM (addresses 0x0000 - 0x00FF) and is reserved to keep track of addresses in ROM that might need to be jumped to when flow encounters a loop-end instruction (\texttt{]}). The stack-pointer (SP) points to an address in this space; it is incremented whenever a new jump-address is pushed to the stack and decremented whenever an address is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it the SP overflows (wraps around back to 0) and starts overwriting previous values. This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs (and each of those loops is entered). Although possible, it is very unlikely to happen for the simple programs we intend to run.
-
+The stack is the first part of RAM (addresses 0x0000 - 0x00FF) and is reserved to keep track of addresses in ROM that might need to be jumped to when flow encounters a loop-end instruction (\texttt{]}). The stack-pointer (SP) points to an address in this space; it is incremented whenever a new jump-address is pushed to the stack and decremented whenever an address is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it the SP overflows (wraps around back to 0) and starts overwriting previous values. This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs (and each of those loops is entered). Although possible, it is very unlikely to happen for the simple programs we intend to run. In Section \ref{sec:results}, where the required stack size is measured for a suite of test-programs, this is confirmed; the largest value found for any required stack size in these programs was only 17, leaving plenty of space for even more complex programs.
+  
 \subsubsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 

@@ -130,17 +130,22 @@ struct EEPROMSettings {
   bool valid() const {
     return checksum == computeChecksum();
   }
- };
+};
 
+static_assert(sizeof(EEPROMSettings) <= 0xff);
 
 void LCDMenu::loadSettings() {
-  uint8_t const validFlag = EEPROM.read(EEPROM_VALID_FLAG_ADDRESS);
-  if (validFlag == EEPROM_VALID_FLAG_VALUE) {
-    EEPROMSettings set = {};
-    EEPROM.get(EEPROM_SETTINGS_ADDRESS, set);
-    if (set.valid()) _settings = set.settings;
-    else EEPROM.write(EEPROM_VALID_FLAG_ADDRESS, false);
+  uint8_t const validFlag  = EEPROM.read(EEPROM_VALID_FLAG_ADDRESS);
+  uint8_t const structSize = EEPROM.read(EEPROM_STRUCT_SIZE_ADDRESS);
+  if (validFlag != EEPROM_VALID_FLAG_VALUE || structSize != sizeof(EEPROMSettings)) {
+    saveSettings();
+    return;
   }
+
+  EEPROMSettings set = {};
+  EEPROM.get(EEPROM_SETTINGS_ADDRESS, set);
+  if (set.valid()) _settings = set.settings;
+  else EEPROM.write(EEPROM_VALID_FLAG_ADDRESS, false);
 }
 
 void LCDMenu::saveSettings() {
@@ -149,4 +154,5 @@ void LCDMenu::saveSettings() {
     EEPROM.update(EEPROM_SETTINGS_ADDRESS + idx, reinterpret_cast<byte const*>(&set)[idx]);
   }
   EEPROM.update(EEPROM_VALID_FLAG_ADDRESS, EEPROM_VALID_FLAG_VALUE);
+  EEPROM.update(EEPROM_STRUCT_SIZE_ADDRESS, sizeof(EEPROMSettings));
 }

@@ -19,8 +19,8 @@ enum LCDDriverPins: uint8_t {
 
 enum ModuleDriverPins: uint8_t {
   K_OUT_PIN = 0,
-  K_IN_PIN = 1,
-  SYSTEM_CLOCK_INTERRUPT_PIN = 2,
+  K_IN_PIN = 2,
+  //SYSTEM_CLOCK_INTERRUPT_PIN = 2,
   KEYBOARD_CLOCK_INTERRUPT_PIN = 3,
   DISPLAY_ENABLE_PIN = A1,
   KEYBOARD_ENABLE_PIN = A2,
@@ -109,12 +109,15 @@ enum IOBuffers: uint8_t {
 };
 
 enum EEPROMStorageParams: uint8_t {
-  EEPROM_VALID_FLAG_VALUE = 0xab,
+  EEPROM_VALID_FLAG_VALUE = 0xbf,
   EEPROM_VALID_FLAG_ADDRESS = 0,
-  EEPROM_SETTINGS_ADDRESS = 1
+  EEPROM_STRUCT_SIZE_ADDRESS = 1,
+  EEPROM_SETTINGS_ADDRESS = 2
 };
 
-enum HandshakeParams: int {
+enum GeneralParams: uint32_t {
+  MCU_FREQUENCY = 16000000,
+  ISR_FREQUENCY = 200,
   HANDSHAKE_STARTUP_DELAY_MILLIS = 500
 };
 

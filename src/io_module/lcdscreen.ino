@@ -7,10 +7,7 @@ LCDScreen::LCDScreen(Settings const &s):
 
 void LCDScreen::begin() {
   lcd.begin();
-  static char line[LINE_SIZE + 1];
-  memset(line, 0, LINE_SIZE + 1);
-  sprintf(line, "Loading slot: %d", settings.programSlot);
-  displayTemp(TEMP_MESSAGE_TIMEOUT, line);
+  displayTemp(TEMP_MESSAGE_TIMEOUT, "Loading slot: %d", settings.programSlot);
 }
 
 void LCDScreen::display(LCDBuffer::View const &view, bool forced) {
@@ -70,16 +67,6 @@ void LCDScreen::displayTemp(char const *lines[], uint8_t const n, size_t const t
 
 void LCDScreen::abortTemp() {
   tempTimeout = 0;
-}
-
-void LCDScreen::displayFrequency() {
-  char floatBuffer[LINE_SIZE + 1];
-  char stringBuffer[LINE_SIZE + 1];
-  
-  double kHz = measureFrequency();
-  dtostrf(kHz, LINE_SIZE - 4, FREQUENCY_DISPLAY_PRECISION, floatBuffer);
-  snprintf(stringBuffer, LINE_SIZE + 1, "%s kHz", floatBuffer);
-  displayTemp(FREQUENCY_TIMEOUT, "Clock Frequency", stringBuffer);
 }
 
 void LCDScreen::enableCursor() {

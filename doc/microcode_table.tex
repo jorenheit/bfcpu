@@ -2,8 +2,9 @@
 
 \begin{footnotesize}
   \begin{longtable}[c] {c|ccccc|c|llllll}
-                     Instr          & K & V & A & S     & Z    & Cycle & \multicolumn{6}{c}{Control Signals}                      \\ \hline
-    \rowcolor{White} Any except ``\texttt{.}''          &   &   &       &      &      & 0   & LD(FB)          & LD(I)         &        &        &        \\ \hline
+     Instr          & K & V & A & S     & Z    & Cycle & \multicolumn{6}{c}{Control Signals}                      \\ \hline
+    \rowcolor{White} Any except   &   &   &       &      &      & 0   & LD(FB)          & LD(I)         &        &        &        \\
+    \rowcolor{White} ``\texttt{.}'' and ``\texttt{,}'' &   &   &       &      &      &   &           &          &        &        & \\ \hline
     \rowcolor{Gray}  \texttt{+}   &   &   & 0 & 0     &      & 1     & INC(D)   & SETV(CU) & LD(FA)  &        &        &        \\
     \rowcolor{Gray}               &   &   & 0 & 0     &      & 2     & INC(IP)  & CLR(CC)   &         &        &        &        \\    
     \rowcolor{White}              &   &   & 1 & 0     &      & 1     & LD(D)    & OE(RAM)  &         &        &        &        \\
@@ -50,27 +51,53 @@
     \rowcolor{White}               &   &   &   & 1     &      & 1     & DEC(LS)  &          &         &        &        &        \\ 
     \rowcolor{White}               &   &   &   & 1     &      & 2     & INC(IP)  & CLR(CC)   &         &        &        &        \\ \hline
 
-    \rowcolor{Gray} \texttt{.}      &   &   & 0 &   &   & 0  & LD(FB)      & LD(I)     & EN(D)     &        &        &        \\ 
-    \rowcolor{White}                &   &   & 1 &   &   & 0  & LD(FB)      & LD(I)     & OE(RAM)   &        &        &        \\ 
-    \rowcolor{Gray}                 &   &   & 0 & 0 &   & 1  & EN(D)       & EN(SCR)   &           &        &        &        \\
-    \rowcolor{Gray}                 & 0 &   & 0 & 0 &   & 2  & EN(D)       & CLR(CC)    &           &        &        &        \\
-    \rowcolor{White}                &   &   & 1 & 0 &   & 1  & EN(D)       & EN(SCR)   &           &        &        &        \\
-    \rowcolor{White}                & 0 &   & 1 & 0 &   & 2  & OE(RAM)     & CLR(CC)    &           &        &        &        \\
-    \rowcolor{Gray}                 & 1 &   &   & 0 &   & 2  & LD(D)       & SETV(CU)  & LD(FA)    &        &        &        \\ 
-    \rowcolor{White}                &   &   &   & 1 &   & 1  & INC(IP)     & CLR(CC)    &           &        &        &        \\ \hline
+    \rowcolor{Gray}\texttt{.}       &   & 0 & 0 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{Gray}                 &   & 0 & 0 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    &        &        &        \\ 
+    \rowcolor{Gray}                 &   & 0 & 0 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    & LD(D)  & OE(RAM)&        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    & EN(D)  & WE(RAM)&        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{White}                & 0 & 1 & 1 & 0 &   & 0  & EN(D)       & EN(SCR)   & CLR(CC)   &         &        &        \\ 
+    \rowcolor{Gray}                 & 1 & 1 & 1 & 0 &   & 0  & LD(FA)      & CLR(K)    & INC(IP)   &        &        &        \\ 
+    \rowcolor{Gray}                 & 1 & 1 & 1 & 0 &   & 1  & LD(FB)      & CLR(CC)   &           &        &        &        \\ 
+    \rowcolor{White}                &   &   &   & 1 &   & 0  & LD(FB)      & LD(I)     &           &        &        &        \\ 
+    \rowcolor{White}                &   &   &   & 1 &   & 1  & INC(IP)     & CLR(CC)   &           &        &        &        \\ \hline
    
-    \rowcolor{Gray} \texttt{,}      &   &   &   & 0 &   & 1  & EN(KB)      &           &           &        &        &        \\
-    \rowcolor{Gray}                 & 0 &   &   & 0 &   & 2  & CLR(CC)      &           &           &        &        &        \\
-    \rowcolor{White}                & 1 &   &   & 0 &   & 2  & LD(D)       & SETV(CU)  & LD(FA)    &        &        &        \\    
-    \rowcolor{White}                & 1 &   &   & 0 &   & 3  & CLR(K)      & INC(IP)   & CLR(CC)    &        &        &        \\
-    \rowcolor{Gray}                 &   &   &   & 1 &   & 1  & INC(IP)     & CLR(CC)    &           &        &        &        \\ \hline
+    \rowcolor{Gray}\texttt{,}       &   & 0 & 0 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{Gray}                 &   & 0 & 0 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    &        &        &        \\ 
+    \rowcolor{Gray}                 &   & 0 & 0 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    & LD(D)  & OE(RAM)&        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    & EN(D)  & WE(RAM)&        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{White}                & 0 & 1 & 1 & 0 &   & 0  & EN(KB)      & CLR(CC)   &           &         &        &        \\ 
+    \rowcolor{Gray}                 & 1 & 1 & 1 & 0 &   & 0  & LD(D)       &           &           &        &        &        \\ 
+    \rowcolor{Gray}                 & 1 & 1 & 1 & 0 &   & 1  & SETV(CU)    & LD(FA)    & CLR(K)    & INC(IP) &        &        \\ 
+    \rowcolor{Gray}                 & 1 & 1 & 1 & 0 &   & 2  & LD(FB)      & LD(I)    & CLR(CC)   &        &        &        \\ 
+    \rowcolor{White}                &   &   &   & 1 &   & 0  & LD(FB)      & LD(I)     &           &        &        &        \\ 
+    \rowcolor{White}                &   &   &   & 1 &   & 1  & INC(IP)     & CLR(CC)   &           &        &        &        \\ \hline
 
 
-    \rowcolor{Gray} \texttt{RAND}   &   &   &   & 0 &   & 1  & EN(KB)      & EN(SCR)   &           &        &        &        \\
-    \rowcolor{Gray}                 & 0 &   &   & 0 &   & 2  & CLR(CC)      &           &           &        &        &        \\
-    \rowcolor{White}                & 1 &   &   & 0 &   & 2  & LD(D)       & SETV(CU)  & LD(FA)    &        &        &        \\    
-    \rowcolor{White}                & 1 &   &   & 0 &   & 3  & CLR(K)      & INC(IP)   & CLR(CC)    &        &        &        \\
-    \rowcolor{Gray}                 &   &   &   & 1 &   & 1  & INC(IP)     & CLR(CC)    &           &        &        &        \\ \hline
+    \rowcolor{Gray}\texttt{?}       &   & 0 & 0 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{Gray}                 &   & 0 & 0 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    &        &        &        \\ 
+    \rowcolor{Gray}                 &   & 0 & 0 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    & LD(D)  & OE(RAM)&        \\ 
+    \rowcolor{White}                &   & 0 & 1 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 0  & LD(FB)      & LD(I)     &           &         &        &        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 1  & SETV(CU)    & SETA(CU)  & LD(FA)    & EN(D)  & WE(RAM)&        \\ 
+    \rowcolor{Gray}                 &   & 1 & 0 & 0 &   & 2  & LD(FB)      & LD(I)     & CLR(CC)   &        &        &        \\ 
+    \rowcolor{White}                & 0 & 1 & 1 & 0 &   & 0  & EN(KB)      & EN(OUT)   & CLR(CC)   &         &        &        \\ 
+    \rowcolor{Gray}                 & 1 & 1 & 1 & 0 &   & 0  & LD(D)       &           &           &        &        &        \\ 
+    \rowcolor{Gray}                 & 1 & 1 & 1 & 0 &   & 1  & SETV(CU)    & LD(FA)    & CLR(K)    & INC(IP) &        &        \\ 
+    \rowcolor{Gray}                 & 1 & 1 & 1 & 0 &   & 2  & LD(FB)      & LD(I)    & CLR(CC)   &        &        &        \\ 
+    \rowcolor{White}                &   &   &   & 1 &   & 0  & LD(FB)      & LD(I)     &           &        &        &        \\ \hline
+    \rowcolor{White}                &   &   &   & 1 &   & 1  & INC(IP)     & CLR(CC)   &           &        &        &        \\ \hline
     
 
     \rowcolor{White} \texttt{NOP}   &   &   &   &   &   & 1  & INC(IP)     & CLR(CC)    &           &        &        &        \\ \hline
