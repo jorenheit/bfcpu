@@ -97,6 +97,7 @@
   \end{enumerate}
 }
 
+
 \newfloat{lstfloat}{htbp}{lop}
 \floatname{lstfloat}{Listing}
 \def\lstfloatautorefname{Listing}
@@ -139,7 +140,7 @@
 
 
 \begin{abstract}
-This report documents the design and implementation of Synapse-191, a fully functional computer built on breadboards to execute the Brainfuck (BF) programming language natively. Unlike traditional approaches that interpret or compile BF code on conventional architectures, Synapse‑191 treats BF as its instruction set, realized through a microcoded CPU constructed entirely from TTL logic components, RAM, and ROM—without programmable logic in the core. The system features a Harvard-like architecture, a two-phase clock capable of operating at over 200 kHz, and a modular design comprising registers, memory units, and a control unit driven by EEPROM-based microcode. A dedicated I/O module, powered by an Atmega328P, manages keyboard input, LCD output, and random number generation, providing a user interface for program selection and runtime configuration. Supporting tools—including an assembler, EEPROM programmer, microcode compiler, and emulation framework—enable efficient development and testing. The project demonstrates the feasibility of implementing an esoteric language as a native instruction set and offers insights into computer architecture, timing, and control logic at the hardware level. Outcomes, limitations, and potential improvements—such as PCB migration and extended data width—are discussed, highlighting both the educational value and practical challenges of building a CPU from first principles.
+This report documents the design and implementation of Synapse-191, a fully functional computer built on breadboards to execute the Brainfuck (BF) programming language natively. Unlike traditional approaches that interpret or compile BF code on conventional architectures, Synapse‑191 treats BF as its instruction set, realized through a microcoded CPU constructed entirely from TTL logic components, RAM, and ROM—without programmable logic in the core. The system features a Harvard-like architecture, a two-phase clock capable of operating at over 250 kHz, and a modular design comprising registers, memory units, and a control unit driven by EEPROM-based microcode. A dedicated I/O module, powered by an Atmega328P, manages keyboard input, LCD output, and random number generation, providing a user interface for program selection and runtime configuration. Supporting tools—including an assembler, EEPROM programmer, microcode compiler, and emulation framework—enable efficient development and testing. The project demonstrates the feasibility of implementing an esoteric language as a native instruction set and offers insights into computer architecture, timing, and control logic at the hardware level. The system ended up being able to run all programs from a diverse test-suite of BF programs, taken verbatim from the internet, without running into any hardware limitations and can be considered a very capable Brainf*ck execution machine, if such a thing even makes sense.
 \end{abstract}
 
 \mbox{}
@@ -168,6 +169,7 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 \include{implementation}
 \include{utilities}
 \include{results}
+\include{final_thoughts}
 \include{conclusion}
 
 \newpage
@@ -182,5 +184,13 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 \end{appendices}
 
 \include{references}
+
+\newpage
+\mbox{}
+\vfill
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{img/final_img}
+\end{figure}
 
 \end{document}
