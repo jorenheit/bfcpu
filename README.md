@@ -6,7 +6,7 @@
 **Synapse-191** is a fully functional 8-bit computer that executes Brainf\*ck (BF) programs *natively* on a breadboard CPU built entirely from TTL logic. The system is capable of running canonical Brainf*ck code directly from ROM and includes a supporting toolchain for assembling and flashing programs.
 
 For detailed design information, schematics, and background, refer to the accompanying report:  
-**[Full Project Report (PDF)](./doc/report.pdf)**
+**[Full Project Report (PDF)](./doc/synapse.pdf)**
 
 ---
 
