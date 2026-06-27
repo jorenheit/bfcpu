@@ -78,6 +78,64 @@
   columns=fullflexible
 }
 
+\lstdefinelanguage{PseudoCode}{
+  morekeywords=[1]{while,for,if,execute},
+  morekeywords=[2]{AND,OR,NOT},
+  morekeywords=[3]{Run,TargetBlock},
+  sensitive=true,
+  morecomment=[l]{//},
+  morestring=[b]",
+}
+
+\lstdefinestyle{pseudocode}{
+  language=PseudoCode,
+  basicstyle=\ttfamily\small,
+  keywordstyle=[1]\color{blue}\bfseries,
+  keywordstyle=[2]\color{purple}\bfseries,
+  keywordstyle=[3]\color{teal},
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=8pt,
+  showstringspaces=false,
+  tabsize=2,
+  breaklines=true,
+  columns=fullflexible,
+}
+
+\definecolor{bfComment}{gray}{0.45}
+\definecolor{bfCommand}{RGB}{0,90,160}
+\definecolor{bfLocation}{RGB}{130,70,160}
+
+\lstdefinelanguage{bf++}{
+  alsoletter={abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_},
+  morekeywords=[1]{+,-,<,>,.,,,[,]},
+  morekeywords=[2]{x,y,tmp,ptr,src,dst},
+  morekeywords=[3]{FrameMarker,Flag,SeekMarker,Value0,Value1,Scratch0,Scratch1,Payload0,Payload1},
+  sensitive=true,
+  morecomment=[l]{\#},
+}
+
+\lstdefinestyle{brainfuck}{
+  language=bf++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=[1]\color{bfCommand}\bfseries,
+  keywordstyle=[2]\color{bfLocation},
+  keywordstyle=[3]\color{bfLocation},  
+  commentstyle=\color{bfComment}\itshape,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=2,
+  breaklines=true,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{bfComment},
+  xleftmargin=1em,
+  framexleftmargin=0.8em,
+}
+
 \NewDocumentEnvironment{labeledenum}{m O{1}}{%
   \begin{enumerate}[
     label=\textbf{#1~\arabic*:},   % e.g. "Cycle 1:"
@@ -118,7 +176,7 @@
 \makeatother
 
 \title{Synapse-191}
-\subtitle{Building A Brainf*ck Computer on Breadboards}
+\subtitle{Building A Brainfuck Computer on Breadboards}
 \author{}
 \date{} 
 
@@ -140,7 +198,7 @@
 
 
 \begin{abstract}
-This report documents the design and implementation of Synapse-191, a fully functional computer built on breadboards to execute the Brainfuck (BF) programming language natively. Unlike traditional approaches that interpret or compile BF code on conventional architectures, Synapse‑191 treats BF as its instruction set, realized through a microcoded CPU constructed entirely from TTL logic components, RAM, and ROM—without programmable logic in the core. The system features a Harvard-like architecture, a two-phase clock capable of operating at over 250 kHz, and a modular design comprising registers, memory units, and a control unit driven by EEPROM-based microcode. A dedicated I/O module, powered by an Atmega328P, manages keyboard input, LCD output, and random number generation, providing a user interface for program selection and runtime configuration. Supporting tools—including an assembler, EEPROM programmer, microcode compiler, and emulation framework—enable efficient development and testing. The project demonstrates the feasibility of implementing an esoteric language as a native instruction set and offers insights into computer architecture, timing, and control logic at the hardware level. The system ended up being able to run all programs from a diverse test-suite of BF programs, taken verbatim from the internet, without running into any hardware limitations and can be considered a very capable Brainf*ck execution machine, if such a thing even makes sense.
+This report documents the design and implementation of Synapse-191, a fully functional computer built on breadboards to execute the Brainfuck (BF) programming language natively. Unlike traditional approaches that interpret or compile BF code on conventional architectures, Synapse‑191 treats BF as its instruction set, realized through a microcoded CPU constructed entirely from TTL logic components, RAM, and ROM—without programmable logic in the core. The system features a Harvard-like architecture, a two-phase clock capable of operating at over 250 kHz, and a modular design comprising registers, memory units, and a control unit driven by EEPROM-based microcode. A dedicated I/O module, powered by an Atmega328P, manages keyboard input, LCD output, and random number generation, providing a user interface for program selection and runtime configuration. Supporting tools—including an assembler, EEPROM programmer, microcode compiler, and emulation framework—enable efficient development and testing. The project demonstrates the feasibility of implementing an esoteric language as a native instruction set and offers insights into computer architecture, timing, and control logic at the hardware level. The system ended up being able to run all programs from a diverse test-suite of BF programs, taken verbatim from the internet, without running into any hardware limitations and can be considered a very capable Brainfuck execution machine, if such a thing even makes sense.
 \end{abstract}
 
 \mbox{}
@@ -163,25 +221,26 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 \newpage
 
 \include{introduction}
-\include{brainfck}
-\include{architecture}
-\include{control_sequences}
-\include{implementation}
-\include{utilities}
-\include{results}
-\include{final_thoughts}
-\include{conclusion}
+%% \include{brainfck}
+%% \include{architecture}
+%% \include{control_sequences}
+%% \include{implementation}
+%% \include{utilities}
+%% \include{results}
+\include{compiling}
+%% \include{final_thoughts}
+%% \include{conclusion}
 
 \newpage
-\begin{appendices}
-  \input{microcode_table}
-  \newpage \input{bfcpu_mu}
-  \newpage \input{bom}
-  \newpage \input{testsuite}
-  \newpage \input{isr_impl.tex}
-  \newpage \input{schematics}
-  \newpage \input{flashback}
-\end{appendices}
+%% \begin{appendices}
+%%   \input{microcode_table}
+%%   \newpage \input{bfcpu_mu}
+%%   \newpage \input{bom}
+%%   \newpage \input{testsuite}
+%%   \newpage \input{isr_impl.tex}
+%%   \newpage \input{schematics}
+%%   \newpage \input{flashback}
+%% \end{appendices}
 
 \include{references}
 
