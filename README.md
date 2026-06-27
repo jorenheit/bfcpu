@@ -56,6 +56,7 @@ The goal of this project was to implement a working CPU that runs Brainf*ck prog
 |-------------|--------------|
 | **[Rinku](https://github.com/jorenheit/rinku)** | C++ library used to emulate and test hardware modules and microcode logic during development. |
 | **[Mugen](https://github.com/jorenheit/mugen)** | Microcode compiler used to generate the control ROM images for the CPU. These are programmed once during construction. |
+| **[Acus](https://github.com/jorenheit/acus)** | Compiler backend for generating BF (under construction). |
 
 ---
 
