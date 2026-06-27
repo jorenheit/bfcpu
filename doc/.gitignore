@@ -2,7 +2,7 @@
 !*/
 !build.sh
 !*.tex
-!report.pdf
+!synapse.pdf
 !.gitignore
 
 datasheets/
