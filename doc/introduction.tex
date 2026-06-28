@@ -1,4 +1,4 @@
-\section{Introduction} \label{sec:introduction}
+\chapter{Introduction} \label{sec:introduction}
 The Brainfuck (BF) programming language is an esoteric programming language that is essentially impossible - or at least highly impractical - to actually write useful programs in. Even if you became a very skilled programmer in this language, the resulting programs would be incredibly slow to execute. Despite this, many programmers have challenged themselves to write stunning pieces of code just for fun, or for the learning experience it offers. In doing so, it teaches us about computer architecture, compilers/interpreters, memory, pointers and much more. For more information on the language itself, see Section \ref{sec:brainfck}.
 
 \paragraph{Goals} The main goal of this project was to build a computer that can actually run BF code natively. Normally, after having written some new piece of BF, the programmer presents this code to some program that either compiles it to an executable native to the host architecture, or interprets it in a virtual BF machine. However, instead of treating BF as a language that requires compilation or interpretation, why not view it as the instruction set of a, yet to exist, BF-CPU?
@@ -28,3 +28,56 @@ The machine has been tested by running many different BF programs on it that can
   \includegraphics[width=.9\textwidth]{img/pics/1000041100}
 \end{center}
 
+\section{Brainfuck}\label{sec:brainfck}
+\subsection{Language Description}
+Brainfuck is a popular esoteric programming language. Just like any other programming language, it allows the programmer to write programs consisting of commands that are executed in order. The key limitation is that the language provides only eight commands to the programmer, all written as a single character: ``\texttt{+-<>[].,}''. Each of these commands corresponds to an operation on an array of memory or a pointer, pointing to some location within this memory. At the start of the program, every cell in (an infinite amount of) memory is initialized to 0 and the pointer is pointing to the very first element (index 0, see Figure \ref{fig:bfmachine_initial}).
+%
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{img/bfmachine_initial}
+  \caption{Initial state of the BF machine.}
+  \label{fig:bfmachine_initial}
+\end{figure}
+%
+The commands then modify the contents of memory or the pointer as follows:
+\begin{itemize}
+\item \texttt{+} : add 1 to the current cell;
+\item \texttt{-} : subtract 1 from the current cell;
+\item \texttt{<} : move the pointer 1 cell to its left;
+\item \texttt{>} : move the pointer 1 cell to its right;
+\item \texttt{[} : if the current cell is nonzero, continue to the next instruction. Otherwise, skip all instructions and continue beyond the matching closing \texttt{]};
+\item \texttt{]} : if the current cell is zero, exit the loop and continue to the next instruction. Otherwise, loop back to its matching opening \texttt{[};
+\item \texttt{.} : send the value in the current cell to the output device;
+\item \texttt{,} : read a value from the input device and store it into the current cell.
+\end{itemize}
+Although the instruction set is minimal, it has been proven to be sufficient for performing any possible computation or program, also known as Turing-completeness \cite{esolangs-bf}. The catch is that this requires an unbounded (or infinite) amount of memory, which is obviously impossible. However, the same caveat holds for traditional systems, so we should be safe to assume that BF is Turing complete for all practical purposes.
+
+\subsection{Interpreters}
+To run a BF program, one usually feeds these commands into an interpreter written in a more common language. These interpreters are very straightforward to write. Listing \ref{lst:bfint} shows a very basic implementation (about 40 lines) a BF-interpreter written in C. This implementation initializes a block of memory to zero and defines a pointer to its first element. This pointer can be incremented or decremented to move along the array, increment/decrement the value it's pointing to or print it to the standard output. Most of its complexity is embedded in the handling of the loop-operators. When an opening bracket is encountered, the index of this instruction is stored in a jump-table. When control reaches its matching closing bracket and the value of the cell pointed to is nonzero, this stored index is reloaded in order to return to the start of the loop. When skipping a loop, i.e.~the current cell holds a zero when the opening bracket is evaluated, all commands up to and including the matching closing bracket are skipped.
+
+\begin{lstfloat}[H]
+  \lstinputlisting[linerange={bfint\_begin-bfint\_end}, language=C]{../src/simple_int/bfint.c}  
+\caption{Very basic implementation of a BF interpreter in C.}
+\label{lst:bfint}
+\end{lstfloat}
+
+When the Hello World program from Wikipedia \cite{bfwiki} is fed into the function of Listing \ref{lst:bfint}, it prints out the string \texttt{Hello World!}, as expected.
+\vspace{0.5cm}
+\begin{lstlisting}[language=bash]
+  $ ./bfint "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.> \
+             ---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+  Hello World!
+\end{lstlisting}
+
+
+\subsection{Brainfuck Instruction Set}
+\paragraph{BISC} Instead of viewing BF as a language that needs to be compiled or interpreted on a traditional machine, it can also be seen as an instruction set to a processor, built according to the BF architecture described above; let's refer to this as a Brainfuck Instruction Set Computer (BISC). A true BISC implementation would operate on the basis of only the 8 aforementioned instructions, which is truly tiny compared to more conventional instruction sets such as those implemented by modern processors or even microcontrollers and older 8-bit systems. Broadly speaking, Complex Instruction Set Computers (CISC) are designed to do as much work as possible in the least number of clock cycles, whereas Reduced Instruction Set Computers (RISC) focus on having a small instruction set with basic operations. For comparison, the x86 instruction set is massive with over 2000 instructions implemented in hardware (depending on the way you count, \cite{stefanheule}), whereas RISC-V processors have a fixed opcode width of only 7 bits, allowing for a maximum of 128 different opcodes \cite{danielmangum}.  BISC is therefore tiny even compared to the smallest instruction sets in use today. While compact, such a small instruction set inevitably leads to less efficient execution; a smaller number of instructions simply means you need more of them to perform meaningful computations, which is reflected by the fact that complex BF programs are typically very large in size.
+
+\paragraph{Harvard Architecture} Modern computers are built according to the von Neumann architecture \cite{vonneumann-wiki}, which specifies a CPU (containing registers and an ALU), a single unit of memory and input/output devices. In this architecture, both the program's instructions and data are stored in RAM. This allows for programs to change their own code at runtime (self-modifying code) because the program itself is data in a sense. This model does \emph{not} naturally fit the Brainfuck model, which has a strict seperation between instructions and data; the data pointer can never point to the instructions that govern it. This is why a Harvard architecture was adopted. In the Harvard architecture two kinds of memory exist: program memory containing the instructions - stored in read-only memory (ROM) - and data memory - stored in random-access-memory (RAM) - containing the modifyable data (Figure \ref{fig:harvard}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{img/harvard}
+  \caption{Schematic overview of the Harvard architecture.}
+  \label{fig:harvard}
+\end{figure}

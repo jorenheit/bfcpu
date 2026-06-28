@@ -1,4 +1,4 @@
-\section{Runtime Results} \label{sec:results}
+\chapter{Runtime Results} \label{sec:results}
 In this section we show snapshots of the output during the execution of each of the BF programs listed in Appendix \ref{sec:appendix:testsuite}. Each of these programs was able to run successfully at the maximum clock speed of around 250kHz ($5\times256=1280$ bytes of memory were initialized to 0). For each program, the following statistics have been collected in a modified version of the interpreter shown in Listing \ref{lst:bfint}:
 
 \begin{itemize}
@@ -10,11 +10,11 @@ In this section we show snapshots of the output during the execution of each of 
 \item \emph{Cycles per Instruction} - the average number of clock cycles needed to execute a single BF instruction. This value changes from program to program and depends on the structure of the program, the number of skipped loops, commonality of command sequences that leverage the A and V flags, etc. These values have been measured in the interpreter and have been (roughly) verified on the physical hardware.
 \end{itemize}
 
-\subsection{Stability}
+\section{Stability}
 Throughout development, the system was plagued by instablilities. At first, these could be traced back to bugs in the microcode, subtle architectural issues or even wrong connections that only sometimes cause problems. Then, the clock speed and overall stability was highly influenced by bad IO design. The IO module was connected to the system clock and expected to run its interrupt routine (ISR) within the time between two ticks; this left the module unresponsive on high clocks (there was near to no time between calls to the ISR to manage other functionality like polling the keyboard) and would sometimes cause bus contention if it could not reset its outputs in time. With a proper handshake implemented using the K-flag and a completely asynchronous setup where the IO module only polls its input at a very low frequency, leaving the rest of the microcontroller's capacity to handling the user interface, all these problems went away. New clock speeds were achieved to the point that it became stable up to the limits of the clock module itself. It has not been pushed any further at the time of writing, though that may very well be possible.
 
-\subsection{Test Suite}
-\subsubsection{\texttt{hello.bf}}
+\section{Test Suite}
+\subsection{\texttt{hello.bf}}
 
 \begin{figure}[H]
   \centering
@@ -40,7 +40,7 @@ It should be obvious why \emph{Hello World} is the first program to test. The ou
 \end{table}
 
 
-\subsubsection{\texttt{euler.bf}}
+\subsection{\texttt{euler.bf}}
 
 \begin{figure}[H]
   \centering
@@ -68,7 +68,7 @@ Since this programs runs indefinitely, there was no bound to the number of runti
 \end{table}
 
 
-\subsubsection{\texttt{phi.bf}}
+\subsection{\texttt{phi.bf}}
 
 \begin{figure}[H]
   \centering
@@ -93,7 +93,7 @@ Like $e$, the Golden Ration $\phi = \frac{1+\sqrt{5}}{2}$ is irrational and thus
   \label{tab:phi}
 \end{table}
 
-\subsubsection{\texttt{factorial.bf}}
+\subsection{\texttt{factorial.bf}}
 
 \begin{figure}[H]
   \centering
@@ -118,7 +118,7 @@ Another program that runs indefinitely is \texttt{factorial.bf}; it calculates $
   \label{tab:factorial}
 \end{table}
 
-\subsubsection{\texttt{primes.bf}}
+\subsection{\texttt{primes.bf}}
 
 \begin{figure}[H]
   \centering
@@ -144,7 +144,7 @@ Found on Reddit by the user Troemax \cite{primes}, this program checks primality
 \end{table}
 
 
-\subsubsection{\texttt{primes2.bf}}
+\subsection{\texttt{primes2.bf}}
 
 \begin{figure}[H]
   \centering
@@ -168,7 +168,7 @@ Like the former prime generating program, this program calculates all primes bel
   \caption{Properties of \texttt{primes.bf}, see Appendix \ref{sec:appendix:testsuite:primes2}}{tab:primes2}
 \end{table}
 
-\subsubsection{\texttt{tictactoe.bf}}
+\subsection{\texttt{tictactoe.bf}}
 
 \begin{figure}[H]
   \centering

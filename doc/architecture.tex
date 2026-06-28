@@ -1,5 +1,5 @@
-\section{Architecture} \label{sec:architecture}
-\subsection{Hardware Overview} \label{sec:architecture:overview}
+\chapter{Synapse-191 Architecture} \label{sec:architecture}
+\section{Hardware Overview} \label{sec:architecture:overview}
 A true BISC implementation is a direct representation of the abstract BF machine described in Section \ref{sec:brainfck}, consisting of an array of memory-cells together with a pointer pointing to one of these cells. The pointer can move along the array while modifying its contents one step at a time. Figure \ref{fig:simplerepresentation} illustrates an example intermediate state of such a system. Consider the BF program ``\texttt{>>>>>+.}'', applied to the initial conditions shown in the example. The pointer would take 5 steps to the right, landing on cell 9 which contains the number 41. It will then increment and output this value, displaying 42 on the screen (assuming a screen of some sort is used as the output device and it is displaying numbers directly rather than interpreting them as ASCII).
 
 \begin{figure}[H]
@@ -40,7 +40,7 @@ In a physical system, the data-tape would be a large memory space in RAM and the
   \label{fig:architecture}
 \end{figure}
 
-\subsection{Flags} \label{sec:architecture:flags}
+\section{Flags} \label{sec:architecture:flags}
 The state of the system is encoded using five flags: K, V, A, S, and Z. These flags were introduced to simplify control logic and enable performance optimizations during execution. Each flag serves a specific purpose, as explained below:
 
 \paragraph{K-Flag} The K-flag is used for communication between the system and the IO Module, which run asynchronously. The flag is set by the IO Module and reset by the system to let each other know when certain data transactions have been completed.
@@ -63,10 +63,10 @@ The state of the system is encoded using five flags: K, V, A, S, and Z. These fl
 \end{figure}
 
 
-\subsection{Data Pointer Register (DP)} \label{sec:architecture:dp}
+\section{Data Pointer Register (DP)} \label{sec:architecture:dp}
 The data-pointer corresponds to the pointer as specified in the BF-language. It points to some value in memory beyond the stack ($\ge$ 0x0100, see \ref{sec:architecture:sp}) and can be either incremented (moved right) or decremented (moved left) using the \texttt{>} and \texttt{<} instructions. Whenever the value pointed to by DP is modified by \texttt{+} or \texttt{-}, it is loaded into the D-register (see \ref{sec:architecture:d}), where it can be modified before being stored back into RAM.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 The DP should be able to increment and decrement (corresponding to the \texttt{<} and \texttt{>} commands), and should be able to be enabled/disabled because of its connection to the address bus of the RAM (the Stack Pointer (SP, see \ref{sec:architecture:sp}, is also connected to this bus). While all other modules have the ability to be reset, the DP is the only register that can be reset (to 0x0100) at runtime. This is necessary during boot, when all the datacells need to be initialized to 0 (see \ref{sec:sequences:bootloading}).
 
 \begin{enumerate}
@@ -77,16 +77,16 @@ The DP should be able to increment and decrement (corresponding to the \texttt{<
 \item R - Reset - Reset the value to 0x0100, the start of the datasection of RAM.
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em   
 \item DP\_OUT - 16 bits, asserted onto the address bus when enabled (EN high).
 \end{enumerate}
 
-\subsection{Data Register (D)} \label{sec:architecture:d}
+\section{Data Register (D)} \label{sec:architecture:d}
 The data register holds a representation of the value currently pointed to by the DP and can be incremented and decremented (using the \texttt{+} and \texttt{-} commands). This register provides the Z-flag to signify that its current value is 0. Among other things, this flag can be used to determine whether or not to enter a loop.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em   
 \item D\_IN - 8 bits - Data inputs, connected to the databus.
@@ -96,7 +96,7 @@ The data register holds a representation of the value currently pointed to by th
 \item D - Down - Decrement the stored value.
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item D\_OUT - 8 bits - Data outputs, connected to the databus.
@@ -104,10 +104,10 @@ The data register holds a representation of the value currently pointed to by th
 \end{enumerate}
 
 
-\subsection{Instruction Pointer Register (IP)} \label{sec:architecture:ip}
+\section{Instruction Pointer Register (IP)} \label{sec:architecture:ip}
 The IP Register stores the instruction pointer (16-bits), which keeps track of the instruction that is currently being executed. It points to a certain address in ROM (which stores the program) and is usually incremented after each instruction has finished executing, in order to move to the next instruction. However, when the processor encounters the \texttt{[}-instruction (and a loop is entered), its value is stored in RAM at the location pointed to by the stack pointer (SP, see \ref{sec:architecture:sp}). When the matching \texttt{]}-instruction is encountered, this value can be loaded back into the IP in order to jump back to the start of the loop if needed.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 
 \item IP\_IN - 16 bits - Data inputs, connected to the databus.
@@ -116,17 +116,17 @@ The IP Register stores the instruction pointer (16-bits), which keeps track of t
 \item U - Up -Increment the stored value. 
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item IP\_OUT - 16 bits - Data outputs, connected to the databus and the address inputs of program-ROM;
 \end{enumerate}
 
 
-\subsection{Stack Pointer Register (SP)} \label{sec:architecture:sp}
+\section{Stack Pointer Register (SP)} \label{sec:architecture:sp}
 The stack is the first part of RAM (addresses 0x0000 - 0x00FF) and is reserved to keep track of addresses in ROM that might need to be jumped to when flow encounters a loop-end instruction (\texttt{]}). The stack-pointer (SP) points to an address in this space; it is incremented whenever a new jump-address is pushed to the stack and decremented whenever an address is popped off the stack. In this implementation, the SP is an 8-bit value, which means that at most 256 different values can be stored onto the stack before it the SP overflows (wraps around back to 0) and starts overwriting previous values. This would happen if a BF program was loaded that has more than 256 nested \texttt{[]}-pairs (and each of those loops is entered). Although possible, it is very unlikely to happen for the simple programs we intend to run. In Section \ref{sec:results}, where the required stack size is measured for a suite of test-programs, this is confirmed; the largest value found for any required stack size in these programs was only 17, leaving plenty of space for even more complex programs.
   
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 
 \item EN - Enable - Assert the stack-pointer onto the address-bus.
@@ -134,36 +134,36 @@ The stack is the first part of RAM (addresses 0x0000 - 0x00FF) and is reserved t
 \item D - Down - Decrement the stack-pointer.
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item SP\_OUT - 8 bits - connected to the address bus of RAM.
 \end{enumerate}
 
-\subsection{Loop Skip Register (LS)} \label{sec:architecture:ls}
+\section{Loop Skip Register (LS)} \label{sec:architecture:ls}
 The Loop Skip (LS) register is a counter that indicates whether or not we're in the process of skipping a loop. In BF, a loop (\texttt{[}) is only entered when the value currently pointed to is nonzero. In the case that it is zero, execution resumes beyond its matching loop-end instruction (\texttt{]}). When it is determined that a loop must be skipped (based on the Z-flag provided by the D-register), the LS register is incremented from 0 to 1 and the S-flag is set. This flag will remain set as long as the value in LS is nonzeros, indicating that the system is in a skip-state. Subsequent instructions are then skipped until either another (nested) loop-start or a closing loop-end is encountered. On the former, the LS is incremented again while on the latter the LS is decremented. This has the effect that the LS becomes 0 again after the \texttt{]} that matches the original \texttt{[} which led to the skip. Normal execution occurs as soon as LS has become 0 again and the S-flag is reset back to 0.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
   \itemsep0em
 \item U - Up - Increment the stored value.
 \item D - Down - Decrement the stored value.
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item SET\_S - Skip flag - set when it value is nonzero, connected to FB.
 \end{enumerate}
 
-\subsection{Flag Registers (FA and FB)} \label{sec:architecture:flags}
+\section{Flag Registers (FA and FB)} \label{sec:architecture:flag-registers}
 \paragraph{FA} The first flag register (FA) holds two flag values, A and V, which are used to indicate that either the address (A) or value (V) has changed during one of the previous instructions. For instance, if D was incremented (or decremented), the V-flag is set to indicate a change of the \emph{value} being pointed to: the value in RAM is now outdated. When DP is incremented (or decremented), the A-flag is set to indicate a change of the current \emph{address}, meaning that the value in D is now outdated. For a more detailed description of the function and application of these flags, refer to Section \ref{sec:sequences:+-} and \ref{sec:sequences:<>}.
 
 \paragraph{FB} On the zeroth cycle of every instruction, these flags are latched into the FB register together with the Z and S-flags (set by the D and LS registers) for a total of 4 flags. This happens simultaneous with loading the next instruction into the instruction register (I, see \ref{sec:architecture:i}) and is not refreshed until loading the next instruction to make sure that the flag-state remains constant throughout the execution of the current instruction.
 
 \paragraph{K-Flag} The previously mentioned K-flag is specific to interactions with the IO-module and is not buffered in either of the flag registers. It is discussed more thoroughly in Sections \ref{sec:sequences:output} and \ref{sec:sequences:input}.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 
 \item SET\_A - Assert the address-change-flag onto FA.
@@ -172,31 +172,31 @@ The Loop Skip (LS) register is a counter that indicates whether or not we're in 
 \item LD(FB) - Load A, V (previously buffered in FA), Z and S (from D and LS) into FB. 
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item F\_OUT - 4 bits - connected to the instruction decoder inside the Control Unit.
 \end{enumerate}
 
 
-\subsection{Instruction Register (I)} \label{sec:architecture:i}
+\section{Instruction Register (I)} \label{sec:architecture:i}
 The instruction register I buffers the current instruction pointed to by the IP. The instruction is loaded from program ROM into I at the start of every new instruction (cycle 0), right after IP has been incremented. Its outputs are used as part of the microcode address that goes into the decoder of the CU (see Figure \ref{fig:decoder} in Section \ref{sec:sequences}).
 
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 
 \item LD(I) - Load the instruction pointed to by IP
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item I\_OUT - 4 bits - connected to the instruction decoder inside the Control Unit.
 \end{enumerate}
 
 
-\subsection{Register Driver} \label{sec:architecture:registerdriver}
+\section{Register Driver} \label{sec:architecture:registerdriver}
 Rather than having a separate signal for each of the INC/DEC-inputs of each register (e.g.~ INC\_D, INC\_LS, etc), a driver module was designed (see \ref{sec:implementation:registerdriver}) to drive registers that support modification of their contents (increment/decrement). In addition to a universal INC/DEC signal, three Register Select (RS) bits are used to index the target-register. This approach has two advantages:
 \begin{enumerate}
 \item It decreases the amount of control signals needed;
@@ -222,7 +222,7 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
   \label{tab:registers}
 \end{table}
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
   \itemsep0em
 \item RS0 - Register Select Bit 0
@@ -232,7 +232,7 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
 \item DEC - Decrement selected register
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item U - 5 bits - Up signals - Connected to the U input of all registers that support the INC operation.
@@ -240,25 +240,25 @@ The driver module accepts 5 control signals: 3 register-select signals (RS0 thro
 \end{enumerate}
 
 
-\subsection{Cycle Counter (CC)} \label{sec:architecture:cc}
+\section{Cycle Counter (CC)} \label{sec:architecture:cc}
 Almost every BF instruction requires multiple cycles to complete. Therefore, in addition to the instruction and state, a cycle counter is used to determine the control signals that should be sent out at each step of the instruction. This cycle counter is implemented as a 3-bit counting register (allowing for at most 8 cycles per instruction) that increments on every clock cycle and sends its output to the control unit. Its only control signal is the clear signal (CLR) which resets the count to 0, in order to fetch the next instruction.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em
 \item CLR - Cycle Reset - Reset the count to 0;
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em
 \item CC\_OUT - 3 bits - Current value of the register (0-8).
 \end{enumerate}
 
-\subsection{Data Memory (RAM)}  \label{sec:architecture:ram}
+\section{Data Memory (RAM)}  \label{sec:architecture:ram}
 RAM is divided into two parts: stack and data. The first 256 bytes (0x0000 - 0x00FF) make up the stack and are indexed by the stack pointer (\ref{sec:architecture:sp}). The data (corresponding to the BF tape) is stored at addresses 0x0100 through 0xFFFF and are indexed by the data pointer (\ref{sec:architecture:dp}). Its address lines are connected to the address bus, which in turn receives its value from either the DP or the SP. Its data lines are bidirectional and are connected to the data bus. When the Write Enable (WE) signal is active, data can be read from the bus and written into RAM. When instead the Output Enable (OE) signal is active, the current value in RAM (determined by the address on the address bus) is asserted onto the data bus.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 
 \item DATA\_IN - 16 bits - Input data, connected to the databus.
@@ -267,31 +267,31 @@ RAM is divided into two parts: stack and data. The first 256 bytes (0x0000 - 0x0
 \item WE - Write Enable - Write the value on the databus into the current address.
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item DATA\_OUT - 16 bits - Output data, connected to the databus (same physical lines as DATA\_IN).
 \end{enumerate}
 
-\subsection{Program Memory (ROM)} \label{sec:architecture:rom}
+\section{Program Memory (ROM)} \label{sec:architecture:rom}
 The actual BF instructions are stored in Read-Only-Memory (ROM) and are addressed by the IP (\ref{sec:architecture:ip}). A 4-bit instruction is stored at the address pointed to by the IP. It is sent to the CU where it is used to determine the set of control signals, together with the flags and cycle counter.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 
 \item ADDR\_IN - 16 bits - Address lines, connected to the IP.
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item INS\_OUT - 4 bits - Instruction data, connected to the CU.
 \end{enumerate}
 
 
-\subsection{Screen (SCR)}  \label{sec:architecture:scr}
+\section{Screen (SCR)}  \label{sec:architecture:scr}
 The output module (which is assumed to be a screen) will be attached to the data bus and will display whatever is on the bus when enabled using the EN signal. Because the output is handled asynchronously by some peripheral that will, from the perspective of the CPU, be viewed as a black box, it needs a flag to acknowledge a successful data-transfer. This is done through the K-flag, which is set by the peripheral after reading data from the databus (this flag is shared with the input device for a similar purpose). The K-flag can only be reset by the CU using the CLR\_K signal, indicating that the transfer procedure has been completed.
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 
 \item DATA\_IN - 8 bits - connected to the data bus.
@@ -299,20 +299,20 @@ The output module (which is assumed to be a screen) will be attached to the data
 \item CLR\_K - Clears the K-flag - connected to the CU (this signal is shared with the input module (KB, see \ref{sec:architecture:kb}).
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 None.
 
-\subsection{Keyboard (KB)} \label{sec:architecture:kb}
+\section{Keyboard (KB)} \label{sec:architecture:kb}
 The input device to the computer is assumed to be a keyboard of some sort\footnote{At a later stage in the process of building the CPU, a Random Number Generator (RNG) was implemented as a second input device, to support a common Brainfuck extension, where the \texttt{?}-command is used to generate a random number in the currently active cell.}, that implements a buffer from which some 8-bit value can be requested. The control unit can assert the enable-signal of this device and should then wait until the K-flag is set, at which point the data should ready to be read from the databus. It is left up to the implementation of the peripheral to decide what to do when there is nothing in the input-buffer (either wait for user input or return 0). Shared with the output-peripheral, the K-flag is reset to communicate that the data has been transferred and the input-device can yield control of the databus back to the system.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em 
 \item EN - Enable - Make the contents of the input buffer available on the databus.
 \item CLR\_K - Clears the K-flag - connected to the CU (this signal is shared with the output module (SCR, see \ref{sec:architecture:scr}).
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item DATA\_OUT - 8 bits - Output data, connected to the databus.
@@ -320,10 +320,10 @@ The input device to the computer is assumed to be a keyboard of some sort\footno
 
 
 
-\subsection{Control Unit} \label{sec:architecture:cu}
+\section{Control Unit} \label{sec:architecture:cu}
 Each of the aforementioned components/modules has one or more control inputs that determine what happens on the next clock cycle. For example, some register-modules can be told to load a value from their input, increment or decrement the currently stored value, or do nothing at all. It is the Control Unit (CU) that supplies the appropriate control signals to each of the modules before the next clock pulse occurs, depending on the current instruction and state determined by the flags and cycle counter. The implementation details of how this is done in hardware are discussed in Section \ref{sec:implementation}.
 
-\subsubsection*{Inputs}
+\subsection*{Inputs}
 \begin{enumerate}
 \itemsep0em
 \item CC\_IN - 3 bits - Cycle counter input lines.
@@ -331,7 +331,7 @@ Each of the aforementioned components/modules has one or more control inputs tha
 \item FLAGS\_IN - 5 bits - Flag input lines (from FB and K).
 \end{enumerate}
 
-\subsubsection*{Outputs}
+\subsection*{Outputs}
 \begin{enumerate}
 \itemsep0em 
 \item HLT - Halt Clock

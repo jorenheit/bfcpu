@@ -1,7 +1,7 @@
-\section{Utilities} \label{sec:utilities}
+\chapter{Supporting Tools} \label{sec:utilities}
 While designing and implementing the computer, several supporting utilities were developed. The assembler (\texttt{bfasm}) is responsible for translating BF programs (text) into machine language (binary), the programmer and its software are used to write data to EEPROM chips and Mugen aids in having a more maintainable microcode definition. Each of these 3 utilities will be described in more detail below.
 
-\subsection{Assembler: \texttt{bfasm}} \label{sec:utilities:bfasm}
+\section{Assembler: \texttt{bfasm}} \label{sec:utilities:bfasm}
 Even though the computer is designed to run BF natively, we can't just burn any text-file containing BF commands onto the program-ROM and expect it to execute them. Instead, each of these commands has to be translated into its corresponding binary opcode. Table \ref{tab:opcodes} lists all the available commands and the values that map to these commands. As explained in Section \ref{sec:sequences}, there are a few non-BF that have been added.
 
 \begin{table}[H]
@@ -31,7 +31,7 @@ Even though the computer is designed to run BF natively, we can't just burn any 
 
 \texttt{bfasm} performs pretty much a one-to-one transformation of the BF commands in the provided textfile into these values. It will add the preamble commands to initialize and bootload the system as was discussed in Section \ref{sec:sequences:binary} and shown in Figure \ref{fig:binary_format}).
 
-\subsubsection{Features}
+\subsection{Features}
 The \texttt{bfasm} utility provides the following features:
 \paragraph{Zero Initialization} By default, only a single INIT instruction will be emitted in the preamble of the resulting binary file. This will initialize a single 256 byte block of RAM when the system boots. In practice this proved to be enough for most programs but if more is needed, \texttt{bfasm} has the option to emit an arbitrary amount of INIT instructions.
 \paragraph{Print Filenames} Especially when multiple programs are written into a single binary, it can be helpful to see what program is running after loading a slot at runtime. The \texttt{-p} flag tells \texttt{bfasm} to generate BF code that prints the source filename before it actually runs. This code precedes the HALT instruction that is inserted right before the body of the program; the filename is displayed and the user can resume the clock knowing which program will run.
@@ -62,7 +62,7 @@ Example: ./src/bfasm/bfasm -p -o image.bin program1.bf program2.bf
 \end{lstlisting}
 
 \newpage
-\subsection{Programmer: \texttt{bflash}} \label{sec:utilities:bflash}
+\section{Programmer: \texttt{bflash}} \label{sec:utilities:bflash}
 
 \begin{figure}[H]
   \centering
@@ -71,10 +71,10 @@ Example: ./src/bfasm/bfasm -p -o image.bin program1.bf program2.bf
   \label{fig:programmer}
 \end{figure}
 
-\subsubsection{Overview}
+\subsection{Overview}
 Given that there are four EEPROM chips embedded in the computer (one containing the program and three containing the microcode), we had to develop a toolkit for programming these. Specialized programmers can be pretty expensive and relatively hard to acquire, so an Arduino Nano was used to carry out that task. It waits for a serial connection and transfers incoming data byte per byte to the EEPROM chip. This serial connection is established by a Python script that accepts a binary blob and passes this on to the Arduino. The Python utility is called \texttt{bflash} (although it's not really BF-specific); its source and the Arduino sketch can be found at \url{https://github.com/jorenheit/bfcpu/tree/main/src/bflash}. A schematic for the programmer hardware (Figure \ref{fig:programmer}) is shown in Appendix \ref{sec:appendix:schematics}.
 
-\subsubsection{Flashing the AT28C64B}
+\subsection{Flashing the AT28C64B}
 The AT28C64B 8x8K EEPROM chip is used for both microcode as program storage. A value can be written to a specific address by asserting  using the following sequence of inputs:
 \begin{enumerate}
 \item Assert the value and address onto the data and address lines of the EEPROM.
@@ -82,20 +82,20 @@ The AT28C64B 8x8K EEPROM chip is used for both microcode as program storage. A v
 \item Hold CE (Chip Enable) low for at least 100ns; we chose 1$\mu$s because this is the smallest delay that can be performed using standard Arduino library functions.
 \end{enumerate}
 
-\subsubsection{Shift Register}
+\subsection{Shift Register}
 Because of the large number of connections to the EEPROM chip (13 address lines, 8 data lines and 3 control lines), two shift registers (74HC595) were used to buffer the address and WE/OE control lines.
 
 
-\subsection{Microcode Compiler (Mugen)} \label{sec:utilities:mugen}
+\section{Microcode Compiler (Mugen)} \label{sec:utilities:mugen}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.3\textwidth]{img/mugen_logo}
 \end{figure}
 
-\subsubsection{Motivation}
+\subsection{Motivation}
 Initially, the binary images that were burnt onto the microcode EEPROM chips were generated using a simple Octave/Matlab script. This meant that both the microcode and the logic to generate the images had to be expressed in this language. While this certainly worked (albeit a bit slow), we felt the need to develop a more general approach to generating microcode images. To satisfy this need, Mugen was developed. It takes a file in which the microcode can be expressed intuitively and generates the binary images from it. The Mugen project can be found in \url{https://github.com/jorenheit/mugen}. The listing in Appendix \ref{sec:appendix:mugen} shows the contents Mugen specification file for this project. 
 
-\subsubsection{File Structure}
+\subsection{File Structure}
 A Mugen file consists of four or five different sections in any order:
 \begin{itemize}
 \item \texttt{rom}: specifies the ROM configuration of the system;
@@ -107,7 +107,7 @@ A Mugen file consists of four or five different sections in any order:
 \end{itemize}
 
 \newpage
-\subsection{Emulation Framework (Rinku)}
+\section{Emulation Framework (Rinku)}
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.3\textwidth]{img/rinku_logo}

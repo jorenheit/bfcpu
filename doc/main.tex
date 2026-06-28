@@ -1,6 +1,6 @@
-\documentclass{article}
+\documentclass[11pt,oneside,openany]{book}
 
-\usepackage[toc,page]{appendix}
+% \usepackage[toc,page]{appendix} % not needed with book + \appendix
 \usepackage{listings}
 \usepackage{float}
 \usepackage{graphicx}
@@ -79,11 +79,11 @@
 }
 
 \lstdefinelanguage{PseudoCode}{
-  morekeywords=[1]{while,for,if,execute},
+  morekeywords=[1]{while,for,if,execute, low, high},
   morekeywords=[2]{AND,OR,NOT},
   morekeywords=[3]{Run,TargetBlock},
   sensitive=true,
-  morecomment=[l]{//},
+  morecomment=[l]{\#},
   morestring=[b]",
 }
 
@@ -111,7 +111,7 @@
 \lstdefinelanguage{bf++}{
   alsoletter={abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_},
   morekeywords=[1]{+,-,<,>,.,,,[,]},
-  morekeywords=[2]{x,y,tmp,ptr,src,dst},
+  morekeywords=[2]{x,y,s,tmp,ptr,src,dst},
   morekeywords=[3]{FrameMarker,Flag,SeekMarker,Value0,Value1,Scratch0,Scratch1,Payload0,Payload1},
   sensitive=true,
   morecomment=[l]{\#},
@@ -181,6 +181,7 @@
 \date{} 
 
 \begin{document}
+\frontmatter
 \thispagestyle{empty}
 \maketitle
 \vspace{3cm}
@@ -197,9 +198,9 @@
 \newpage
 
 
-\begin{abstract}
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
 This report documents the design and implementation of Synapse-191, a fully functional computer built on breadboards to execute the Brainfuck (BF) programming language natively. Unlike traditional approaches that interpret or compile BF code on conventional architectures, Synapse‑191 treats BF as its instruction set, realized through a microcoded CPU constructed entirely from TTL logic components, RAM, and ROM—without programmable logic in the core. The system features a Harvard-like architecture, a two-phase clock capable of operating at over 250 kHz, and a modular design comprising registers, memory units, and a control unit driven by EEPROM-based microcode. A dedicated I/O module, powered by an Atmega328P, manages keyboard input, LCD output, and random number generation, providing a user interface for program selection and runtime configuration. Supporting tools—including an assembler, EEPROM programmer, microcode compiler, and emulation framework—enable efficient development and testing. The project demonstrates the feasibility of implementing an esoteric language as a native instruction set and offers insights into computer architecture, timing, and control logic at the hardware level. The system ended up being able to run all programs from a diverse test-suite of BF programs, taken verbatim from the internet, without running into any hardware limitations and can be considered a very capable Brainfuck execution machine, if such a thing even makes sense.
-\end{abstract}
 
 \mbox{}
 \vfill
@@ -212,7 +213,8 @@ This report documents the design and implementation of Synapse-191, a fully func
 \newpage
 \mbox{}
 \vfill
-\section*{Acknowledgement}
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
 I would like to express my sincere gratitude to Artur Topal, a former student of mine, with whom this project first began. Together, we set out on this journey when he was looking for a project for his \textit{profielwerkstuk}---a kind of final high school research project in the Netherlands. Artur played a vital role in the early stages of the design, from theoretical planning and debugging to constructing logic circuits and keeping the project’s momentum alive. His sharp mind, perseverance, and enthusiasm were invaluable and have significantly contributed to the eventual success of this project.\\[1em]
 \textbf{Thank you, Artur.}
 \newpage
@@ -220,27 +222,36 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 \tableofcontents
 \newpage
 
+\mainmatter
+
+\part{The Brainfuck Computer}
+
 \include{introduction}
-\include{brainfck}
 \include{architecture}
 \include{control_sequences}
 \include{implementation}
 \include{utilities}
 \include{results}
-%\include{compiling}
-\include{final_thoughts}
-\include{conclusion}
 
-\newpage
-%% \begin{appendices}
-%%   \input{microcode_table}
-%%   \newpage \input{bfcpu_mu}
-%%   \newpage \input{bom}
-%%   \newpage \input{testsuite}
-%%   \newpage \input{isr_impl.tex}
-%%   \newpage \input{schematics}
-%%   \newpage \input{flashback}
-%% \end{appendices}
+\part{Compiling to Brainfuck}
+
+\include{compiling}
+
+\part{Reflection}
+
+\include{final_thoughts}
+
+\appendix
+
+\include{microcode_table}
+\include{bfcpu_mu}
+\include{bom}
+\include{testsuite}
+\include{isr_impl}
+\include{schematics}
+\include{flashback}
+
+\backmatter
 
 \include{references}
 
