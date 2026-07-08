@@ -18,6 +18,9 @@ Run:
 
 Keys are shown in the in-app help pane footer. Press '?' inside the app for a
 larger help overlay.
+
+NOTE: This program was vibecoded entirely. Thanks wonderful LLM for doing this so
+      I don't have to think about UI stuff.
 """
 
 from __future__ import annotations

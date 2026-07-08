@@ -8,6 +8,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{booktabs}
+\usepackage{longtable}
 \usepackage{multirow}
 \usepackage{xcolor,colortbl}
 \usepackage{longtable}
@@ -136,6 +137,30 @@
   framexleftmargin=0.8em,
 }
 
+\lstdefinestyle{cpp}{
+  language=C++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{green!40!black}\itshape,
+  stringstyle=\color{orange!70!black},
+  numberstyle=\scriptsize\color{gray},
+  numbers=left,
+  numbersep=8pt,
+  stepnumber=1,
+  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=false,
+  tabsize=2,
+  keepspaces=true,
+  columns=fullflexible,
+  frame=single,
+  rulecolor=\color{black!20},
+  framesep=4pt,
+  xleftmargin=1.5em,
+  framexleftmargin=1em,
+  captionpos=b
+}
+
 \NewDocumentEnvironment{labeledenum}{m O{1}}{%
   \begin{enumerate}[
     label=\textbf{#1~\arabic*:},   % e.g. "Cycle 1:"
@@ -176,7 +201,7 @@
 \makeatother
 
 \title{Synapse-191}
-\subtitle{Building A Brainfuck Computer on Breadboards}
+\subtitle{Building A Brainfuck Computing Environment}
 \author{}
 \date{} 
 
@@ -224,32 +249,33 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 
 \mainmatter
 
-\part{The Brainfuck Computer}
+%% \part{The Brainfuck Computer}
 
-\include{introduction}
-\include{architecture}
-\include{control_sequences}
-\include{implementation}
-\include{utilities}
-\include{results}
+%% \include{introduction}
+%% \include{architecture}
+%% \include{control_sequences}
+%% \include{implementation}
+%% \include{utilities}
+%% \include{results}
 
-\part{Compiling to Brainfuck}
+\part{Brainfuck Compilation}
 
 \include{compiling}
 
-\part{Reflection}
+%% \part{Reflection}
 
-\include{final_thoughts}
+%% \include{final_thoughts}
 
 \appendix
 
-\include{microcode_table}
-\include{bfcpu_mu}
-\include{bom}
-\include{testsuite}
-\include{isr_impl}
-\include{schematics}
-\include{flashback}
+%% \include{microcode_table}
+%% \include{bfcpu_mu}
+%% \include{bom}
+%% \include{testsuite}
+%% \include{isr_impl}
+\include{factory_table}
+%% \include{schematics}
+%% \include{flashback}
 
 \backmatter
 
