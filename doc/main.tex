@@ -180,6 +180,12 @@
   \end{enumerate}
 }
 
+% Tables
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{T}[1]{>{\raggedright\arraybackslash\ttfamily}p{#1}}
+
 
 \newfloat{lstfloat}{htbp}{lop}
 \floatname{lstfloat}{Listing}
@@ -249,7 +255,7 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 
 \mainmatter
 
-%% \part{The Brainfuck Computer}
+\part{The Brainfuck Computer}
 
 %% \include{introduction}
 %% \include{architecture}
@@ -260,20 +266,20 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 
 \part{Brainfuck Compilation}
 
-\include{compiling}
+\include{compilation}
 
-%% \part{Reflection}
+\part{Reflection}
 
 %% \include{final_thoughts}
 
-\appendix
+%% \appendix
 
 %% \include{microcode_table}
 %% \include{bfcpu_mu}
 %% \include{bom}
 %% \include{testsuite}
 %% \include{isr_impl}
-\include{factory_table}
+%% \include{factory_table}
 %% \include{schematics}
 %% \include{flashback}
 
