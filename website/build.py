@@ -662,7 +662,6 @@ def copy_assets(source_dir: Path, output: Path) -> None:
 def header_html(route: str) -> str:
     nav = [
         ("Hardware", "/synapse-191/", route.startswith("/synapse-191")),
-        ("Architecture", "/synapse-191/architecture/", "architecture" in route),
         ("Acus", "/acus/", route.startswith("/acus")),
         ("Appendix", "/appendix/", route.startswith("/appendix")),
     ]
