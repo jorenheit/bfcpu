@@ -335,6 +335,20 @@ def collect_source_label_titles(source: str) -> dict[str, str]:
 
 def normalize_custom_environments(source: str) -> str:
     """Lower LaTeX environments that Pandoc's reader otherwise discards."""
+
+    # Font-size environments affect only PDF layout. Pandoc may discard their
+    # complete contents, so unwrap them for HTML conversion.
+    source = re.sub(
+        r"\\begin\{(?:tiny|scriptsize|footnotesize|small|normalsize|large|Large|LARGE|huge|Huge)\}",
+        "",
+        source,
+    )
+    source = re.sub(
+        r"\\end\{(?:tiny|scriptsize|footnotesize|small|normalsize|large|Large|LARGE|huge|Huge)\}",
+        "",
+        source,
+    )
+
     source = re.sub(r"\\begin\{wrapfigure\}\{[^}]*\}\{[^}]*\}", r"\\begin{figure}", source)
     source = source.replace(r"\end{wrapfigure}", r"\end{figure}")
     pattern = re.compile(r"\\begin\{lstfloat\}(?:\[[^]]*\])?(.*?)\\end\{lstfloat\}", re.S)
@@ -460,10 +474,10 @@ def normalize_table_columns(source: str) -> str:
         return rf"\begin{{longtable}}{{{columns}}}"
 
     return re.sub(
-        r"\\begin\{longtable\}\{([^\n]+)\}",
+        r"\\begin\{longtable\}(?:\[[^]]*\])?\s*\{([^\n]+)\}",
         normalize,
         source,
-    )
+    )    
 
 def distribute_footnotes(pages: list[dict[str, object]]) -> None:
     notes: dict[str, str] = {}
