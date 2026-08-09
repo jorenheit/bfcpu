@@ -355,6 +355,7 @@ def normalize_custom_environments(source: str) -> str:
 
 def preprocess_latex(source: str, source_dir: Path, citations: dict[str, int]) -> tuple[str, list[str]]:
     source = normalize_custom_environments(source)
+    source = normalize_table_columns(source)
     source = re.sub(r"\\part\{[^}]+\}", "", source)
     source = re.sub(r"\\(?:frontmatter|mainmatter|backmatter|appendix)\b", "", source)
     source = re.sub(r"\\begin\{labeledenum\}\{[^}]+\}(?:\[[^]]+\])?", r"\\begin{enumerate}", source)
@@ -442,6 +443,27 @@ def split_pages(converted: str) -> list[dict[str, object]]:
         })
     return pages
 
+
+def normalize_table_columns(source: str) -> str:
+    """Replace custom LaTeX column types with forms Pandoc understands."""
+
+    def normalize(match: re.Match[str]) -> str:
+        columns = match.group(1)
+
+        # Widths are handled responsively by the website, so only preserve
+        # the intended alignment.
+        columns = re.sub(r"T\{[^{}]+\}", "l", columns)
+        columns = re.sub(r"L\{[^{}]+\}", "l", columns)
+        columns = re.sub(r"R\{[^{}]+\}", "r", columns)
+        columns = re.sub(r"Q\{[^{}]+\}", "c", columns)
+
+        return rf"\begin{{longtable}}{{{columns}}}"
+
+    return re.sub(
+        r"\\begin\{longtable\}\{([^\n]+)\}",
+        normalize,
+        source,
+    )
 
 def distribute_footnotes(pages: list[dict[str, object]]) -> None:
     notes: dict[str, str] = {}
