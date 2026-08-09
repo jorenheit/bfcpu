@@ -649,15 +649,22 @@ def deduplicate_page_ids(page: dict[str, object]) -> None:
 def copy_assets(source_dir: Path, output: Path) -> None:
     assets = output / "assets"
     assets.mkdir(parents=True, exist_ok=True)
+
     shutil.copy2(HERE / "assets" / "site.css", assets / "site.css")
     shutil.copy2(HERE / "assets" / "site.js", assets / "site.js")
     shutil.copy2(HERE / "assets" / "favicon.svg", assets / "favicon.svg")
+
     report_assets = assets / "report"
     for name in ("img", "schematics"):
         source = source_dir / name
         if source.is_dir():
             shutil.copytree(source, report_assets / name, dirs_exist_ok=True)
 
+    # Copy the downloadable PDF
+    pdf = source_dir / "synapse.pdf"
+    if pdf.is_file():
+        shutil.copy2(pdf, output / "synapse-191.pdf")
+        
 
 def header_html(route: str) -> str:
     nav = [
@@ -772,7 +779,23 @@ def render_home(pages: list[dict[str, object]]) -> str:
       <h1>Synapse-191</h1>
       <h2>Building a Brainfuck<br>Computing Environment</h2>
       <p class="hero-lead">From a native Brainfuck computer to a typed compiler backend.</p>
-      <div class="hero-actions"><a class="button button-primary" href="{relative_url('/', '/synapse-191/introduction/')}">Start reading {arrow()}</a><a class="button button-secondary" href="{relative_url('/', '/acus/')}">Explore Acus {arrow()}</a></div>
+
+      <div class="hero-actions">
+        <a class="button button-primary"
+           href="{relative_url('/', '/synapse-191/introduction/')}">
+          Start reading {arrow()}
+        </a>
+        <a class="button button-secondary"
+           href="{relative_url('/', '/acus/')}">
+          Explore Acus {arrow()}
+        </a>
+        <a class="button button-secondary"
+           href="synapse-191.pdf"
+           download>
+          Download PDF ↓
+        </a>    
+      </div>    
+
       <p class="hero-meta">Joren Heit · 2025 · Web edition</p>
     </div>{hero_diagram()}
   </section>
