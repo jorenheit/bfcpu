@@ -1,0 +1,194 @@
+\chapter{Runtime Results} \label{sec:results}
+In this section we show snapshots of the output during the execution of each of the BF programs listed in Appendix \ref{sec:appendix:testsuite}. Each of these programs was able to run successfully at the maximum clock speed of around 250kHz ($5\times256=1280$ bytes of memory were initialized to 0). For each program, the following statistics have been collected in a modified version of the interpreter shown in Listing \ref{lst:bfint}:
+
+\begin{itemize}
+\item \emph{Program Size} - the number of BF commands in the program, i.e.~the number of bytes in the \texttt{.bf} file, not counting non-BF characters.
+\item \emph{Stack Size Required} - size of the stack required to run the program, i.e.~the maximum nesting depth encountered while executing loops.
+\item \emph{Memory Cells Required} - the minimum number of memory cells required to execute the program. In our case, this corresponds to the minimal amount of cells that needs to be zero-initialized at startup in order for the program to execute correctly.
+\item \emph{Runtime Instructions} - the number of BF instructions that are executed when the program is run. Due to the existence of loops, this number differs (for most programs) from the program size.
+\item \emph{Runtime Clock Cycles} - the number of clock cycles that elapsed over the course of execution.
+\item \emph{Cycles per Instruction} - the average number of clock cycles needed to execute a single BF instruction. This value changes from program to program and depends on the structure of the program, the number of skipped loops, commonality of command sequences that leverage the A and V flags, etc. These values have been measured in the interpreter and have been (roughly) verified on the physical hardware.
+\end{itemize}
+
+\section{Stability}
+Throughout development, the system was plagued by instablilities. At first, these could be traced back to bugs in the microcode, subtle architectural issues or even wrong connections that only sometimes cause problems. Then, the clock speed and overall stability was highly influenced by bad IO design. The IO module was connected to the system clock and expected to run its interrupt routine (ISR) within the time between two ticks; this left the module unresponsive on high clocks (there was near to no time between calls to the ISR to manage other functionality like polling the keyboard) and would sometimes cause bus contention if it could not reset its outputs in time. With a proper handshake implemented using the K-flag and a completely asynchronous setup where the IO module only polls its input at a very low frequency, leaving the rest of the microcontroller's capacity to handling the user interface, all these problems went away. New clock speeds were achieved to the point that it became stable up to the limits of the clock module itself. It has not been pushed any further at the time of writing, though that may very well be possible.
+
+\section{Test Suite}
+\subsection{\texttt{hello.bf}}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/helloclose.jpeg}
+  \caption{\emph{Hello World}}
+  \label{fig:hello}
+\end{figure}
+
+It should be obvious why \emph{Hello World} is the first program to test. The output is simply the string \emph{``Hello World!''} followed by a newline. This program performed as expected on any selected clock frequency within the supported range (and maybe even beyond). This program was taken straight from the Wikipedia page on Brainfuck \cite{hello}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 112 \\
+    Stack Size Required & 1 \\
+    Memory Cells Required & 4 \\
+    Runtime Instructions & 390 \\
+    Runtime Clock Cycles & 1273 \\
+    Cycles per Instruction & 3.3 \\
+  \end{tabular}
+  \caption{Properties of \texttt{hello.bf}, see Appendix \ref{sec:appendix:testsuite:hello}}
+  \label{tab:hello}
+\end{table}
+
+
+\subsection{\texttt{euler.bf}}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/eulerclose.jpeg}
+  \caption{\emph{Calculating Euler's Number}}
+  \label{fig:euler}
+\end{figure}
+
+The Euler number ($e$) is an irrational number, so calculating its digits is an infinite process; the \texttt{euler.bf} program (written by the notorious BF developer Daniel Cristofani \cite{euler}) never ends. Running this program for a long time exposes a weakness of the system; sometimes the system get into some erroneous state and go haywire. It is still not fully understood what causes this to happen; based on qualitative observations, it seems as if the probability of failure increases with time and persists afterwards even after a reset. Shorting the power rails (after power has been disconnected) seems to stabilize the system again, so maybe the instability stems from charge buildup due to bad connections to power. Such bad connections have been found throughout the build process, so there may still be subtle bad connections present around the board. 
+
+Since this programs runs indefinitely, there was no bound to the number of runtime instructions. The number of memory cells required also keeps growing with time; it was found to grow proportional to the square root of the number of BF instructions that had been executed up to that point according to $M = 0.36\sqrt{N}$. A quick back-of-the-envelope calculation shows that for our case, with 64K ($2^{16}$ cells) of RAM available (the stack is negligible in comparison), we'd be able to execute $\left(\frac{2^{16}}{0.36}\right)^2 = 3.3\times10^{10}$ BF instructions, which would take $1.1\times 10^{11}$ cycles to complete (using the measured value of 3.4 cycles per instruction), or $4.5\times 10^5$ seconds at 250 kHz (over 124 hours). It's probably safe to assume that those limits won't be reached any time soon.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 1424 \\
+    Stack Size Required & 11 \\
+    Memory Required & $\sim\sqrt{N}$ \\
+    Runtime Instructions & $\infty$ \\
+    Runtime Clock Cycles & $\infty$ \\
+    Cycles per Instruction & 3.4 \\
+  \end{tabular}
+  \caption{Properties of \texttt{euler.bf}, see Appendix \ref{sec:appendix:testsuite:euler}}
+  \label{tab:euler}
+\end{table}
+
+
+\subsection{\texttt{phi.bf}}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/phiclose.jpeg}
+  \caption{\emph{Calculating $\phi$}}
+  \label{fig:euler}
+\end{figure}
+
+Like $e$, the Golden Ration $\phi = \frac{1+\sqrt{5}}{2}$ is irrational and thus has infinitely many digits. The \texttt{phi.bf} program \cite{phi} runs indefinitely and has growing memory demands when it runs for a longer amount of time. Again, the number of memory cells requires grows as the square root of the number of BF commands executed according to $M=71+0.033\sqrt{N}$. This number grows even slower than that required to calculate Euler's number, so there won't be any memory issues here neither.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 1950 \\ 
+    Stack Size Required & 17 \\
+    Memory Required & $\sim\sqrt{N}$ \\
+    Runtime Instructions & $\infty$ \\
+    Runtime Clock Cycles & $\infty$ \\
+    Cycles per Instruction & 3.6 \\
+  \end{tabular}
+  \caption{Properties of \texttt{phi.bf}, see Appendix \ref{sec:appendix:testsuite:phi}}
+  \label{tab:phi}
+\end{table}
+
+\subsection{\texttt{factorial.bf}}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/factorialclose.jpeg}
+  \caption{\emph{Calculating increasingly larger factorials}}
+  \label{fig:euler}
+\end{figure}
+
+Another program that runs indefinitely is \texttt{factorial.bf}; it calculates $n!$ for ever increasing $n$ ad infinitum. Unfortunately, this program was found and downloaded long before this report ever needed to mention it; we were unable to trace and credit its source at the time of writing. The memory requirement grows according to a cube root, so this program can run for an even longer time compared to \texttt{phi.bf} and indeed \texttt{euler.bf} before memory runs out (provided it runs without issue): $M = 12.5 \sqrt[3]{N}$.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 964 \\
+    Stack Size Required & 15 \\
+    Memory Required & $\sim\sqrt[3]{N}$ \\
+    Runtime Instructions & $\infty$ \\
+    Runtime Clock Cycles & $\infty$ \\
+    Cycles per Instruction & 3.6 \\
+  \end{tabular}
+  \caption{Properties of \texttt{factorial.bf}, see Appendix \ref{sec:appendix:testsuite:factorial}}
+  \label{tab:factorial}
+\end{table}
+
+\subsection{\texttt{primes.bf}}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/primesclose.jpeg}
+  \caption{\emph{Calculating primes $<20$.}}
+  \label{fig:euler}
+\end{figure}
+
+Found on Reddit by the user Troemax \cite{primes}, this program checks primality for all numbers $\le 20$ (this value can be adjusted by changing the number of \texttt{+} commands at the very start of the program). It runs stable at all tested clock speeds up to 250 kHz. The algorithm reuses memory very efficiently during the course of its execution, requiring only 18 cells.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 790 \\
+    Stack Size Required & 7 \\
+    Memory Required & 18 \\
+    Runtime Instructions & 3.6M \\
+    Runtime Clock Cycles & 12M \\
+    Cycles per Instruction & 3.3 \\
+  \end{tabular}
+  \caption{Properties of \texttt{primes.bf}, see Appendix \ref{sec:appendix:testsuite:primes}}
+  \label{tab:primes}
+\end{table}
+
+
+\subsection{\texttt{primes2.bf}}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/primes2close.jpeg}
+  \caption{\emph{Calculating primes $<20$ (entered at runtime).}}
+  \label{fig:euler}
+\end{figure}
+
+Like the former prime generating program, this program calculates all primes below 20. The difference between between \texttt{primes.bf} and \texttt{primes2.bf} is that the latter asks for the upper bound at runtime (expecting keyboard input). The program was posted on the codegolf section of Stackexchange by user Alexandru, challenging other users to implement small interpreters that can successfully run it. 
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 3880 \\
+    Stack Size Required & 6 \\
+    Memory Required & 10 \\
+    Runtime Instructions & 5K \\
+    Runtime Clock Cycles & 1.8M \\
+    Cycles per Instruction & 3.5 \\
+  \end{tabular}
+  \caption{Properties of \texttt{primes.bf}, see Appendix \ref{sec:appendix:testsuite:primes2}}{tab:primes2}
+\end{table}
+
+\subsection{\texttt{tictactoe.bf}}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{img/tictactoeclose.jpeg}
+  \caption{\emph{Playing Tic Tac Toe against Synapse-191.}}
+  \label{fig:tictactoe}
+\end{figure}
+
+Found on Github \cite{tictactoe}, from a developer by the username Mixtela \cite{tictactoe}, we found a BF program that actually implements a game of Tic Tac Toe, including a very capable `AI' opponent. The statistics in Table \ref{tab:tictactoe} have been gathered by playing a single game (which ended in a draw).
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{r|c}
+    Program Size & 6880 \\
+    Stack Size Required & 12 \\
+    Memory Required & 72 \\
+    Runtime Instructions & 224K \\
+    Runtime Clock Cycles & 774K \\
+    Cycles per Instruction & 3.5 \\
+  \end{tabular}
+  \caption{Properties of \texttt{tictactoe.bf}, see Appendix \ref{sec:appendix:testsuite:tictactoe}}
+  \label{tab:tictactoe}
+\end{table}

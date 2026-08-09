@@ -1,0 +1,207 @@
+\chapter{Constant Factory Lookup Table} \label{sec:appendix:factorytable}
+
+Table \ref{tab:constant-factors} lists the factor pair selected for each
+constant ($c$) from 0 through 128. The generated code first constructs the
+product ($ab$), then corrects for any remaining difference ($c-ab$) using
+increment or decrement operations. The entry for ($c=0$) is unused, since
+zero is produced simply by clearing the target cell.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.05}
+
+
+\begin{longtable}{
+r|c @{\qquad}
+r|c @{\qquad}
+r|c @{\qquad}
+r|c @{\qquad}
+r|c
+}
+\caption{Factor pairs used by the constant factory.}
+\label{tab:constant-factors} \\
+%
+\toprule
+\multicolumn{1}{c|}{$c$} & $a \times b$ &
+\multicolumn{1}{c|}{$c$} & $a \times b$ &
+\multicolumn{1}{c|}{$c$} & $a \times b$ &
+\multicolumn{1}{c|}{$c$} & $a \times b$ &
+\multicolumn{1}{c|}{$c$} & $a \times b$ \\
+\midrule
+\endfirsthead
+%
+\toprule
+\multicolumn{1}{c|}{$c$} & $a \times b$ &
+\multicolumn{1}{c|}{$c$} & $a \times b$ &
+\multicolumn{1}{c|}{$c$} & $a \times b$ &
+\multicolumn{1}{c|}{$c$} & $a \times b$ &
+\multicolumn{1}{c|}{$c$} & $a \times b$ \\
+\midrule
+\endhead
+%
+\midrule
+\multicolumn{10}{r}{\emph{Continued on the next page}} \\
+\endfoot
+%
+\bottomrule
+\endlastfoot
+
+0  & -  &
+26 & $5 \times 5$  &
+52 & $4 \times 13$ &
+78 & $6 \times 13$ &
+104 & $8 \times 13$ \\
+
+1  & $1 \times 1$  &
+27 & $3 \times 9$  &
+53 & $6 \times 9$  &
+79 & $8 \times 10$ &
+105 & $7 \times 15$ \\
+
+2  & $1 \times 2$  &
+28 & $4 \times 7$  &
+54 & $6 \times 9$  &
+80 & $8 \times 10$ &
+106 & $7 \times 15$ \\
+
+3  & $1 \times 3$  &
+29 & $4 \times 7$  &
+55 & $5 \times 11$ &
+81 & $9 \times 9$  &
+107 & $9 \times 12$ \\
+
+4  & $2 \times 2$  &
+30 & $5 \times 6$  &
+56 & $7 \times 8$  &
+82 & $9 \times 9$  &
+108 & $9 \times 12$ \\
+
+5  & $2 \times 2$  &
+31 & $5 \times 6$  &
+57 & $7 \times 8$  &
+83 & $7 \times 12$ &
+109 & $9 \times 12$ \\
+
+6  & $2 \times 3$  &
+32 & $4 \times 8$  &
+58 & $7 \times 8$  &
+84 & $7 \times 12$ &
+110 & $10 \times 11$ \\
+
+7  & $2 \times 3$  &
+33 & $4 \times 8$  &
+59 & $6 \times 10$ &
+85 & $7 \times 12$ &
+111 & $10 \times 11$ \\
+
+8  & $2 \times 4$  &
+34 & $5 \times 7$  &
+60 & $6 \times 10$ &
+86 & $7 \times 12$ &
+112 & $8 \times 14$ \\
+
+9  & $3 \times 3$  &
+35 & $5 \times 7$  &
+61 & $6 \times 10$ &
+87 & $8 \times 11$ &
+113 & $8 \times 14$ \\
+
+10 & $2 \times 5$  &
+36 & $6 \times 6$  &
+62 & $7 \times 9$  &
+88 & $8 \times 11$ &
+114 & $8 \times 14$ \\
+
+11 & $2 \times 5$  &
+37 & $6 \times 6$  &
+63 & $7 \times 9$  &
+89 & $8 \times 11$ &
+115 & $9 \times 13$ \\
+
+12 & $3 \times 4$  &
+38 & $6 \times 6$  &
+64 & $8 \times 8$  &
+90 & $9 \times 10$ &
+116 & $9 \times 13$ \\
+
+13 & $3 \times 4$  &
+39 & $5 \times 8$  &
+65 & $8 \times 8$  &
+91 & $7 \times 13$ &
+117 & $9 \times 13$ \\
+
+14 & $2 \times 7$  &
+40 & $5 \times 8$  &
+66 & $6 \times 11$ &
+92 & $7 \times 13$ &
+118 & $9 \times 13$ \\
+
+15 & $3 \times 5$  &
+41 & $5 \times 8$  &
+67 & $6 \times 11$ &
+93 & $7 \times 13$ &
+119 & $10 \times 12$ \\
+
+16 & $4 \times 4$  &
+42 & $6 \times 7$  &
+68 & $6 \times 11$ &
+94 & $8 \times 12$ &
+120 & $10 \times 12$ \\
+
+17 & $4 \times 4$  &
+43 & $6 \times 7$  &
+69 & $7 \times 10$ &
+95 & $8 \times 12$ &
+121 & $11 \times 11$ \\
+
+18 & $3 \times 6$  &
+44 & $4 \times 11$ &
+70 & $7 \times 10$ &
+96 & $8 \times 12$ &
+122 & $11 \times 11$ \\
+
+19 & $3 \times 6$  &
+45 & $5 \times 9$  &
+71 & $7 \times 10$ &
+97 & $8 \times 12$ &
+123 & $11 \times 11$ \\
+
+20 & $4 \times 5$  &
+46 & $5 \times 9$  &
+72 & $8 \times 9$  &
+98 & $7 \times 14$ &
+124 & $9 \times 14$ \\
+
+21 & $3 \times 7$  &
+47 & $6 \times 8$  &
+73 & $8 \times 9$  &
+99 & $9 \times 11$ &
+125 & $9 \times 14$ \\
+
+22 & $3 \times 7$  &
+48 & $6 \times 8$  &
+74 & $8 \times 9$  &
+100 & $10 \times 10$ &
+126 & $9 \times 14$ \\
+
+23 & $4 \times 6$  &
+49 & $7 \times 7$  &
+75 & $5 \times 15$ &
+101 & $10 \times 10$ &
+127 & $9 \times 14$ \\
+
+24 & $4 \times 6$  &
+50 & $5 \times 10$ &
+76 & $7 \times 11$ &
+102 & $10 \times 10$ &
+128 & $8 \times 16$ \\
+
+25 & $5 \times 5$  &
+51 & $5 \times 10$ &
+77 & $7 \times 11$ &
+103 & $8 \times 13$ &
+&               \\
+
+\end{longtable}
+\endgroup

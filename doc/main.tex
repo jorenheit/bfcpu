@@ -8,7 +8,6 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{booktabs}
-\usepackage{longtable}
 \usepackage{multirow}
 \usepackage{xcolor,colortbl}
 \usepackage{longtable}
@@ -183,7 +182,7 @@
 % Tables
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
-\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{Q}[1]{>{\centering\arraybackslash}p{#1}}
 \newcolumntype{T}[1]{>{\raggedright\arraybackslash\ttfamily}p{#1}}
 
 
@@ -257,12 +256,12 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 
 \part{The Brainfuck Computer}
 
-%% \include{introduction}
-%% \include{architecture}
-%% \include{control_sequences}
-%% \include{implementation}
-%% \include{utilities}
-%% \include{results}
+\include{introduction}
+\include{architecture}
+\include{control_sequences}
+\include{implementation}
+\include{utilities}
+\include{results}
 
 \part{Brainfuck Compilation}
 
@@ -270,18 +269,18 @@ I would like to express my sincere gratitude to Artur Topal, a former student of
 
 \part{Reflection}
 
-%% \include{final_thoughts}
+\include{final_thoughts}
 
-%% \appendix
+\appendix
 
-%% \include{microcode_table}
-%% \include{bfcpu_mu}
-%% \include{bom}
-%% \include{testsuite}
-%% \include{isr_impl}
-%% \include{factory_table}
-%% \include{schematics}
-%% \include{flashback}
+\include{microcode_table}
+\include{bfcpu_mu}
+\include{bom}
+\include{testsuite}
+\include{isr_impl}
+\include{factory_table}
+\include{schematics}
+\include{flashback}
 
 \backmatter
 

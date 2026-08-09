@@ -1,0 +1,297 @@
+\documentclass[11pt,oneside,openany]{book}
+
+% \usepackage[toc,page]{appendix} % not needed with book + \appendix
+\usepackage{listings}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor,colortbl}
+\usepackage{longtable}
+\usepackage{pdflscape}
+\usepackage{fancyvrb}
+\usepackage{cprotect}
+\usepackage{forloop}
+\usepackage{pdfpages}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{tabularx}
+\usepackage{tabulary}
+\usepackage{url}
+\usepackage{enumitem}
+\usepackage{xparse}
+\usepackage{amsmath}
+\usepackage[margin=1in]{geometry}
+\usepackage[bottom]{footmisc}
+
+\VerbatimFootnotes
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+  basicstyle=\ttfamily,
+  frame=single,
+  commentstyle=\color{lightgray},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{black},
+  stringstyle=\color{darkgray},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=4,
+  rangeprefix=//----------,
+  rangesuffix=----------
+}
+
+\lstdefinelanguage{Mugen}{
+  morekeywords=[1]{rom, address, signals, macros, opcodes, microcode, catch},
+  sensitive=true,
+  morecomment=[l]{\#},           % line comment starts with #
+}
+
+\lstdefinestyle{MugenStyle}{
+  language=Mugen,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=10pt,
+  tabsize=4,
+  showstringspaces=false,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\lstdefinelanguage{PseudoCode}{
+  morekeywords=[1]{while,for,if,execute, low, high},
+  morekeywords=[2]{AND,OR,NOT},
+  morekeywords=[3]{Run,TargetBlock},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+}
+
+\lstdefinestyle{pseudocode}{
+  language=PseudoCode,
+  basicstyle=\ttfamily\small,
+  keywordstyle=[1]\color{blue}\bfseries,
+  keywordstyle=[2]\color{purple}\bfseries,
+  keywordstyle=[3]\color{teal},
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{orange},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=8pt,
+  showstringspaces=false,
+  tabsize=2,
+  breaklines=true,
+  columns=fullflexible,
+}
+
+\definecolor{bfComment}{gray}{0.45}
+\definecolor{bfCommand}{RGB}{0,90,160}
+\definecolor{bfLocation}{RGB}{130,70,160}
+
+\lstdefinelanguage{bf++}{
+  alsoletter={abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_},
+  morekeywords=[1]{+,-,<,>,.,,,[,]},
+  morekeywords=[2]{x,y,s,tmp,ptr,src,dst},
+  morekeywords=[3]{FrameMarker,Flag,SeekMarker,Value0,Value1,Scratch0,Scratch1,Payload0,Payload1},
+  sensitive=true,
+  morecomment=[l]{\#},
+}
+
+\lstdefinestyle{brainfuck}{
+  language=bf++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=[1]\color{bfCommand}\bfseries,
+  keywordstyle=[2]\color{bfLocation},
+  keywordstyle=[3]\color{bfLocation},  
+  commentstyle=\color{bfComment}\itshape,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=2,
+  breaklines=true,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{bfComment},
+  xleftmargin=1em,
+  framexleftmargin=0.8em,
+}
+
+\lstdefinestyle{cpp}{
+  language=C++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{green!40!black}\itshape,
+  stringstyle=\color{orange!70!black},
+  numberstyle=\scriptsize\color{gray},
+  numbers=left,
+  numbersep=8pt,
+  stepnumber=1,
+  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=false,
+  tabsize=2,
+  keepspaces=true,
+  columns=fullflexible,
+  frame=single,
+  rulecolor=\color{black!20},
+  framesep=4pt,
+  xleftmargin=1.5em,
+  framexleftmargin=1em,
+  captionpos=b
+}
+
+\NewDocumentEnvironment{labeledenum}{m O{1}}{%
+  \begin{enumerate}[
+    label=\textbf{#1~\arabic*:},   % e.g. "Cycle 1:"
+    start=#2,             % optional start value
+    labelsep=0.75em,      % space between label and text
+    labelwidth=*,         % auto adjust label width
+    labelindent=2em,      % indentation of the entire list
+    leftmargin=!,         % compute left margin from labelwidth+labelsep
+    rightmargin=2em,      % indent from the right
+    align=left,           % left-align the labels
+    itemindent=0pt,       % no hanging indent
+    listparindent=0pt,    % align wrapped lines with first letter
+    parsep=0pt,
+    topsep=0.5ex
+  ]%
+}{%
+  \end{enumerate}
+}
+
+% Tables
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{Q}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{T}[1]{>{\raggedright\arraybackslash\ttfamily}p{#1}}
+
+
+\newfloat{lstfloat}{htbp}{lop}
+\floatname{lstfloat}{Listing}
+\def\lstfloatautorefname{Listing}
+\captionsetup{width=.75\textwidth,font=footnotesize,format=hang}
+\newcommand{\nocontentsline}[3]{}
+\definecolor{Gray}{gray}{0.9}
+\definecolor{White}{gray}{1}
+
+\makeatletter
+\newcommand{\subtitle}[1]{\gdef\@subtitle{#1}} % define \subtitle command
+\renewcommand{\maketitle}{
+  \begin{center}
+    {\Huge\bfseries \@title \par}      % larger title
+    \vspace{0.5cm}
+    {\large\itshape \@subtitle \par}   % subtitle in italics
+  \end{center}
+}
+\makeatother
+
+\title{Synapse-191}
+\subtitle{Building A Brainfuck Computing Environment}
+\author{}
+\date{} 
+
+\begin{document}
+\frontmatter
+\thispagestyle{empty}
+\maketitle
+\vspace{3cm}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{img/titlepage_img1}
+\end{figure}
+\vfill
+\begin{flushright}
+  {\large Joren Heit}\\[0.3em]
+  {\normalsize 2025}
+\end{flushright}
+
+\newpage
+
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+This report documents the design and implementation of Synapse-191, a fully functional computer built on breadboards to execute the Brainfuck (BF) programming language natively. Unlike traditional approaches that interpret or compile BF code on conventional architectures, Synapse‑191 treats BF as its instruction set, realized through a microcoded CPU constructed entirely from TTL logic components, RAM, and ROM—without programmable logic in the core. The system features a Harvard-like architecture, a two-phase clock capable of operating at over 250 kHz, and a modular design comprising registers, memory units, and a control unit driven by EEPROM-based microcode. A dedicated I/O module, powered by an Atmega328P, manages keyboard input, LCD output, and random number generation, providing a user interface for program selection and runtime configuration. Supporting tools—including an assembler, EEPROM programmer, microcode compiler, and emulation framework—enable efficient development and testing. The project demonstrates the feasibility of implementing an esoteric language as a native instruction set and offers insights into computer architecture, timing, and control logic at the hardware level. The system ended up being able to run all programs from a diverse test-suite of BF programs, taken verbatim from the internet, without running into any hardware limitations and can be considered a very capable Brainfuck execution machine, if such a thing even makes sense.
+
+\mbox{}
+\vfill
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{img/full_board}
+\end{figure}
+\vfill
+
+\newpage
+\mbox{}
+\vfill
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+I would like to express my sincere gratitude to Artur Topal, a former student of mine, with whom this project first began. Together, we set out on this journey when he was looking for a project for his \textit{profielwerkstuk}---a kind of final high school research project in the Netherlands. Artur played a vital role in the early stages of the design, from theoretical planning and debugging to constructing logic circuits and keeping the project’s momentum alive. His sharp mind, perseverance, and enthusiasm were invaluable and have significantly contributed to the eventual success of this project.\\[1em]
+\textbf{Thank you, Artur.}
+\newpage
+
+\tableofcontents
+\newpage
+
+\mainmatter
+
+\part{The Brainfuck Computer}
+
+\include{introduction}
+\include{architecture}
+\include{control_sequences}
+\include{implementation}
+\include{utilities}
+\include{results}
+
+\part{Brainfuck Compilation}
+
+\include{compilation}
+
+\part{Reflection}
+
+\include{final_thoughts}
+
+\appendix
+
+\include{microcode_table}
+\include{bfcpu_mu}
+\include{bom}
+\include{testsuite}
+\include{isr_impl}
+\include{factory_table}
+\include{schematics}
+\include{flashback}
+
+\backmatter
+
+\include{references}
+
+\newpage
+\mbox{}
+\vfill
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{img/final_img}
+\end{figure}
+
+\end{document}

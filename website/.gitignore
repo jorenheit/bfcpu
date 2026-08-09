@@ -1,0 +1,12 @@
+*
+
+!.gitignore
+!build.py
+!assets/
+!assets/**
+!content/
+!content/**
+
+# Keep generated output and backups ignored
+_site/
+*~
