@@ -348,7 +348,7 @@ As described above, the IO module will have put the program slot (set by the use
 \end{labeledenum}
 
 \paragraph{PROG\_START}
-The only opcode that performs non-trivial actions while the system is in skip-mode (initiated by incrementing LS as described above) is PROG\_START. It checks the value in D, which was initially populated with the index of the desired program (0, 1, 2, ...), to see if the IP has arrived at the correct location: if the Z-flag is set (D = 0), we exit skip-mode and enter the program following the current PROG\_START instruction. If the Z-flag is not set (D $> 0), we decrement D and keep scanning. In other words, D is decremented on each PROG\_START until it hits zero, i.e.~the selected program slot has been reached.
+The only opcode that performs non-trivial actions while the system is in skip-mode (initiated by incrementing LS as described above) is PROG\_START. It checks the value in D, which was initially populated with the index of the desired program (0, 1, 2, ...), to see if the IP has arrived at the correct location: if the Z-flag is set (D = 0), we exit skip-mode and enter the program following the current PROG\_START instruction. If the Z-flag is not set ($D > 0$), we decrement D and keep scanning. In other words, D is decremented on each PROG\_START until it hits zero, i.e.~the selected program slot has been reached.
 
 \begin{labeledenum}{Scenario}
   \item (S = 1, Z = 0) - D still holds a nonzero value. Decrement D and continue in skip-mode:
