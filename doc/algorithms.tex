@@ -1,8 +1,8 @@
 \section{Algorithms}\label{section:algorithms}
-The BFX compiler implements a series of algorithms to perform basic operations on the data stored in the data-array, which map to common operators and statements in most programming languages. This section will document each of these algorithms, starting with the most fundamental ones, which we can then use to implement the more complex operations. In the process, we will develop a pseudo language that maps directly to BF-code. The statements of the pseudo language will always be written within a set of curly braces, in order to seperate them from the BF operators.
+The BFX compiler implements a series of algorithms to perform basic operations on the data stored in the data array, which map to common operators and statements in most programming languages. This section will document each of these algorithms, starting with the most fundamental ones, which we can then use to implement the more complex operations. In the process, we will develop a pseudo-language that maps directly to BF code. The statements of the pseudo-language will always be written within a set of curly braces, in order to separate them from the BF operators.
 
 \subsection{Moving the Pointer: \texttt{\{x\}}}
-Whenever we need to operate on a cell, we first need to move the datapointer to this cell. It is assumed that the compiler is aware of the current pointer position and will therefore be able to move the pointer to any other cell, as long as the address of this cell is also known at compile-time. From now on, the operation of moving to a cell designated by some variable \texttt{x} will be written in as \texttt{\{x\}}.
+Whenever we need to operate on a cell, we first need to move the data pointer to this cell. It is assumed that the compiler is aware of the current pointer position and will therefore be able to move the pointer to any other cell, as long as the address of this cell is also known at compile time. From now on, the operation of moving to a cell designated by some variable \texttt{x} will be written as \texttt{\{x\}}.
 
 \textbf{In future expressions enclosed by curly braces, the pointer is always left implicitly at the address of the left-hand-side operand.}
 
@@ -13,7 +13,7 @@ The next elementary operation is setting some cell to a specific (known) value. 
 \end{lstlisting}
 From now on, we will use the following shorthand for setting a cell (\texttt{x}) to a fixed value (n): \texttt{\{x <- n\}}.
 \subsubsection{Using \texttt{+} Instead: \texttt{\{x <- n+\}}}
-Instead of decrementing the cell until it becomes zero, we could also choose to increment it using \texttt{[+]}. The cell will eventually overflow and wrap back to zero, achieving the same result. This might seem unnecessary and dangerous, especially for 16-bit or larger values, because it can take a lot of time before the cell overflows. However, for some algorithms, where a cell is intentionally being \emph{underflown}, this is a helpfull tool to have at hand. When we need it, we will use a slightly different shorthand: \texttt{\{x <- n+\}}.
+Instead of decrementing the cell until it becomes zero, we could also choose to increment it using \texttt{[+]}. The cell will eventually overflow and wrap back to zero, achieving the same result. This might seem unnecessary and dangerous, especially for 16-bit or larger values, because it can take a lot of time before the cell overflows. However, for some algorithms, where a cell is intentionally being \emph{underflowed}, this is a helpful tool to have at hand. When we need it, we will use a slightly different shorthand: \texttt{\{x <- n+\}}.
 
 \subsection{Moving Data: \texttt{\{x <- y\}}}
 It turns out that moving data is a lot easier than copying data. When moving data from one cell to another, the source-cell will be left empty. Below is a listing for the algorithm that moves the contents of cell x into cell y, leaving cell x empty after the move:
@@ -21,7 +21,7 @@ It turns out that moving data is a lot easier than copying data. When moving dat
   {y <- 0} 
   {x} [ {y} + {x} - ]
 \end{lstlisting}
-After clearing \texttt{y}, we move the pointer to \texttt{x} and decrement it until it becomes zero, while at the same time incrementing cell \texttt{y}. This algorithm can be extended to move the data into arbitrarily cells, simply by adding variables to the loop and incrementing those as well. Moving data from \texttt{x} to \texttt{y, z, ...} will from now on be written as \texttt{\{(y, z, ...) <- x\}}, analogous to moving a fixed value into a cell.
+After clearing \texttt{y}, we move the pointer to \texttt{x} and decrement it until it becomes zero, while at the same time incrementing cell \texttt{y}. This algorithm can be extended to move the data into arbitrarily many cells, simply by adding variables to the loop and incrementing those as well. Moving data from \texttt{x} to \texttt{y, z, ...} will from now on be written as \texttt{\{(y, z, ...) <- x\}}, analogous to moving a fixed value into a cell.
 
 \subsection{Assignment/Copy: \texttt{\{x = y\}}}
 An assignment of the form \texttt{x = y} will assign the contents of cell \texttt{y} to cell \texttt{x}, overwriting the previously present value of \texttt{x}. This can be achieved by moving the contents of \texttt{y} into both \texttt{x} and a temporary value \texttt{tmp}. This will leave \texttt{y} empty, but we can restore it by moving the contents of \texttt{tmp} back into \texttt{y}.
@@ -29,7 +29,7 @@ An assignment of the form \texttt{x = y} will assign the contents of cell \textt
   {(x, tmp) <- y}
   {y <- tmp}
 \end{lstlisting}
-The shorthand for this operation will from now on be: \texttt{\{x = y\}}
+The shorthand for this operation will from now on be: \texttt{\{x = y\}}.
 
 \subsection{Addition}
 \subsubsection{In-Place Addition: \texttt{\{x += y\}}}
@@ -62,6 +62,7 @@ To multiply \texttt{x} by the value stored in \texttt{y}, we need to add \texttt
 \begin{lstlisting}
   {xCopy = x}
   {yCopy = y}
+  {x <- 0}
   {yCopy}
   [
     {x += xCopy}
@@ -105,7 +106,7 @@ The AND operator will only return 1 when both arguments (x and y) are nonzero:
 \end{lstlisting}
 
 \subsubsection{OR: \texttt{\{z <- x OR y\}}}
-The OR operator returns a 1 when either of its arguments are nonzero:
+The OR operator returns a 1 when either of its arguments is nonzero:
 \begin{lstlisting}
   {z <- 0}
   {xCopy = x}
@@ -146,11 +147,11 @@ The less than algorithm can just be expressed as a greater than algorithm, for w
 \subsubsection{Equals: \texttt{\{z <- x == y\}}}
 Once the `greater than` and `less than` operators have been properly defined, the `equals` operator can be defined in terms of these:
 \begin{lstlisting}
-  {z <- {NOT x < y} AND {NOT (x > y)}}
+  {z <- {NOT (x < y)} AND {NOT (x > y)}}
 \end{lstlisting}
 
 \subsection{Division and Modulo: \texttt{\{(div, mod) <- x / y\}}}
-Division and modulo are done in a single algorithm. Division is implemented as a series of subtractions, counting how many times the numerator fits in the denominator. Two special cases are handled:
+Division and modulo are done in a single algorithm. Division is implemented as a series of subtractions, counting how many times the denominator fits in the numerator. Two special cases are handled:
 \begin{enumerate}
 \item When the numerator is zero, the division algorithm is skipped and zero is returned.
 \item When the denominator is zero, the algorithm is skipped and the maximum cell value is returned (which is as close to infinity as we can get).

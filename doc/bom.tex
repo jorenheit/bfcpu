@@ -1,5 +1,5 @@
 \chapter{Bill of Materials} \label{sec:bom}
-The following section lists all components required to build the Synapse-191 computer, including
+The following chapter lists all components required to build the Synapse-191 computer, including
 integrated circuits, passive components, and other hardware parts.  
 The system was constructed entirely on solderless breadboards using standard through-hole
 TTL logic and readily available electronic parts.  
@@ -31,18 +31,18 @@ make appropriate substitutions where necessary.
     74LS123                  & 2 & 2x Monostable Multivibrator  \\
     74LS138                  & 2 & 3-to-8 Decoder  \\
     74LS157                  & 1 & 4-bit Data Selector \\
-    74LS161                  & 2 & 8-Bit Counter  \\
-    74LS173                  & 9 & 8-Bit Register  \\
-    74LS193                  & 14 & 8-Bit U/D Counter  \\
+    74LS161                  & 2 & 4-Bit Counter  \\
+    74LS173                  & 9 & 4-Bit Register  \\
+    74LS193                  & 14 & 4-Bit U/D Counter  \\
     74LS245                  & 10 & 8-Bit Bus Transceiver  \\
     74HC595                  & 1 & 8-Bit Shift Register  \\
     MC14078B                 & 2 & 8-Input NOR  \\
     NE555                    & 4 & 555-Timer \\
-    AT28C64B                 & 4 & 64K EEPROM  \\
-    AS6C4008                 & 2 & 512K SRAM  \\
+    AT28C64B                 & 4 & 64-Kbit ($8\text{K}\times8$) EEPROM  \\
+    AS6C4008                 & 2 & $512\text{K}\times8$ SRAM  \\
     ICM7226B                 & 1 & Frequency Timer  \\
   \end{tabular}
-  \caption{IC's used in the project.}
+  \caption{ICs used in the project.}
   \label{tab:parts}
 \end{table}
 
@@ -116,14 +116,13 @@ make appropriate substitutions where necessary.
   \centering
   \begin{tabular}{r|c|l}
     Part                     & Quantity & Description \\\hline
-    Breadboard               & $\sim$25 & 830 hole  \\
+    Breadboard               & $\sim$25 & 830-hole  \\
     Single 7-Segment Display & 2 &    \\
     Quad 7-Segment Display   & 2 &    \\
-    Single LED               & 15& Various colors \\
-    Bar LED strip            & 11& 10 LEDs per strip  \\
-    HD44780 Compatible LCD   & 1 & 4x20 Characters  \\
+    Single LED               & 15 & Various colors \\
+    Bar LED strip            & 11 & 10 LEDs per strip  \\
+    HD44780-Compatible LCD   & 1 & $20\times4$ characters  \\
   \end{tabular}
   \caption{Other parts used in the project.}
-  \label{tab:parts}
+  \label{tab:otherparts}
 \end{table}
-

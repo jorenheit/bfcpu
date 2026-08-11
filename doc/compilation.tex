@@ -3,7 +3,7 @@
 
 \section{What This is Not}
 \label{sec:compilation:not}
-Acus\footnote{Latin for \emph{needle}, referring to the pointer in the BF computation model.} is not a BF compiler: it is a C++ library for the development of such compilers. This chapter is \emph{not} a guide on how to use Acus. For examples and extensive API-details, please visit the Github repository at \cite{acus}. Instead, this chapter goes through the most important concepts, methods and abstractions that allow for the translation of high-level programming concepts (like function-calls and flow-control) into BF.
+Acus\footnote{Latin for \emph{needle}, referring to the pointer in the BF computation model.} is not a BF compiler: it is a C++ library for the development of such compilers. This chapter is \emph{not} a guide on how to use Acus. For examples and extensive API details, please visit the GitHub repository at \cite{acus}. Instead, this chapter goes through the most important concepts, methods and abstractions that allow for the translation of high-level programming concepts (like function calls and flow control) into BF.
 
 \begin{figure}[H]
   \centering
@@ -12,18 +12,18 @@ Acus\footnote{Latin for \emph{needle}, referring to the pointer in the BF comput
 
 \section{Motivation and History}
 \label{sec:compilation:motivation}
-Up to this point, almost every BF program used to test the computer was found online and used verbatim. On some occasions, simple BF routines were written to test very specific functions of the computer, but these were borderline trivial to produce. The next goal therefore was to create a compiler that takes human-readable source code and turns that in to BF which in turn can be assembled into the binary format understood by Synapse-191.
+Up to this point, almost every BF program used to test the computer was found online and used verbatim. On some occasions, simple BF routines were written to test very specific functions of the computer, but these were borderline trivial to produce. The next goal, therefore, was to create a compiler that takes human-readable source code and turns that into BF, which in turn can be assembled into the binary format understood by Synapse-191.
 
 The author has attempted to create such a language and compiler in the past: \emph{BrainFix} \cite{brainfix} is a compiler that takes a C-style language and turns it into BF. This compiler works reasonably well but has some serious limitations:
 \begin{itemize}\itemsep0em 
-\item No (true) function-calls: all functions are inlined. Recursion is therefore \emph{not} possible.
+\item No (true) function calls: all functions are inlined. Recursion is therefore \emph{not} possible.
 \item Dynamic array accesses were implemented in a way that limits the maximum array size to 256 elements.
 \item Only 8-bit numbers are supported (assuming the BF tape stores 8-bit integers in its cells).
 \item No signed integers.
 \item No pointers or function pointers.
 \end{itemize}
 %
-These limitations derive from naive choices during early development of the compiler, where the focus was on parsing and language design: features were bolted on rather than planned for in early stages of development. In this second, more mature, attempt to build a compiler, we started out by building a backend rather than a full compiler: \emph{Acus}. Acus is a C++ library that exposes a set of elementary assembly-like instructions (like arithmetic operations, conditional expressions and jumps) that are compiled into BF. Acus is meant to be used a compiler back-end: a layer that accepts higher-level operations and emits BF code. A front-end can then link with Acus, parse an actual programming language, call the necessary Acus functions and produce the corresponding BF. Acus can also be used on its own, since its library-functions were designed to feel a bit like an actual language, as can be seem from the \emph{Hello World} snippet of Listing \ref{lst:acushello}\footnote{Note that using Acus in this way is unintended and inconvenient: the resulting binary is a program that, when run, prints a string of BF commands to the output. That string of commands then has to be written to a file, which can then be executed by a BF computer or interpreter. When the program is modified, the C++ source has to be recompiled and the resulting executable re-run to produce the updated BF source.}
+These limitations derive from naive choices during early development of the compiler, where the focus was on parsing and language design: features were bolted on rather than planned for in the early stages of development. In this second, more mature attempt to build a compiler, we started out by building a backend rather than a full compiler: \emph{Acus}. Acus is a C++ library that exposes a set of elementary assembly-like instructions (like arithmetic operations, conditional expressions and jumps) that are compiled into BF. Acus is meant to be used as a compiler backend: a layer that accepts higher-level operations and emits BF code. A frontend can then link with Acus, parse an actual programming language, call the necessary Acus functions and produce the corresponding BF. Acus can also be used on its own, since its library functions were designed to feel a bit like an actual language, as can be seen from the \emph{Hello World} snippet of Listing \ref{lst:acushello}\footnote{Note that using Acus in this way is unintended and inconvenient: the resulting binary is a program that, when run, prints a string of BF commands to the output. That string of commands then has to be written to a file, which can then be executed by a BF computer or interpreter. When the program is modified, the C++ source has to be recompiled and the resulting executable rerun to produce the updated BF source.}
 
 \begin{lstfloat}[H]
   \begin{lstlisting}[style=cpp]
@@ -62,7 +62,7 @@ The main goal was to make Acus capable enough that a frontend for a language lik
 \item user-defined structured types (structs);
 \item arithmetic operators (\texttt{+, -, *, /, \%});
 \item logic operators (\texttt{and, or, not, xor});
-\item function-calls and recursion;
+\item function calls and recursion;
 \item pointers and pointer arithmetic;
 \item labels and conditional jumps (\texttt{goto});
 \item global data.
@@ -70,7 +70,7 @@ The main goal was to make Acus capable enough that a frontend for a language lik
 %
 Familiar features that were \emph{not} implemented include:
 \begin{enumerate} \itemsep0em 
-\item floating/fixed point numbers;
+\item floating/fixed-point numbers;
 \item bitwise operators;
 \item member functions;
 \item control-flow mechanisms like \texttt{for, while, switch, if}.
@@ -83,14 +83,14 @@ Many of the above can be implemented in terms of the features provided by Acus; 
 
 \section{Basic Block Scheduling}
 \label{sec:compilation:program}
-In the Acus model, a program consists of a series of basic blocks, sequences of code that are always executed in order, and jumps between those blocks. Each basic block ($B_i$) is compiled into its corresponding BF instructions and wrapped in a BF loop-pair (i.e.  between \texttt{[} and \texttt{]}) whose entry is controlled by generated guard code $G_i$. The complete sequence of blocks is enclosed in a main-loop, conditional on the value in a special BF-cell, the \emph{Run}-cell, which can be reset by any block when the program should be terminated. Prior to entering the main-loop a \emph{head} section $H$ is responsible for the initial setup of the data-tape and the tail-code $T$ is responsible for resetting the pointer to the \emph{Run}-cell before the closing bracket of the main-loop is encountered:
+In the Acus model, a program consists of a series of basic blocks, sequences of code that are always executed in order, and jumps between those blocks. Each basic block ($B_i$) is compiled into its corresponding BF instructions and wrapped in a BF loop pair (i.e.~between \texttt{[} and \texttt{]}) whose entry is controlled by generated guard code $G_i$. The complete sequence of blocks is enclosed in a main loop, conditional on the value in a special BF cell, the \emph{Run} cell, which can be reset by any block when the program should be terminated. Prior to entering the main loop, a \emph{head} section $H$ is responsible for the initial setup of the data tape and the tail code $T$ is responsible for resetting the pointer to the \emph{Run} cell before the closing bracket of the main loop is encountered:
 
 \begin{center}
   \includegraphics[width=0.5\textwidth]{img/program_structure}
 \end{center}
 
 
-The aforementioned guard-code $G_i$ compares the block-index $i$ to the value stored in another predefined cell: the \emph{TargetBlock}-cell. Only when this cell contains the exact index of the block \emph{and} the \emph{Run}-cell is still nonzero, is the loop entered and its code executed. Therefore, each block should at some point set the index of next block to be executed to keep the program going (not setting a different \emph{TargetBlock} will cause the same block to be executed ad infinitum). This approach basically implements a state-machine that can be expressed in pseudo-code as shown in Listing \ref{lst:acusprogram}. Note that, on each iteration of the main-loop, all blocks are scanned until the scheduled block is encountered. In a worst-case scenario, when block \texttt{i} is scheduled by block \texttt{i+1} (the currently exectuted block), the system will first need to check all blocks from \texttt{i+2} up to \texttt{N} before looping back to block 1 and eventually block \texttt{i}.
+The aforementioned guard code $G_i$ compares the block index $i$ to the value stored in another predefined cell: the \emph{TargetBlock} cell. Only when this cell contains the exact index of the block \emph{and} the \emph{Run} cell is still nonzero is the loop entered and its code executed. Therefore, each block should at some point set the index of the next block to be executed to keep the program going (not setting a different \emph{TargetBlock} will cause the same block to be executed ad infinitum). This approach basically implements a state machine that can be expressed in pseudocode as shown in Listing \ref{lst:acusprogram}. Note that, on each iteration of the main loop, all blocks are scanned until the scheduled block is encountered. In a worst-case scenario, when block \texttt{i} is scheduled by block \texttt{i+1} (the currently executed block), the system will first need to check all blocks from \texttt{i+2} up to \texttt{N} before looping back to block 1 and eventually block \texttt{i}.
 
 \begin{lstfloat}[H]
   \begin{lstlisting}[style=pseudocode]
@@ -110,20 +110,20 @@ The aforementioned guard-code $G_i$ compares the block-index $i$ to the value st
 
 \section{Frames and Initialization}
 \label{sec:compilation:framesinit}
-Each function has its own chunk of memory that it operates on, called a frame. Calling a function has the effect of advancing the data-pointer one cell beyond the end of the current current function's frame. When a BF program is executed, the pointer starts at cell 0 in frame 0, which is dedicated to hold the global data (Section \ref{sec:compilation:globalframe}). Frame 1 starts just beyond the end of frame 0; the exact offset depends on the number of global variables and their sizes. The initialization code that runs prior to entering the main loop, needs to set up both frame 0 and frame 1:
+Each function has its own chunk of memory that it operates on, called a frame. Calling a function has the effect of advancing the data pointer one cell beyond the end of the current function's frame. When a BF program is executed, the pointer starts at cell 0 in frame 0, which is dedicated to holding the global data (Section \ref{sec:compilation:globalframe}). Frame 1 starts just beyond the end of frame 0; the exact offset depends on the number of global variables and their sizes. The initialization code that runs prior to entering the main loop needs to set up both frame 0 and frame 1:
 %
 \begin{enumerate}
 \item Set a marker (the \texttt{SeekMarker}, Section \ref{sec:compilation:seekmarker}) at the start of the data-tape (cell 0). This marker can be used as a stop-sign during dynamic pointer movements to locate the start of the global data frame (and to prevent the pointer from moving into the (undefined) negative address-space).
 \item Set another marker (the \texttt{FrameMarker}) that marks the start of frame 0 (the global data frame, Section \ref{sec:compilation:globalframe}). This might seem redundant as we already marked the start of this frame with a \texttt{SeekMarker}, but since every frame has a \texttt{FrameMarker}, the global frame needs it as well for generalized algorithms to work.
 \item Calculate the size of frame 0 and move the pointer to the start of frame 1 (the frame that will be used by the function that is set as the entrypoint for the program). 
 \item Mark the start of frame 1 by setting the \texttt{FrameMarker} here as well.
-\item Move the datapointer to the \emph{Run}-cell of frame 1 and set its value to 1.
-\item While the datapointer points to the \emph{Run}-cell of frame 1, open the main-loop (guaranteed to be entered as we just set this cell to 1).
+\item Move the data pointer to the \emph{Run} cell of frame 1 and set its value to 1.
+\item While the data pointer points to the \emph{Run} cell of frame 1, open the main loop (guaranteed to be entered as we just set this cell to 1).
 \end{enumerate}
 
 \section{Block Guards}
 \label{sec:compilation:blockguards}
-The guards $G_i$ compare the value stored in the \texttt{TargetBlock} cell to their index and check if the \emph{Run} flag is still set. The results of these comparisons are and'ed together and used as the loop-condition for the block that follows immediately after. Because the block-index is known at compile-time, it can simply be subtracted from (a copy of) the \texttt{TargetBlock} value. If the result is 0, this means we should enter the block given that the \emph{Run}-cell contains a nonzero (true) value. The logic necessary to implement these checks is discussed in more detail in Section \ref{sec:compilation:logic}. A simplified BF algorithm that implements this logic could look like the snippet of Listing \ref{lst:guard}; the real algorithm is more complicated because it needs to support 16-bit block-indices (otherwise each program would be limited to only 255 code-blocks), which requires 16-bit arithmetic and logic routines (Section \ref{sec:compilation:arithmetic}).
+The guards $G_i$ compare the value stored in the \texttt{TargetBlock} cell to their index and check if the \emph{Run} flag is still set. The results of these comparisons are ANDed together and used as the loop condition for the block that follows immediately after. Because the block index is known at compile time, it can simply be subtracted from (a copy of) the \texttt{TargetBlock} value. If the result is 0, this means we should enter the block given that the \emph{Run} cell contains a nonzero (true) value. The logic necessary to implement these checks is discussed in more detail in Section \ref{sec:compilation:logic}. A simplified BF algorithm that implements this logic could look like the snippet of Listing \ref{lst:guard}; the real algorithm is more complicated because it needs to support 16-bit block indices (otherwise each program would be limited to only 255 code blocks), which requires 16-bit arithmetic and logic routines (Section \ref{sec:compilation:arithmetic}).
 
 \begin{lstfloat}[H]
 \begin{lstlisting}[style=brainfuck]
@@ -157,9 +157,9 @@ The guards $G_i$ compare the value stored in the \texttt{TargetBlock} cell to th
 
 \section{Example: Fibonacci}
 \label{sec:compilation:fibonacci}
-To illustrate how a program is divided into basic blocks, a simple fibonacci number generator is shown in Figure \ref{fig:fibexample}. It consists of three functions, each of which contains multiple basic blocks. The block-ID's are shown in square brackets at the start of each block. Blocks end at control-boundaries, i.e.~ places in the code where potential jumps take place or explicitly at predefined labels.
+To illustrate how a program is divided into basic blocks, a simple Fibonacci number generator is shown in Figure \ref{fig:fibexample}. It consists of three functions, each of which contains multiple basic blocks. The block IDs are shown in square brackets at the start of each block. Blocks end at control boundaries, i.e.~places in the code where potential jumps take place, or explicitly at predefined labels.
 
-The program starts execution in block 10, which is set as the entry-point by the initialization code (note that the initialization code of Listing \ref{lst:acusprogram} sets the entry-point to block 1; the specific example from below requires the initialization sequence to set this value to 10 instead). A function-call is immediately encountered, ending the current block. After initializing a new stack frame (this will be covered later, Section \ref{sec:compilation:frames}), the \emph{TargetBlock} is set to block 1: the entry-block index of the callee. This will cause control flow to skip over block 11 and loop back to block 1, which will then be entered. When control hits the conditional statement of block 3, either block 4 or 5 will be set as the next target-block, depending on the result of evaluating \texttt{i < n}. In this case, both the \texttt{if}- and \texttt{else} body contain only a single block that immediately terminates in a jump. When control eventually reaches the end of \texttt{main}, the \emph{Run}-cell is set to zero, causing flow to exit the main loop and terminate the program.
+The program starts execution in block 10, which is set as the entry point by the initialization code (note that the initialization code of Listing \ref{lst:acusprogram} sets the entry point to block 1; the specific example below requires the initialization sequence to set this value to 10 instead). A function call is immediately encountered, ending the current block. After initializing a new stack frame (this will be covered later, in Section \ref{sec:compilation:frames}), the \emph{TargetBlock} is set to block 1: the entry block index of the callee. This will cause control flow to skip over block 11 and loop back to block 1, which will then be entered. When control hits the conditional statement of block 3, either block 4 or 5 will be set as the next target block, depending on the result of evaluating \texttt{i < n}. In this case, both the \texttt{if} and \texttt{else} bodies contain only a single block that immediately terminates in a jump. When control eventually reaches the end of \texttt{main}, the \emph{Run} cell is set to zero, causing flow to exit the main loop and terminate the program.
 
 \begin{figure}[H]
   \centering
@@ -176,7 +176,7 @@ The program starts execution in block 10, which is set as the entry-point by the
     \caption{Control flow}
     \label{fig:fibflow}
   \end{subfigure}
-  \caption{Figure (a) shows a simple fibonacci program (unspecified syntax) and how that program is split into blocks. Figure (b) shows how control flows from one block to another.}
+  \caption{Figure (a) shows a simple Fibonacci program (unspecified syntax) and how that program is split into blocks. Figure (b) shows how control flows from one block to another.}
   \label{fig:fibexample}
 \end{figure}
 
@@ -196,12 +196,12 @@ The data-tape is considered a stack, where each function owns a stack frame. Eac
 \longrightarrow
 \text{Tape}
 \]
-A macro-cell contains the following fields (in arbitrary order), each of which will be discussed in more detail in Section \ref{sec:compilation:macrocells}
+A macro-cell contains the following fields (in arbitrary order), each of which will be discussed in more detail in Section \ref{sec:compilation:macrocells}.
 \begin{enumerate}\itemsep0em 
 \item \texttt{Value0}: Low-byte of the semantic value of the macro-cell.
 \item \texttt{Value1}: High-byte of the semantic value of the macro-cell.
 \item \texttt{Scratch0}: General-purpose scratch-cell.
-\item \texttt{Scratch1}: General-purpose Scratch-cell.
+\item \texttt{Scratch1}: General-purpose scratch-cell.
 \item \texttt{Payload0}: Low-byte of a payload (or another scratch-cell).
 \item \texttt{Payload1}: High-byte of a payload (or another scratch-cell).  
 \item \texttt{Flag}: Dedicated flag cell to guard BF-loops.
@@ -212,7 +212,7 @@ A macro-cell contains the following fields (in arbitrary order), each of which w
 Central to the macro-cells are the two value-fields that hold the actual value of the logical cell. By having two value fields, we allow for 16-bit data types to be implemented within the same logical-cell, rather than having to allocate two macro-cells for a single 16-bit variable. The other fields hold temporary data or metadata required to perform higher level functions like arithmetic, flow control and dynamic pointer movement. When the compiler needs to generate code that moves the BF-pointer to location known only at runtime (for example when dereferencing pointers or accessing array elements by a dynamic index), these fields can hold temporary values or metadata necessary to perform the move. Other non-value fields include temporary scratch-pads (heavily used when performing arithmetic operations), payload-fields (used to transport data to locations known only at runtime) and a flag cell that is dedicated to the evaluation of loop-conditions. Having all these fields near one another on the BF-tape has the nice consequence of BF-algorithms being relatively short due to tight pointer-move-sequences.
 
 \subsection*{Example: Fibonacci (continued)}
-Figure \ref{fig:tapehierarchy} shows the tape hierarchy described above, applied to the fibonacci example from before and evaluated immediately after \texttt{fib} was first called. Even though this program made no use of any global data, this frame is still depicted for completeness' sake. Zooming in on Frame 2, used by the \texttt{fib}-function, we see how a frame starts with the slots we previously encountered in Section \ref{sec:compilation:program}: the \texttt{TargetBlock} and \texttt{Run} slots, which are used to determine where to jump next and whether to continue execution at all. Since \texttt{fib} does not return anything, no return-slot has been allocated to this frame. Instead, the local data immediately follows: first the arguments passed to the function (initialized by the caller), then the local data used within the function. Only the variables \texttt{c} and \texttt{i} have been explicitly allocated by the programmer, but temporary slots have been created by the compiler to store the result of \texttt{a + b} and \texttt{i < n}.
+Figure \ref{fig:tapehierarchy} shows the tape hierarchy described above, applied to the Fibonacci example from before and evaluated immediately after \texttt{fib} was first called. Even though this program made no use of any global data, this frame is still depicted for completeness' sake. Zooming in on Frame 2, used by the \texttt{fib} function, we see how a frame starts with the slots we previously encountered in Section \ref{sec:compilation:program}: the \texttt{TargetBlock} and \texttt{Run} slots, which are used to determine where to jump next and whether to continue execution at all. Since \texttt{fib} does not return anything, no return slot has been allocated to this frame. Instead, the local data immediately follows: first the arguments passed to the function (initialized by the caller), then the local data used within the function. Only the variables \texttt{c} and \texttt{i} have been explicitly allocated by the programmer, but temporary slots have been created by the compiler to store the result of \texttt{a + b} and \texttt{i < n}.
 
 Zooming in further on two of the slots, we see that they both contain only a single macro-cell and its 9 constituents. The first slot of the frame (\texttt{TargetBlock}), which still holds ID 1 (the block-ID of the first block of the function) in its value-field, also has its \texttt{FrameMarker} field set, indicating that this is where a new frame starts on the data-tape. The \texttt{b}-slot has its value-field set to 1 as well, corresponding to the value of \texttt{b} that was passed to \texttt{fib} from \texttt{main}. 
 
@@ -228,11 +228,11 @@ The sections below go into more detail about each of the layers of abstraction.
 
 \section{Cells and Macro-Cells}
 \label{sec:compilation:macrocells}
-BF operates on the most fundamental level of raw cells. Each consecutive sequence of 9 such cells constitutes a logical macro-cell as mentioned before in Section \ref{sec:compilation:tape}. In this section, we will cover each of the 9 fields of a macro-cell in more detail and cover some of their use cases. 
+BF operates on the most fundamental level of raw cells. Each consecutive sequence of 9 such cells constitutes a logical macro-cell as mentioned before in Chapter \ref{sec:compilation:tape}. In this section, we will cover each of the 9 fields of a macro-cell in more detail and cover some of their use cases.
 
 \subsection{\texttt{Value0} and \texttt{Value1}}
 \label{sec:compilation:valuefields}
-The value fields together hold the semantic value of the macro-cell. The \texttt{Value0} field contains the low byte and the the \texttt{Value1} field holds the high byte of an integer of at most 16 bits. Acus implements four integer data-types using these two fields: unsigned 8-bit (\texttt{u8}), unsigned 16-bit (\texttt{u16}), signed 8-bit (\texttt{s8}) and signed 16-bit (\texttt{s16}). When referring to 8-bit values, the \texttt{Value1} field is simply ignored. Signed integers are represented using two's complement; some algorithms need to do some additional work (like evaluating the sign-bit) before applying the usual operations.
+The value fields together hold the semantic value of the macro-cell. The \texttt{Value0} field contains the low byte and the \texttt{Value1} field holds the high byte of an integer of at most 16 bits. Acus implements four integer data types using these two fields: unsigned 8-bit (\texttt{u8}), unsigned 16-bit (\texttt{u16}), signed 8-bit (\texttt{s8}) and signed 16-bit (\texttt{s16}). When referring to 8-bit values, the \texttt{Value1} field is simply ignored. Signed integers are represented using two's complement; some algorithms need to do some additional work (like evaluating the sign bit) before applying the usual operations.
 
 \subsection{\texttt{Scratch0} and \texttt{Scratch1}}
 \label{sec:compilation:scratchfields}
@@ -255,7 +255,7 @@ Many BF algorithms need temporary cells as scratch-pads. These cells can be temp
 
 \subsection{\texttt{Flag}}
 \label{sec:compilation:flag}
-The \texttt{Flag} field is reserved to store a value that determines whether or not a BF-loop should be entered. An algorithm can store an intermediate, temporary, value in the flag-cell and use that as a branch or loop-condition. Whereas scratch-cells are general purpose temporary storage locations, the flag-cell is meant to be used for this purpose alone to avoid confusion. The section below includes an example that also utilizes this field in Listing \ref{lst:bfseekframe}.
+The \texttt{Flag} field is reserved to store a value that determines whether or not a BF-loop should be entered. An algorithm can store an intermediate, temporary, value in the flag-cell and use that as a branch or loop-condition. Whereas scratch-cells are general purpose temporary storage locations, the flag-cell is meant to be used for this purpose alone to avoid confusion. The subsection below includes an example that also utilizes this field in Listing \ref{lst:bfseekframe}.
 
 \subsection{\texttt{FrameMarker}}
 \label{sec:compilation:framemarker}
@@ -275,7 +275,7 @@ The \texttt{FrameMarker} field is only set when the macrocell marks the start of
     # field-switches within the same macro-cell, except for the
     # 9 left-moves, which take us exactly one macro-cell to the left.
 
-    # Assumed: there already exist implementations for assignment and
+    # Assumed: there are already implementations for assignment and
     #          the logical NOT operator.
     
     ASSIGN(Flag, NOT(FrameMarker))
@@ -304,7 +304,7 @@ The payload fields are used to store values that need to be transported along to
 \label{sec:compilation:slots}
 A slot is a storage location for one object. Single 8 or 16-bit integers occupy a single macro-cell, while larger objects like arrays or structs occupy a sequence of macro-cells. A slot is bound to a stack frame; its offset is defined as the index of its first macro-cell with respect to the start of the frame, not the start of the actual BF data-tape.
 
-In addition to a name and offset, a slot holds information about its scope (to determine access, allow for name-shadowing and keep track of lifetime) and its \emph{kind}. Most slots are of the \emph{local} kind, representing data local to the current function, but slots can also be tagged \emph{global}, \emph{available} (representing a free block of memory that was previously occupied), \emph{temp} (for temporary slots that should be freed after use) and \emph{cache} (Section \ref{sec:compilation:cache}). Figure \ref{fig:slots} shows a section of a frame and how local slots could be organized given their data-types and sizes. Note that the size of a slot is expressed in terms of the number of macro-cells rather than raw BF cells.
+In addition to a name and offset, a slot holds information about its scope (to determine access, allow for name-shadowing and keep track of lifetime) and its \emph{kind}. Most slots are of the \emph{local} kind, representing data local to the current function, but slots can also be tagged \emph{global}, \emph{available} (representing a free block of memory that was previously occupied), \emph{temp} (for temporary slots that should be freed after use) and \emph{cache} (Chapter \ref{sec:compilation:cache}). Figure \ref{fig:slots} shows a section of a frame and how local slots could be organized given their data-types and sizes. Note that the size of a slot is expressed in terms of the number of macro-cells rather than raw BF cells.
 
 \begin{figure}[H]
   \centering
@@ -351,7 +351,7 @@ Fixed-size character buffer, equivalent in layout to an array of \texttt{N} byte
 
 \texttt{ptr<T>} &
 2 &
-Pointer to a value of type \texttt{T}. The type parameter determines how dereferenced storage is interpreted. The first cell contains the \texttt{FrameDepth} of the pointer, i.e. how many frames back the pointee is actually stored. The second cell stores the offset of the pointee within its frame. Refer to section \ref{sec:compilation:pointers} for more details on pointers. \\
+Pointer to a value of type \texttt{T}. The type parameter determines how dereferenced storage is interpreted. The first cell contains the \texttt{FrameDepth} of the pointer, i.e. how many frames back the pointee is actually stored. The second cell stores the offset of the pointee within its frame. Refer to Section \ref{sec:compilation:pointers} for more details on pointers. \\
 
 \texttt{struct}-defined type &
 sum of field sizes &
@@ -375,7 +375,7 @@ Most expressions encountered by the compiler can be resolved directly into a slo
   let x: array<Person, 5>;
 \end{lstlisting}
 
-In this context, the expressions \texttt{x}, \texttt{x[2]} and \texttt{x[2].age} all refer to known slots or sub-slots (assuming square brackets represent array indexing and a dot represents field access for struct objects). The compiler knows in which slot the array \texttt{x} is stored, it knows how to find the offset of element 2 and it knows how to find the offset of the \texttt{age} field.
+In this context, the expressions \texttt{x}, \texttt{x[2]} and \texttt{x[2].age} all refer to known slots or sub-slots (assuming square brackets represent array indexing and a dot represents field access for struct objects). The compiler knows in which slot the array \texttt{x} is stored, how to find the offset of element 2 and how to find the offset of the \texttt{age} field.
 
 However, when the index is not a compile-time constant, things change. The expression \texttt{x[i].age} has the same shape as \texttt{x[2].age} (they might even refer to the same data), but now the compiler has no way to compute the desired offset at compile-time. At this point, the expression can no longer be represented by a single statically known slot. The array itself still has a known base location, and the layout of each \texttt{Person} object is still known, but the particular element that should be accessed depends on a value computed at runtime. In Brainfuck terms, the compiler must now generate code that moves through the tape dynamically, using the value of \texttt{i} to reach the correct element before applying the fixed offset of the \texttt{age} field.
 
@@ -391,7 +391,7 @@ This is where Acus introduces the notion of a \emph{slot proxy}. A slot proxy is
 
 The distinction between actual slots and proxies that represent them allows the compiler to treat simple variables, struct fields, array elements and pointer dereferences in a uniform way. Code that needs to read from or write to an expression does not have to know immediately whether the target is a fixed slot or a dynamically computed location. It can ask the proxy to materialize the value into a concrete slot, or to write a concrete value back through the described access path.
 
-For the purposes of this chapter, slot proxies should therefore be understood as compiler-level access paths. They bridge the gap between the static memory layout known at compile-time and the dynamic addresses that sometimes have to be computed at runtime. This idea becomes especially important in the caching system (Section \ref{sec:compilation:cache}), which is designed to limit unnecessary materialization and synchronization events.
+For the purposes of this chapter, slot proxies should therefore be understood as compiler-level access paths. They bridge the gap between the static memory layout known at compile-time and the dynamic addresses that sometimes have to be computed at runtime. This idea becomes especially important in the caching system (Chapter \ref{sec:compilation:cache}), which is designed to limit unnecessary materialization and synchronization events.
 
 \subsection{Local Memory Management}
 \label{sec:compilation:localmemory}
@@ -399,7 +399,7 @@ Declaring a local variable means reserving a slot inside the current function fr
 
 Temporary slots are allocated in the same frame when the compiler needs short-lived storage. This happens, for example, when evaluating intermediate expressions, materializing a slot proxy, or running algorithms that require additional scratch space. Unlike named locals, temporaries are not part of the source-level program and may be released as soon as the generated code no longer depends on their contents.
 
-When a slot is freed, either because a local variable leaves scope or because a temporary can be dismissed, its region is marked as available. The contents of the underlying macro-cells are not necessarily cleared immediately; freeing a slot only means that the compiler is allowed to reuse that region for later storage. When a new slot is allocated, a sufficiently large available region may be split into an occupied part and a smaller remaining available part. Conversely, when a slot is freed, neighbouring available regions are merged back together. This prevents the local frame from becoming unnecessarily fragmented and allows larger slots to be allocated later when enough adjacent macro-cells have become free. This management system is discussed in more detail in Section \ref{sec:compilation:memorymanagement}.
+When a slot is freed, either because a local variable leaves scope or because a temporary can be dismissed, its region is marked as available. The contents of the underlying macro-cells are not necessarily cleared immediately; freeing a slot only means that the compiler is allowed to reuse that region for later storage. When a new slot is allocated, a sufficiently large available region may be split into an occupied part and a smaller remaining available part. Conversely, when a slot is freed, neighbouring available regions are merged back together. This prevents the local frame from becoming unnecessarily fragmented and allows larger slots to be allocated later when enough adjacent macro-cells have become free. This management system is discussed in more detail in Chapter \ref{sec:compilation:memorymanagement}.
 
 \section{Frames and Calls}
 \label{sec:compilation:frames}
@@ -407,22 +407,22 @@ A frame groups all data belonging to one function activation. Each frame contain
 
 \subsection{Reference Frames}
 \label{sec:compilation:referenceframes}
-Each stack frame acts as a frame of reference, or coordinate system, to the data-pointer. Since function calls happen dynamically, stack frames are allocated dynamically as well. This means that the compiler has no way of knowing where the data-pointer is located in an absolute sense (i.e. with respect to the start of the BF-tape). Instead, it keeps track of the pointer-location with respect to the start of the current frame. Pushing a new frame on top of the stack and moving the pointer to the start of this frame can then be seen as performing a coordinate transformation - or rebase - of the pointer: the origin is now in the frame of the callee rather than the caller. 
+Each stack frame acts as a frame of reference, or coordinate system, to the data-pointer. Since function calls happen dynamically, stack frames are allocated dynamically as well. This means that the compiler has no way of knowing where the data-pointer is located in an absolute sense (i.e. with respect to the start of the BF-tape). Instead, it keeps track of the pointer-location with respect to the start of the current frame. Pushing a new frame on top of the stack and moving the pointer to the start of this frame can then be seen as performing a coordinate transformation---or rebase---of the pointer: the origin is now in the frame of the callee rather than the caller.
 
 \subsection{Global Data Frame}
 \label{sec:compilation:globalframe}
-Global data is allocated in its own frame at the very start of the data-tape, i.e. frame 0. This frame is not owned by any function and is accessible from any other frame to fetch data from or write to. Like dynamic array accesses or pointer dereferences, a global slot is accessed through a slot-proxy and will be materialized locally before any work can be done on it. This introduces synchronization issues accross call-boundaries, which will be addressed in Section \ref{sec:compilation:cache}. In the sections below, the concept of (stack) frames refers to a frames actually tied to the functions being executed, not the global frame.
+Global data is allocated in its own frame at the very start of the data-tape, i.e. frame 0. This frame is not owned by any function and is accessible from any other frame to fetch data from or write to. Like dynamic array accesses or pointer dereferences, a global slot is accessed through a slot-proxy and will be materialized locally before any work can be done on it. This introduces synchronization issues across call boundaries, which will be addressed in Chapter \ref{sec:compilation:cache}. In the sections below, the concept of (stack) frames refers to frames actually tied to the functions being executed, not the global frame.
 
 \subsection{Frame Layout}
 \label{sec:compilation:framelayout}
 The exact layout of a frame depends on the nature of the function that it belongs to, depending on the return-type and number of arguments it takes. However, each instance of a function-call will cause an identical frame-layout to be generated as a result. In general, a frame is laid out as follows (in terms of macro-cells):
 \begin{enumerate}
-\item \texttt{TargetBlock}: a macro-cell who's \texttt{Value} fields are set to the index of the next block scheduled for execution and who's \texttt{FrameMarker} is set to 1, indicating the start of a new frame.
-\item \texttt{Run}: a macro-cell dedicated to store a local copy of the program's \emph{run}-state. As soon as this flag is set to 0 (from any frame), none of the blocks will execute and the main loop will be aborted.
+\item \texttt{TargetBlock}: a macro-cell whose \texttt{Value} fields are set to the index of the next block scheduled for execution and whose \texttt{FrameMarker} is set to 1, indicating the start of a new frame.
+\item \texttt{Run}: a macro-cell dedicated to storing a local copy of the program's \emph{run}-state. As soon as this flag is set to 0 (from any frame), none of the blocks will execute and the main loop will be aborted.
 \item \texttt{ReturnSlot}: Depending on the return-type of the function, a slot is allocated to hold the return-value. Note that this slot is located at a fixed offset, so it can be reached easily even from within the caller's frame in order to fetch the return-value. If the function returns \texttt{void}, this slot does not exist at all.
 \item \texttt{Locals}: Data local to the frame, which can be categorized further:
   \begin{enumerate}
-  \item local variables (including function-arguments), organised in slots as discussed before in Section \ref{sec:compilation:slots}.
+  \item local variables (including function arguments), organised in slots as discussed before in Section \ref{sec:compilation:slots}.
   \item compiler-generated temporaries
   \item cached materializations
   \end{enumerate}
@@ -432,12 +432,12 @@ The exact layout of a frame depends on the nature of the function that it belong
 \label{sec:compilation:metablocks}
 \paragraph{Calls} To call a function, the caller has to perform the following actions:
 \begin{enumerate}
-\item Set the caller's \texttt{TargetBlock} to the ID of a compiler-generated meta-block. This is the continuation that will run after the callee returns (see Section \ref{sec:compilation:metablocks} below).
+\item Set the caller's \texttt{TargetBlock} to the ID of a compiler-generated meta-block. This is the continuation that will run after the callee returns (described in the next paragraph).
 \item Copy or materialize the function arguments into the argument slots of the next frame. The offsets are known relative to the caller's frame, so this does not require a runtime search.
 \item Initialize the control cells of the callee frame: its \texttt{Run} cell is set and its \texttt{TargetBlock} is set to the callee's entry block.
 \item Move the data pointer to the start of the callee frame and treat this position as the new origin.
 \end{enumerate}
-After these steps, the runtime naturally dispactches to the block who's ID is now stored in the \texttt{TargetBlock} cell of the freshly initialized stack frame.
+After these steps, the runtime naturally dispatches to the block whose ID is now stored in the \texttt{TargetBlock} cell of the freshly initialized stack frame.
 
 \paragraph{Meta-blocks} These are compiler-generated code-blocks that are scheduled at the time of the call, while still in the caller's frame. When the pointer is popped back to this frame after the callee returns, this is the value that is observed and used to determine the next block to be executed. This block is then responsible for making sure that
 \begin{enumerate}
@@ -446,7 +446,7 @@ After these steps, the runtime naturally dispactches to the block who's ID is no
 \item the \texttt{TargetBlock} cell is set to the ID of the block following the call.
 \end{enumerate}
 
-Propagatin the \emph{run}-flag like this makes early termination compositional: if a callee stops the program, the caller observes the same stopped state after the return metablock has run. This allows a (builtin) function like \texttt{abort()} to be implemented.
+Propagating the \emph{run}-flag like this makes early termination compositional: if a callee stops the program, the caller observes the same stopped state after the return metablock has run. This allows a (builtin) function like \texttt{abort()} to be implemented.
 
 \paragraph{Returns} To return control to the caller, we only need to make sure that the return-slot is populated appropriately and pop the data-pointer back to the frame below. The meta-block has already been scheduled and will take control immediately, finishing the transaction as described above.
 
@@ -463,13 +463,13 @@ Notice that the return address is not stored on a hardware stack. It is encoded 
 
 \chapter{Memory Management}\label{sec:compilation:memorymanagement}
 \section{Overview}
-Whenever a variable is declared to Acus, the allocator will look for available space in the current stack-frame. From the allocator's point of view, named locals, compiler temporaries and cache slots are all typed slots inside the current frame. They differ only in who requests them and when they are released.
+Whenever a variable is declared in Acus, the allocator will look for available space in the current stack-frame. From the allocator's point of view, named locals, compiler temporaries and cache slots are all typed slots inside the current frame. They differ only in who requests them and when they are released.
 
-This allocation can always succeed in the compiler model, because Acus assumes an unbounded Brainfuck tape and therefore allows frames to grow as needed. Frame-sizes are only evaluated when the program has been fully defined and algorithms are retroactively adjusted to fit the final configuration. However, slots may also be recycled to keep the frames as tightly packed as possible; this is important to reduce the number of pointer movements. To accomplish this, the management system provides the following features:
+This allocation can always succeed in the compiler model, because Acus assumes an unbounded Brainfuck tape and therefore allows frames to grow as needed. Frame sizes are only evaluated when the program has been fully defined and algorithms are retroactively adjusted to fit the final configuration. However, slots may also be recycled to keep the frames as tightly packed as possible; this is important to reduce the number of pointer movements. To accomplish this, the management system provides the following features:
 
 
 \begin{enumerate}\itemsep0em
-\item Freed slots are marked \texttt{Available} and can be re-used.
+\item Freed slots are marked \texttt{Available} and can be reused.
 \item Declarations can be scoped to reduce the lifetime of variables. Variable slots will become \texttt{Available} when the variable goes out of scope.
 \item Temporary slots declared by the compiler are freed immediately after use.
 \item Adjacent \texttt{Available} slots are merged to accommodate larger data types.
@@ -483,7 +483,7 @@ The memory management system assigns each slot an offset relative to the start o
 When a slot is freed, its contents are not cleared. This means that no algorithm may assume that a newly allocated slot contains zero, even if that slot has just been created from previously available space. In particular, the \texttt{Value} fields of a slot must be treated as unknown until explicitly initialized. Freeing a slot is therefore purely a compiler-side bookkeeping operation and does not incur any runtime cost.
 
 \subsection{Heap Allocation}
-While technically possible, Acus does not support heap-allocation. This would require a separate heap-frame and a runtime system that keeps track of the memory layout in that frame (including de-allocation, block splitting and block merging). The runtime overhead that would arise from managing the heap at runtime would be so costly that it was decided to not implement this as a feature. However, a front-end might emulate heap-allocation using the global frame. One could certainly write algorithms on top of Acus to reserve a specific amount of raw data in the global frame and manage it using existing features.
+While technically possible, Acus does not support heap allocation. This would require a separate heap frame and a runtime system that keeps track of the memory layout in that frame (including deallocation, block splitting and block merging). The runtime overhead that would arise from managing the heap at runtime would be so costly that it was decided not to implement this as a feature. However, a front-end might emulate heap allocation using the global frame. One could certainly write algorithms on top of Acus to reserve a specific amount of raw data in the global frame and manage it using existing features.
 
 \section{Splitting and Merging}
 \subsection{Slot Splitting}
@@ -511,13 +511,13 @@ Named local variables live until the end of their lexical scope. Temporaries usu
 
 \chapter{Code Generation}
 \label{sec:compilation:codegen}
-Before discussing larger compiler structures such as caching and dynamic access, it is useful to look at the small Brainfuck idioms from which Acus builds its generated code. Many of the algorithms in this section are simple in isolation, but together they form the vocabulary used to express higher-level operations on the tape. Moving or copying values, constructing constants or adding numbers together are all small patterns that appear repeatedly in the generated output.
+Before discussing larger compiler structures such as caching and dynamic access, it is useful to look at the small Brainfuck idioms from which Acus builds its generated code. Many of the algorithms in this chapter are simple in isolation, but together they form the vocabulary used to express higher-level operations on the tape. Moving or copying values, constructing constants or adding numbers together are all small patterns that appear repeatedly in the generated output.
 
 This chapter is therefore not meant to be a complete catalogue of every algorithm implemented by Acus. Instead, it presents a representative selection: the basic destructive operations that make Brainfuck programming work, a few arithmetic operations, and the dynamic pointer-movement techniques that are most specific to compiling higher-level code to Brainfuck. 
 
 \section{Clearing, Moving and Copying Values}
 \label{sec:compilation:movecopy}
-One of the simplest useful BF idiom is destructive movement: consume one cell while adding its value somewhere else. From that, one can build addition and non-destructive copying by introducing temporary storage. Basically all other algorithms rely on repeated applications of these idioms.
+One of the simplest useful BF idioms is destructive movement: consume one cell while adding its value somewhere else. From that, one can build addition and non-destructive copying by introducing temporary storage. Basically all other algorithms rely on repeated applications of these idioms.
 
 \subsection{Clearing Cells}
 A cell can be cleared simply by moving the pointer onto it and repeatedly decrementing its value until it becomes zero: \texttt{[-]}. If the value is known to be larger than 128, \texttt{[+]} may be faster at runtime, since the cell reaches zero by overflowing rather than by decrementing all the way down.
@@ -601,7 +601,7 @@ In this small example the saving is only two characters, while the runtime cost 
 \label{sec:compilation:arithmetic}
 \subsection{Addition (8-bit)}
 \label{sec:compilation:add8}
-The algorithm for addition is much like that of copying, the difference being that the target cell is never cleared in advance. When the right-hand-side (rhs) of an expression of the form \texttt{x += y} may be destroyed, the algorithm is very short and efficient:
+The algorithm for addition is much like that of copying, the difference being that the target cell is never cleared in advance. When the right-hand side (rhs) of an expression of the form \texttt{x += y} may be destroyed, the algorithm is very short and efficient:
 
 \vspace{0.5cm}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=brainfuck]
@@ -641,7 +641,7 @@ Adding 16-bit numbers together is much more involved and no BF pseudocode will b
 
 \subsection{Subtraction}
 \label{sec:compilation:subtraction}
-The subtraction algorithms are symmetric to the ones for addition, where increments are substituted for decrement operations and instead of checking for overflow, we check for underflow in the 16-bit case (i.e. wether the result has grown after doing the 8-bit subtraction on the low byte).
+The subtraction algorithms are symmetric to the ones for addition, where increments are substituted for decrement operations and instead of checking for overflow, we check for underflow in the 16-bit case (i.e. whether the result has grown after doing the 8-bit subtraction on the low byte).
 
 \subsection{Signed Integers}
 \label{sec:compilation:signedintegers}
@@ -652,7 +652,7 @@ For signed integers, no special algorithms have to be used at all. Since signedn
 \subsection{Multiplication (8-bit)}\label{sec:compilation:mul8} Multiplication can be implemented in terms of repeated addition, much like we already did in the constant factory optimization. To evaluate the expression \texttt{x *= y}, we do the following:
 \begin{enumerate}
 \item Make a copy of the operand \texttt{x}.
-\item Clear \texttt{x}
+\item Clear \texttt{x}.
 \item Repeatedly decrease \texttt{y} while adding the original value of \texttt{x}, stored in the copy, to \texttt{x} itself.
 \end{enumerate}
 The steps above are the generalized version of the algorithm, which can be optimized further for edge cases where \texttt{y = 0}, \texttt{y = 1} or even for powers of 2.
@@ -683,7 +683,7 @@ Like before, this algorithm destroys the rhs operand in the process. A non-destr
 \end{minipage}
 
 
-\subsection{Multiplication (16-bit)}\label{sec:compilation:mul16} A naive 16-bit algorithm can simply follow the exact same procedure by relying on 16-bit addition. However this leads to a lot of additions for large factors, which can slow down the runtime significantly. Instead, we can perform a small series of 8-bit multiplications and additions to get the same result, realizing that the 16-bit number is stored as a 2-digit base-256 number. That is, every 16-bit integer $x$ can be written as
+\subsection{Multiplication (16-bit)}\label{sec:compilation:mul16} A naive 16-bit algorithm can simply follow the exact same procedure by relying on 16-bit addition. However, this leads to a lot of additions for large factors, which can slow down the runtime significantly. Instead, we can perform a small series of 8-bit multiplications and additions to get the same result, realizing that the 16-bit number is stored as a 2-digit base-256 number. That is, every 16-bit integer $x$ can be written as
 %
 \begin{align}
   x = x_0 + 256\cdot x_1,
@@ -712,14 +712,14 @@ Therefore, the 16-bit product can be computed using three 8-bit multiplications.
   p2 = high(x) * low(y)
 
   low(z)  = low(p0)
-  high(z) = low(p1 + p2) 
+  high(z) = low(p1 + p2)
 \end{lstlisting}
 \end{minipage}
 
 
 \subsection{Division (8-bit and 16-bit)}
 \label{sec:compilation:division}
-Unsigned division is implemented using repeated subtraction. Given two values \texttt{x} and \texttt{y}, the goal is to compute a quotient \texttt{q} and remainder \texttt{r} such that
+Unsigned division is implemented using repeated subtraction. Given two values \texttt{x} and nonzero \texttt{y}, the goal is to compute a quotient \texttt{q} and remainder \texttt{r} such that
 %
 \begin{align}
 x = qy + r, \qquad 0 \leq r < y.
@@ -736,21 +736,21 @@ For 8-bit unsigned values, this can be expressed by first copying the dividend i
   r = x
 
   while r >= y:
-  r -= y
-  q += 1
+    r -= y
+    q += 1
 \end{lstlisting}
 \end{minipage}
 
-The actual BF implementation cannot test \texttt{r >= y} directly. Instead, this comparison is implemented using scratch cells: temporary copies of \texttt{r} and \texttt{y} are decremented together until one of them reaches zero. If the copy of \texttt{y} reaches zero first, the subtraction is safe and the loop may continue. If the copy of \texttt{r} reaches zero first, the next subtraction would underflow and the algorithm terminates. The original values must either be preserved during this test or reconstructed afterwards, which makes division considerably more expensive than addition or multiplication.
+The actual BF implementation cannot test \texttt{r >= y} directly. Instead, this comparison is implemented using scratch cells: temporary copies of \texttt{r} and \texttt{y} are decremented together until one of them reaches zero. If the copy of \texttt{y} reaches zero first or at the same time as \texttt{r}, the subtraction is safe and the loop may continue. If the copy of \texttt{r} reaches zero first, the next subtraction would underflow and the algorithm terminates. The original values must either be preserved during this test or reconstructed afterwards, which makes division considerably more expensive than addition or multiplication.
 
 The same idea also applies to 16-bit unsigned division. The quotient is repeatedly incremented while the divisor is subtracted from a 16-bit remainder. The only difference is that the comparison and subtraction are now multi-byte operations, using the borrow and comparison mechanisms described earlier. This makes the algorithm correct but relatively slow for large quotients, since the number of loop iterations is proportional to the resulting quotient.
 
-Division by zero is not meaningful in this model and has to be handled separately by the compiler or by the generated program. In the current arithmetic model, unsigned division should therefore be understood as an operation that assumes a nonzero divisor.
+The generated implementation handles a zero divisor separately according to the rules in Section \ref{sec:compilation:divby0}.
 
 
 \subsection{Signed Multiplication and Division}
 \label{sec:compilation:signedmuldiv}
-Signed multiplication and division are implemented as thin layers around the corresponding unsigned algorithms. First, the sign bit of the left-hand side is inspected. If it is set, the value is negated in-place and a temporary flag is set to indicate that the final result should be negative. The right-hand side is copied into temporary storage before its sign is inspected, so the original divisor or multiplier does not have to be modified. If this copy is negative, it is negated as well and the result-sign flag is toggled. At this point, both operands have been converted to positive values, while the temporary flag records whether the original operands had opposite signs.
+Signed multiplication and division are implemented as thin layers around the corresponding unsigned algorithms. First, the sign bit of the left-hand side is inspected. If it is set, the value is negated in place and a temporary flag is set to indicate that the final result should be negative. The right-hand side is copied into temporary storage before its sign is inspected, so the original divisor or multiplier does not have to be modified. If this copy is negative, it is negated as well and the result-sign flag is toggled. At this point, both operands have been converted to positive values, while the temporary flag records whether the original operands had opposite signs.
 
 The actual multiplication or division can then be performed using the unsigned algorithm. After this operation has completed, the result-sign flag is checked. If it is set, the result is negated back into two's complement form. This approach avoids having to implement separate signed versions of the core multiplication and division algorithms; signedness is handled only by pre-processing the operands and post-processing the result.
 
@@ -763,7 +763,7 @@ When division also produces a remainder, Acus follows the same convention as C++
 where \texttt{x \% y} follows the sign of \texttt{x}. This convention was chosen because it is familiar from C++ and maps naturally onto the implementation: expressions evaluated at compile-time (constant-folding) using the C++ \texttt{\%} operator will therefore produce the same result as the runtime.
 
 \subsection{Division by Zero}\label{sec:compilation:divby0}
-To deal with division by zero, Acus will simply fill the result with the maximum value allowed by the width of the type: 255 for \texttt{u8} or 65535 for \texttt{u16} unsigned integers. For signed integers, the same bit-representation will be used, resulting in (a somewhat confusing) value of -1. The exception to this rule is when the numerator is 0 as well, in which case the result will become 0. Modulo operations where the denominator is 0, will always result in a value of 0.
+To deal with division by zero, Acus will simply fill the result with the maximum value allowed by the width of the type: 255 for \texttt{u8} or 65535 for \texttt{u16} unsigned integers. For signed integers, the same bit-representation will be used, resulting in (a somewhat confusing) value of -1. The exception to this rule is when the numerator is 0 as well, in which case the result will become 0. Modulo operations where the denominator is 0 will always result in a value of 0.
 
 \section{Boolean Operations}
 \label{sec:compilation:logic}
@@ -785,7 +785,7 @@ The simplest boolean conversion is one where an integer is transformed into eith
 
 \subsection{Logical Not}
 \label{sec:compilation:logicalnot}
-The not-operator does the exact opposite of a boolean conversion. It transforms its operand into 1 when it's value equals 0 and vice versa for any non-zero values. The algorithm is almost identical to that of \texttt{BOOL(x)}: instead of setting \texttt{x} to 0 and incrementing it in the loop-block, we set it to 1 and decrement it inside the loop.
+The not-operator does the exact opposite of a boolean conversion. It transforms its operand into 1 when its value equals 0 and vice versa for any non-zero values. The algorithm is almost identical to that of \texttt{BOOL(x)}: instead of setting \texttt{x} to 0 and incrementing it in the loop-block, we set it to 1 and decrement it inside the loop.
 
 \vspace{0.5cm}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=brainfuck]
@@ -855,7 +855,7 @@ In testing for equality, we rely on the fact that $x-y=0$ when $x=y$ to implemen
 
 \subsection{Less Than}
 \label{sec:compilation:less}
-This operator was already used before in the implementation of 16-bit addition, to determine the value of the carry-bit. It is implemented by reducing both of its operators simultaneously, until either one of them reaches zero. If the rhs is still non-zero when this happens, the lhs must have been the smaller of the two. This turns out to be a pretty tedious algorithm when expressed in BF so instead it is presented in pseudo-code below. Other comparison operators are implemented similarly.
+This operator was already used before in the implementation of 16-bit addition, to determine the value of the carry-bit. It is implemented by reducing both of its operands simultaneously, until either one of them reaches zero. If the rhs is still non-zero when this happens, the lhs must have been the smaller of the two. This turns out to be a pretty tedious algorithm when expressed in BF, so instead it is presented in pseudocode below. Other comparison operators are implemented similarly.
 
 \vspace{0.5cm}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=pseudocode]
@@ -871,26 +871,28 @@ This operator was already used before in the implementation of 16-bit addition, 
 
 \subsection{Signed Comparisons}
 \label{sec:compilation:signedcomparisons}
-Comparisons on signed integers cannot use the unsigned implementations discussed before. Instead, the exact form of the algorithm depends on the sign-bits of both of the argument. A runtime check has to be done to determine which one of four branches must be taken. For example, for the less-than operator, if its operands are both signed:
+Comparisons on signed integers cannot use the unsigned implementations discussed before. Instead, the exact form of the algorithm depends on the sign bits of both arguments. A runtime check has to be done to determine which one of four branches must be taken. For example, for the less-than operator, if its operands are both signed:
 
 \begin{enumerate}
-\item If both are positive, use the unsigned algorithm.
+\item If both are nonnegative, use the unsigned algorithm.
 \item If the lhs is negative and the rhs is positive (or zero), return 1 immediately.
-\item If the lhs is positive (or zero) and the rhs is negative, return 0 immediately.
+\item If the lhs is nonnegative and the rhs is negative, return 0 immediately.
 \item If both are negative, use the unsigned greater-than algorithm on their absolute values.
 \end{enumerate}
 
-This requires an algorithm to evaluate the sign of an integer and one to take its absolute value. To get the sign-bit of an 8-bit value $x$ (1 if negative, 0 otherwise), we simply compute the result of $x >= 128$ (using the unsigned greater-equal operator). Values with bitpatterns identical to unsigned values from 128 on are interpreted as negative numbers (i.e. have their highest bit set) in two's complement representation.
+This requires an algorithm to evaluate the sign of an integer and one to take its absolute value. To get the sign bit of an 8-bit value $x$ (1 if negative, 0 otherwise), we simply compute the result of $x >= 128$ (using the unsigned greater-equal operator). Values with bit patterns identical to unsigned values from 128 on are interpreted as negative numbers (i.e. have their highest bit set) in two's complement representation.
 
-To calculate the absolute value of a signed integer, its sign-bit is first calculated. If not set, the value can remain unmodified since it's already positive. If the sign-bit \emph{is} set, it can be negated simply by subtracting it from 0.
+To calculate the absolute value of a signed integer, its sign bit is first calculated. If not set, the value can remain unmodified since it is already positive. If the sign bit \emph{is} set, it can be negated simply by subtracting it from 0.
 
 \vspace{0.5cm}\noindent\begin{minipage}{\linewidth}
-\begin{lstlisting}[style=brainfuck]
+\begin{lstlisting}[style=pseudocode]
   # ABS(x)
   # Assumes s to be an empty scratch-cell
 
-  SUB_FROM(s, x)
-  MOVE(s, x)
+  if SIGN_BIT(x):
+    # x = 0 - x
+    SUB_FROM(s, x)
+    MOVE(s, x)
 \end{lstlisting}
 \end{minipage}
 
@@ -900,11 +902,11 @@ BF has no random access instruction; the only way to reach a cell is to move the
 
 \subsection{Static Pointer Movement}
 \label{sec:compilation:staticmove}
-In most scenario's, when the source and destination locations are known at compile time, pointer movement is straightforward: emit the required number of \texttt{<} or \texttt{>} commands. This is the common case for local slot operations within a frame, where the compiler can keep track of the current pointer position relative to the frame origin.
+In most scenarios, when the source and destination locations are known at compile time, pointer movement is straightforward: emit the required number of \texttt{<} or \texttt{>} commands. This is the common case for local slot operations within a frame, where the compiler can keep track of the current pointer position relative to the frame origin.
 
 \subsection{Dynamic Pointer Movement}
 \label{sec:compilation:dynamicmove}
-The most interesting pointer-movement algorithms are the ones where the target is not known until runtime. Examples include array access by a runtime index and pointer dereferencing. These algorithms rely on metadata stored in macro-cells: markers, counters and payload fields are used so that the BF pointer can search through structured tape data and stop at the correct logical cell. We can distinguis between two different classes of dynamic pointer movement: \emph{marker-based} and \emph{offset-based} moves. In marker-based moves, the pointer moves along the tape until it hits some pre-set marker. In offset-based moves, the offset is stored in the payload cells and dragged along with the pointer while being reduced; when the payload becomes zero, the destination has been reached. 
+The most interesting pointer-movement algorithms are the ones where the target is not known until runtime. Examples include array access by a runtime index and pointer dereferencing. These algorithms rely on metadata stored in macro-cells: markers, counters and payload fields are used so that the BF pointer can search through structured tape data and stop at the correct logical cell. We can distinguish between two different classes of dynamic pointer movement: \emph{marker-based} and \emph{offset-based} moves. In marker-based moves, the pointer moves along the tape until it hits some pre-set marker. In offset-based moves, the offset is stored in the payload cells and dragged along with the pointer while being reduced; when the payload becomes zero, the destination has been reached.
 
 \subsubsection{Marker-Based}
 \label{sec:compilation:dynamicmove:marker}
@@ -930,13 +932,13 @@ Because the pointer ends up at some unknown location, we commonly set another ma
 
 \subsubsection{Offset-Based}
 \label{sec:compilation:dynamicmove:offset}
-The second class of dynamic pointer movement relies on a runtime value representing the offset being stored on the tape itself. For example, in the expression \texttt{x[i]}, \texttt{i} is a variable stored on the tape that contains the offset with respect to the start of the array \texttt{x} in terms of the size of the element-type of \texttt{x}. To reach a specific offset, the pointer is moved to the start of the array (known at compile-time) and the offset-value is copied or moved into its payload-fields (a single one for 8-bit values and both of them for 16-bit values). The pointer is then moved to the right while the payload is moved along and decremented. When the payload hits zero, the required offset has been reached.
+The second class of dynamic pointer movement relies on a runtime value representing the offset being stored on the tape itself. For example, in the expression \texttt{x[i]}, \texttt{i} is a variable stored on the tape that contains the element index with respect to the start of the array \texttt{x}. This index is converted into a macro-cell offset based on the size of the element type. To reach a specific offset, the pointer is moved to the start of the array (known at compile-time) and the offset-value is copied or moved into its payload-fields (a single one for 8-bit values and both of them for 16-bit values). The pointer is then moved to the right while the payload is moved along and decremented. When the payload hits zero, the required offset has been reached.
 
 \vspace{0.5cm}\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}[style=brainfuck]
   # TO_OFFSET(b, i)
   # b = base address
-  # i = index/offset wrt base
+  # i = macro-cell offset wrt base
 
   COPY(i, b.payload)
   b.payload [-
@@ -953,7 +955,7 @@ Note that, depending on the element-type of the array, the index does not always
 \label{sec:compilation:payloadtransport}
 Dynamic writes are harder than dynamic reads because data has to be carried to a location that is not statically known. Acus solves this by moving values through designated payload fields. The payload travels along with the dynamic traversal and is deposited when the target macro-cell is found.
 
-For marker-based movements, the payload can simply be moved along with the pointer because the payload fields are not used to perform the move itself. For offset-based movements, the payload-fields already serve the purpose of containing the offset itself and cannot be used to transport the new value. Instead the usual offset-based method described in Section \ref{sec:compilation:dynamicmove:offset} is used to find the element, where a marker is planted. Then, the marker-based method is used to move the payload to that position and overwrite its value-field(s).
+For marker-based movements, the payload can simply be moved along with the pointer because the payload fields are not used to perform the move itself. For offset-based movements, the payload fields already serve the purpose of containing the offset itself and cannot be used to transport the new value. Instead, the usual offset-based method described in Section \ref{sec:compilation:dynamicmove:offset} is used to find the element, where a marker is planted. Then, the marker-based method is used to move the payload to that position and overwrite its value field(s).
 
 \chapter{Caching} \label{sec:compilation:cache}
 Slot proxies (Section \ref{sec:compilation:slotproxies}) allow expressions to remain abstract until their value is needed. However, repeatedly materializing the same proxy can duplicate work. For example, accessing the same array element several times in a block should not require materializing the element locally each time. Instead, multiple accesses can be cached and a writeback occurs only when necessary, for example at control-flow boundaries.
@@ -972,12 +974,12 @@ Slot proxies (Section \ref{sec:compilation:slotproxies}) allow expressions to re
 \end{lstlisting}
 \end{minipage}
 
-To implement this caching system, dependencies between proxies need to be carefully maintained. During compilation, a dependency graph is built and used to determine which cache-entries have become dirty and which ones need to be flushed back into their actual storage location. This section will go over the different techniques and compromises that were made in their implementation.
+To implement this caching system, dependencies between proxies need to be carefully maintained. During compilation, a dependency graph is built and used to determine which cache entries have become dirty and which ones need to be flushed back into their actual storage location. This chapter will go over the different techniques and compromises that were made in their implementation.
 
 \section{Cache Graphs}\label{sec:compilation:cachegraphs}
-A cache entry connects a logical proxy to a concrete slot that currently holds its materialized value. Entries can be marked dirty when modified or invalidated/removed when there is no guarantee that its value still represents the actual referred-to data.
+A cache entry connects a logical proxy to a concrete slot that currently holds its materialized value. Entries can be marked dirty when modified or invalidated/removed when there is no guarantee that their values still represent the actual referred-to data.
 
-Figure \ref{fig:cachegraph} shows a simplified representation of a cache graph, where each entry (node) contains information about the proxy that it represents, the physical location of the cached slot, and its parent- and child-nodes. A proxy \texttt{A} is considered a parent of proxy \texttt{B} if the canonical storage location of \texttt{B} is a subset of that of \texttt{A}. For example, given the expression \texttt{x[i][j]}, the expression \texttt{x[i]} is represented by a proxy that itself will be cached (assuming \texttt{i} is not known at compile-time). Therefore, to materialize the element \texttt{x[i][j]} we first need to materialize \texttt{x[i]} and their cache-entries are in a parent-child relation: \texttt{x[i]} is the parent of \texttt{x[i][j]} because the storage slot of \texttt{x[i]} encloses that of \texttt{x[i][j]}.
+Figure \ref{fig:cachegraph} shows a simplified representation of a cache graph, where each entry (node) contains information about the proxy that it represents, the physical location of the cached slot, and its parent and child nodes. A proxy \texttt{A} is considered a parent of proxy \texttt{B} if the canonical storage location of \texttt{B} is a subset of that of \texttt{A}. For example, given the expression \texttt{x[i][j]}, the expression \texttt{x[i]} is represented by a proxy that itself will be cached (assuming \texttt{i} is not known at compile time). Therefore, to materialize the element \texttt{x[i][j]}, we first need to materialize \texttt{x[i]}, and their cache entries are in a parent-child relation: \texttt{x[i]} is the parent of \texttt{x[i][j]} because the storage slot of \texttt{x[i]} encloses that of \texttt{x[i][j]}.
 
 In the example of Figure \ref{fig:cachegraph}, the $3\times 3$ matrix \texttt{x} is indexed by the index variables \texttt{i}, \texttt{j}, \texttt{k} and \texttt{l} through the expressions at the top. The first line causes the left branch of the tree to be generated: in order to materialize \texttt{x[i][j]}, its parent \texttt{x[i]} is materialized in a cache slot, which can be generated from the statically known starting address of its parent \texttt{x} (which does not have to be cached). In this example, \texttt{x[i]} is materialized right after its parent \texttt{x} (as can be confirmed from the offsets and size data) but this does not necessarily have to be the case.
 
@@ -1001,21 +1003,21 @@ Flushing an entry means writing its contents back into its parent (either anothe
 %
 \begin{enumerate}
 \item The entry is marked \emph{dirty} and a parent somewhere up in the cache hierarchy is materialized. If the dirty entry is multiple parents removed, this causes all intermediate parents to be flushed as well. For example, if \texttt{x[i][j]} is dirty and \texttt{x} is materialized, the dirty \texttt{x[i][j]} is flushed into \texttt{x[i]}, which then becomes dirty and is subsequently flushed into \texttt{x} itself. The entire path from \texttt{x[i][j]} to \texttt{x} is now clean.
-\item Whenever a control-flow boundary is crossed. For example, at jumps or function-calls, the entire cache is cleared by flushing all entries (starting at the deepest child-nodes) back into their canonical storage. This makes sure that all flow-paths see the correct data.
+\item Whenever a control-flow boundary is crossed. For example, at jumps or function calls, the entire cache is cleared by flushing all entries (starting at the deepest child nodes) back into their canonical storage. This makes sure that all flow paths see the correct data.
 \item Whenever a pointer is dereferenced. Because pointers can refer to anything (of some type) at runtime, the entire cache is cleared to make sure that the pointee is up-to-date when fetched by the dereferencing algorithm.
-\item Before cache-invalidation. In scenario's where a cache entry is invalidated (removed from the tree), it is flushed back before doing so. Cache invalidation is discussed in more detail below.
+\item Before cache invalidation. In scenarios where a cache entry is invalidated (removed from the tree), it is flushed back before doing so. Cache invalidation is discussed in more detail below.
 \end{enumerate}
 
 At a return boundary, local cache entries can be discarded because their frame is about to disappear. Entries referring to storage that outlives the frame, such as globals and dereferenced pointers, must first be flushed. Return values are transferred separately by the return mechanism described earlier.
 
 \subsection{Invalidation}\label{sec:compilation:invalidation}
-Entries can be invalidated when an external dependency or (indirect) parent is modified or freed by the memory management system. In the example of Figure \ref{fig:cachegraph} the entries \texttt{x[i]} and \texttt{x[i][j]} have been materialized in cache using the value stored in slot \texttt{i} at that time. When the value of \texttt{i} is modified, the proxy refers to a new object and the entry has become invalid. When this is about to happen, the invalidated proxy has to be flushed (if dirty) \emph{before} modifying the dependency, after which it (and its descendants) can be removed from the cache tree.
+Entries can be invalidated when an external dependency or (indirect) parent is modified or freed by the memory management system. In the example of Figure \ref{fig:cachegraph}, the entries \texttt{x[i]} and \texttt{x[i][j]} have been materialized in cache using the value stored in slot \texttt{i} at that time. When the value of \texttt{i} is modified, the proxy refers to a new object and the entry has become invalid. When this is about to happen, the invalidated proxy has to be flushed (if dirty) \emph{before} modifying the dependency, after which it (and its descendants) can be removed from the cache tree.
 
 \subsection{Writes}
 \label{sec:compilation:cachewrites}
-Writing to a proxy will, as mentioned before, cause its cached entry to be marked \emph{dirty}. When the object is overwritten independently from its original value, there is no need to materialize that value at all. For example, when compiling the expression \texttt{x[i][j] = 3}, the value stored initially in \texttt{x[i][j]} is completely irrelevant. In such cases, a new entry for the proxy \texttt{x[i][j]} is created and marked dirty immediately and no materialization algorithm has to be executed.
+Writing to a proxy will, as mentioned before, cause its cached entry to be marked \emph{dirty}. When the object is overwritten independently of its original value, there is no need to materialize that value at all. For example, when compiling the expression \texttt{x[i][j] = 3}, the value stored initially in \texttt{x[i][j]} is completely irrelevant. In such cases, a new entry for the proxy \texttt{x[i][j]} is created and marked dirty immediately and no materialization algorithm has to be executed.
 
-\subsection{Example}\label{sec:compilation:cacheexample} The listing below shows a more complete version of code that leads to the cache hierarchy of Figure \ref{fig:cachegraph}. At the lines marked \texttt{(a)} and \texttt{(b)}, the graph from Figure \ref{fig:cachegraph} is generated. Then, at line \texttt{(c)}, a new value is assigned to \texttt{x[i][j]}. This assignment expression will write the value \texttt{3} directly to the already cached slot for the proxy \texttt{x[i][j]} and mark this entry as \emph{dirty}. At the next expression (line \texttt{(d)}), a new proxy (\texttt{x[i][k]}) is materialized, which shares a parent (\texttt{x[i]}) with the now dirty entry \texttt{x[i][j]}. Therefore, before materializing \texttt{x[i][k]}, the dirty entry is flushed upwards into \texttt{x[i]}, after which its dirty-state is cleared and \texttt{x[i][k]} can be materialized. Finally, at line \texttt{(e)}, the value of \texttt{i} is modified. All cache-entries that depend on \texttt{i} (the left branch of the graph) therefore need to be invalidated. In this example these entries have just been flushed and are still clean, so there is no need to flush them prior to deletion.
+\subsection{Example}\label{sec:compilation:cacheexample} The listing below shows a more complete version of code that leads to the cache hierarchy of Figure \ref{fig:cachegraph}. At the lines marked \texttt{(a)} and \texttt{(b)}, the graph from Figure \ref{fig:cachegraph} is generated. Then, at line \texttt{(c)}, a new value is assigned to \texttt{x[i][j]}. This assignment expression will write the value \texttt{3} directly to the already cached slot for the proxy \texttt{x[i][j]} and mark this entry as \emph{dirty}. At the next expression (line \texttt{(d)}), a new proxy (\texttt{x[i][k]}) is materialized, which shares a parent (\texttt{x[i]}) with the now dirty entry \texttt{x[i][j]}. Therefore, before materializing \texttt{x[i][k]}, the dirty entry is flushed upwards into \texttt{x[i]}, after which its dirty state is cleared and \texttt{x[i][k]} can be materialized. Finally, at line \texttt{(e)}, the value of \texttt{i} is modified. All cache entries that depend on \texttt{i} (the left branch of the graph) therefore need to be invalidated. In this example, these entries have just been flushed and are still clean, so there is no need to flush them prior to deletion.
 
 \vspace{0.5cm}\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[style=pseudocode]
@@ -1046,10 +1048,10 @@ Writing to a proxy will, as mentioned before, cause its cached entry to be marke
 The caching system is one of the optimizations used by Acus to try to somewhat limit the number of generated BF instructions, which tends to grow very fast for complex programs. Even though it was never a goal to produce highly optimized BF, several other optimizations have been implemented to fight the explosive nature of the generated output. Each of these techniques will be briefly outlined in this chapter.
 
 \section{Move Semantics}
-The algorithms for moving and copying BF cells are very similar: copying means we simultaneously move to the target-cell and a scratch cell, only for the scratch-cell to be emptied back into the source location. Obviously, we should move and avoid the full copy algrithm whenever possible. Therefore, if we can prove that the source is expendible, we can just move its contents out of it to a new location. Acus tries to find as many opportunities as possible to move instead of copy. For example in the following situations:
+The algorithms for moving and copying BF cells are very similar: copying means we simultaneously move to the target cell and a scratch cell, only for the scratch cell to be emptied back into the source location. Obviously, we should move and avoid the full copy algorithm whenever possible. Therefore, if we can prove that the source is expendable, we can just move its contents out of it to a new location. Acus tries to find as many opportunities as possible to move instead of copy. For example, this is possible in the following situations:
 \begin{enumerate}\itemsep0em
 \item Assignment from a temporary expression. e.g. \texttt{x = y + z}, where \texttt{y + z} is a temporary which does not outlive the statement anyway. 
-\item Flushing cache-entries that are about to be deleted. When a cache-tree is flushed prior to it being deleted, we can move instead of copy towards the root.
+\item Flushing cache entries that are about to be deleted. When a cache tree is flushed prior to it being deleted, we can move instead of copy towards the root.
 \end{enumerate}
 
 \section{Literal Evaluation}
@@ -1069,7 +1071,7 @@ All operators come in 2 flavors: one to apply its effect to two slots and one to
 
 \section{Primitive and BF Merging}
 \subsection{Merging Primitives}
-Before generating actual BF characters, Acus will produce a series of primitives, each of which represents a relatively simple sequence of BF instructions on a slightly higher level (Table \ref{tab:primitives}). Sequences of primitives can sometimes be merged into shorter sequences or even no-ops. For example, if the primitive \texttt{MoveRelative(3)} is immediately followed by the primitive \texttt{MoveRelative(6)}, they can be merged into a single \texttt{MoveRelative(9)}. This leads to a series of merge-rules, listed in Table \ref{tab:mergerules}. By applying these rules iteratively to the generated sequence of primitives, the program can be shrunk significantly in post-processing.
+Before generating actual BF characters, Acus will produce a series of primitives, each of which represents a relatively simple sequence of BF instructions on a slightly higher level (Table \ref{tab:primitives}). Sequences of primitives can sometimes be merged into shorter sequences or even no-ops. For example, if the primitive \texttt{MovePointerRelative(3)} is immediately followed by the primitive \texttt{MovePointerRelative(6)}, they can be merged into a single \texttt{MovePointerRelative(9)}. This leads to a series of merge-rules, listed in Table \ref{tab:mergerules}. By applying these rules iteratively to the generated sequence of primitives, the program can be shrunk significantly in post-processing.
 
 
 \begin{longtable}{T{0.30\textwidth}|L{0.62\textwidth}}
@@ -1096,12 +1098,12 @@ Before generating actual BF characters, Acus will produce a series of primitives
   \texttt{Or(x)} & Set the current value to the logical OR of this value and the value inside the cell at relative offset \texttt{x}. \\
   \texttt{And(x)} & Set the current value to the logical AND of this value and the value inside the cell at relative offset \texttt{x}. \\
   \texttt{Xor(x)} & Set the current value to the logical XOR of this value and the value inside the cell at relative offset \texttt{x}. \\
-  \texttt{Equal(x)} & Set the current value to 1 if it's equal to the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
-  \texttt{Less(x)} & Set the current value to 1 if it's less than the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
-  \texttt{LessOrEqual(x)} & Set the current value to 1 if it's less than or equal to the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
-  \texttt{Greater(x)} & Set the current value to 1 if it's greater than the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
-  \texttt{GreaterOrEqual(x)} & Set the current value to 1 if it's greater than or equal to the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
-  \texttt{Cmp(c)} & Set the current value to 1 if it's equal to the compile-time constant \texttt{c}, 0 otherwise. \\
+  \texttt{Equal(x)} & Set the current value to 1 if it is equal to the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
+  \texttt{Less(x)} & Set the current value to 1 if it is less than the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
+  \texttt{LessOrEqual(x)} & Set the current value to 1 if it is less than or equal to the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
+  \texttt{Greater(x)} & Set the current value to 1 if it is greater than the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
+  \texttt{GreaterOrEqual(x)} & Set the current value to 1 if it is greater than or equal to the value in the cell at relative offset \texttt{x}, 0 otherwise. \\
+  \texttt{Cmp(c)} & Set the current value to 1 if it is equal to the compile-time constant \texttt{c}, 0 otherwise. \\
   \hline
   \caption{Acus primitives.}
   \label{tab:primitives}   
@@ -1127,14 +1129,10 @@ Before generating actual BF characters, Acus will produce a series of primitives
 \texttt{ZeroCellPlus} & \texttt{ZeroCell} & \texttt{ZeroCellPlus} \\
 \hline
 
-\texttt{LoopEnd} & \texttt{ZeroCell} & \texttt{LoopEnd} \\
-\texttt{LoopEnd} & \texttt{ZeroCellPlus} & \texttt{LoopEnd} \\
-\hline
-
 \texttt{MovePointerRelative(x)} & \texttt{MovePointerRelative(y)} & \texttt{MovePointerRelative(x + y)} \\
 \hline
 
-\texttt{ConstructConstant(c)} & \texttt{ChangeBy(d)} & \texttt{ConstructConstant(c + d)} \\
+\texttt{ConstructConstant(c)} & \texttt{ChangeValue(d)} & \texttt{ConstructConstant(c + d)} \\
 \texttt{ConstructConstant(c)} & \texttt{ConstructConstant(d)} & \texttt{ConstructConstant(d)} \\
 \texttt{ConstructConstant(c)} & \texttt{ZeroCell} & \texttt{ZeroCell} \\
 \texttt{ConstructConstant(c)} & \texttt{ZeroCellPlus} & \texttt{ZeroCellPlus} \\
@@ -1143,10 +1141,10 @@ Before generating actual BF characters, Acus will produce a series of primitives
 \texttt{ConstructConstant(c)} & \texttt{Cmp(d)} & \texttt{ConstructConstant(c == d)} \\
 \hline
 
-\texttt{ChangeBy(c)} & \texttt{ChangeBy(d)} & \texttt{ChangeBy(c + d)} \\
-\texttt{ChangeBy(c)} & \texttt{ZeroCell} & \texttt{ZeroCell} \\
-\texttt{ChangeBy(c)} & \texttt{ZeroCellPlus} & \texttt{ZeroCellPlus} \\
-\texttt{ChangeBy(c)} & \texttt{ConstructConstant(d)} & \texttt{ConstructConstant(d)} \\
+\texttt{ChangeValue(c)} & \texttt{ChangeValue(d)} & \texttt{ChangeValue(c + d)} \\
+\texttt{ChangeValue(c)} & \texttt{ZeroCell} & \texttt{ZeroCell} \\
+\texttt{ChangeValue(c)} & \texttt{ZeroCellPlus} & \texttt{ZeroCellPlus} \\
+\texttt{ChangeValue(c)} & \texttt{ConstructConstant(d)} & \texttt{ConstructConstant(d)} \\
 \hline
 
 \texttt{MoveData(x)} & \texttt{ZeroCell} & \texttt{MoveData(x)} \\
@@ -1221,9 +1219,7 @@ Before generating actual BF characters, Acus will produce a series of primitives
 \end{longtable}
 
 \subsection{Merging BF}
-As a final pass, after all primitives have been lowered into actual BF character, Acus will scan the resulting source code for cancellation opportunities: sequences of consecutive \texttt{+} and \texttt{-} or \texttt{<} and \texttt{>} commands that can be collapsed. The primitive-merging rules already do this to some extend by merging \texttt{ChangeValue} and \texttt{MovePointerRelative} primitives, but that does not capture all opportunities. For example, when a \texttt{MovePointerRelative} primitive is followed by another that, when lowered to BF, starts with a sequence of \texttt{>} commands, these can be merged or cancelled in the final result.
-
-
+As a final pass, after all primitives have been lowered into actual BF characters, Acus will scan the resulting source code for cancellation opportunities: sequences of consecutive \texttt{+} and \texttt{-} or \texttt{<} and \texttt{>} commands that can be collapsed. The primitive-merging rules already do this to some extent by merging \texttt{ChangeValue} and \texttt{MovePointerRelative} primitives, but that does not capture all opportunities. For example, when a \texttt{MovePointerRelative} primitive is followed by another that, when lowered to BF, starts with a sequence of \texttt{>} commands, these can be merged or cancelled in the final result.
 
 
 
