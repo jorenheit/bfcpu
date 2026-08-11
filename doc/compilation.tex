@@ -1084,6 +1084,8 @@ Before generating actual BF characters, Acus will produce a series of primitives
   \hline
   \endhead
 
+  \texttt{LoopOpen} & Open a BF loop, compiles to simply \texttt{[}. \\
+  \texttt{LoopClose} & Close a BF loop, compiles to simply \texttt{]}. \\
   \texttt{MovePointerRelative(x)} & Move the pointer by \texttt{x} cells (positive means to the right). \\
   \texttt{ChangeValue(c)} & Change the current value by an amount \texttt{c}. \\
   \texttt{ZeroCell} & Set the current value to \texttt{0} using \texttt{[-]}. \\
@@ -1127,6 +1129,10 @@ Before generating actual BF characters, Acus will produce a series of primitives
 
 \texttt{ZeroCellPlus} & \texttt{ZeroCellPlus} & \texttt{ZeroCellPlus} \\
 \texttt{ZeroCellPlus} & \texttt{ZeroCell} & \texttt{ZeroCellPlus} \\
+\hline
+
+\texttt{LoopClose} & \texttt{ZeroCell} & \texttt{LoopClose} \\
+\texttt{LoopClose} & \texttt{ZeroCellPlus} & \texttt{LoopClose} \\
 \hline
 
 \texttt{MovePointerRelative(x)} & \texttt{MovePointerRelative(y)} & \texttt{MovePointerRelative(x + y)} \\

@@ -35,7 +35,7 @@ ROUTES: dict[str, tuple[str, str, str]] = {
     "Code Generation": ("/acus/code-generation/", "Brainfuck Compilation", "05"),
     "Caching": ("/acus/caching/", "Brainfuck Compilation", "06"),
     "Other Optimizations": ("/acus/other-optimizations/", "Brainfuck Compilation", "07"),
-    "Final Thoughts and Conclusion": ("/reflection/", "Reflection", "Reflection"),
+    "Reflection": ("/reflection/", "Reflection", "Reflection"),
     "Microcode Table": ("/appendix/microcode-table/", "Appendix", "A"),
     "Mugen Specification": ("/appendix/mugen-specification/", "Appendix", "B"),
     "Bill of Materials": ("/appendix/bill-of-materials/", "Appendix", "C"),
@@ -150,6 +150,11 @@ def relative_url(current_route: str, target_route: str, fragment: str = "") -> s
     else:
         relative += "/"
     return relative + (f"#{fragment}" if fragment else "")
+
+
+def relative_file_url(current_route: str, target_path: str) -> str:
+    """Return a relative URL for a file, without treating it as a page route."""
+    return posixpath.relpath(target_path.lstrip("/"), route_directory(current_route))
 
 
 def asset_url(route: str, asset: str) -> str:
@@ -833,6 +838,11 @@ def copy_assets(source_dir: Path, output: Path) -> None:
         if source.is_dir():
             shutil.copytree(source, report_assets / name, dirs_exist_ok=True)
 
+    report_pdf = source_dir / "synapse.pdf"
+    if not report_pdf.is_file():
+        raise SystemExit(f"Report PDF not found: {report_pdf}")
+    shutil.copy2(report_pdf, output / "synapse.pdf")
+
 def header_html(route: str) -> str:
     nav = [
         ("Home", "/", route == "/"),
@@ -948,7 +958,7 @@ def render_home(pages: list[dict[str, object]]) -> str:
       <h1>Synapse-191</h1>
       <h2>Building a Brainfuck<br>Computing Environment</h2>
       <p class="hero-lead">From a native Brainfuck computer to a typed compiler backend.</p>
-      <div class="hero-actions"><a class="button button-primary" href="{relative_url('/', '/synapse-191/introduction/')}">Start reading {arrow()}</a><a class="button button-secondary" href="{relative_url('/', '/acus/')}">Explore Acus {arrow()}</a></div>
+      <div class="hero-actions"><a class="button button-primary" href="{relative_url('/', '/synapse-191/introduction/')}">Start reading {arrow()}</a><a class="button button-secondary" href="{relative_url('/', '/acus/')}">Explore Acus {arrow()}</a><a class="button button-secondary" href="{relative_file_url('/', 'synapse.pdf')}" download>Download PDF <span aria-hidden="true">↓</span></a></div>
       <p class="hero-meta">Joren Heit · 2025 · Web edition</p>
     </div>{hero_diagram()}
   </section>
