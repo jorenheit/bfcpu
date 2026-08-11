@@ -35,7 +35,7 @@ ROUTES: dict[str, tuple[str, str, str]] = {
     "Code Generation": ("/acus/code-generation/", "Brainfuck Compilation", "05"),
     "Caching": ("/acus/caching/", "Brainfuck Compilation", "06"),
     "Other Optimizations": ("/acus/other-optimizations/", "Brainfuck Compilation", "07"),
-    "Final Thoughts and Conclusion": ("/reflection/final-thoughts/", "Reflection", "01"),
+    "Final Thoughts and Conclusion": ("/reflection/", "Reflection", "Reflection"),
     "Microcode Table": ("/appendix/microcode-table/", "Appendix", "A"),
     "Mugen Specification": ("/appendix/mugen-specification/", "Appendix", "B"),
     "Bill of Materials": ("/appendix/bill-of-materials/", "Appendix", "C"),
@@ -43,17 +43,18 @@ ROUTES: dict[str, tuple[str, str, str]] = {
     "IO Module ISR": ("/appendix/io-module-isr/", "Appendix", "E"),
     "Constant Factory Lookup Table": ("/appendix/constant-factory-table/", "Appendix", "F"),
     "Schematics": ("/appendix/schematics/", "Appendix", "G"),
-    "Flashback": ("/appendix/flashback/", "Appendix", "H"),
-    "References": ("/references/", "Back matter", "References"),
+    "Flashback": ("/flashback/", "Gallery", "Gallery"),
+    "References": ("/references/", "References", "References"),
 }
 
 PART_ORDER = [
     "The Brainfuck Computer",
     "Brainfuck Compilation",
     "Reflection",
+    "Gallery",
     "Appendix",
     "Front matter",
-    "Back matter",
+    "References",
 ]
 
 LANDINGS = {
@@ -80,22 +81,6 @@ LANDINGS = {
         "lead": "The appendices collect the complete microcode table, Mugen specification, bill of materials, test suite, I/O interrupt code, constant lookup table, schematics, and a photographic flashback.",
         "part": "Appendix",
         "accent": "A  B  C  D  E  F  G  H",
-    },
-    "/reflection/": {
-        "key": "reflection",
-        "eyebrow": "Part III · Reflection",
-        "title": "What worked, what changed, and what comes next.",
-        "lead": "A retrospective on the design choices, practical lessons, possible improvements, and the surprising amount of rigor required to build something deliberately impractical.",
-        "part": "Reflection",
-        "accent": "BUILD → TEST → REVISE",
-    },
-    "/about/": {
-        "key": "about",
-        "eyebrow": "Front matter",
-        "title": "About this report and the people behind it.",
-        "lead": "Read the abstract for a compact project overview, then the acknowledgement of Artur Topal’s vital role in the project’s early design and construction.",
-        "part": "Front matter",
-        "accent": "SYN-191 · WEB EDITION",
     },
 }
 
@@ -169,6 +154,33 @@ def relative_url(current_route: str, target_route: str, fragment: str = "") -> s
 
 def asset_url(route: str, asset: str) -> str:
     return posixpath.relpath(asset, route_directory(route))
+
+
+def rebase_embedded_html(source: str, source_route: str, target_route: str) -> str:
+    """Rebase relative links when one generated page is embedded in another."""
+
+    def replace(match: re.Match[str]) -> str:
+        attribute, quote, url = match.groups()
+        if (
+            not url
+            or url.startswith(("#", "/", "//"))
+            or re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", url)
+        ):
+            return match.group(0)
+
+        path, separator, fragment = url.partition("#")
+        trailing_slash = path.endswith("/")
+        absolute_target = posixpath.normpath(
+            posixpath.join(route_directory(source_route), path)
+        )
+        rebased = posixpath.relpath(absolute_target, route_directory(target_route))
+        if trailing_slash and not rebased.endswith("/"):
+            rebased += "/"
+        if separator:
+            rebased += f"#{fragment}"
+        return f"{attribute}={quote}{rebased}{quote}"
+
+    return re.sub(r"\b(href|src)=(['\"])(.*?)\2", replace, source, flags=re.I)
 
 
 def route_output_path(output: Path, route: str) -> Path:
@@ -333,22 +345,35 @@ def collect_source_label_titles(source: str) -> dict[str, str]:
     return titles
 
 
+def collect_source_figure_captions(source: str) -> dict[str, str]:
+    """Return figure labels and their captions, retaining empty captions.
+
+    Empty captions are significant here: LaTeX sometimes uses an outer figure
+    purely to group subfigures. That wrapper should not consume a visible web
+    figure number.
+    """
+    captions: dict[str, str] = {}
+    cursor = 0
+    while True:
+        caption = command_argument(source, "caption", cursor)
+        if not caption:
+            break
+        value, _, end = caption
+        following = source[end:end + 500]
+        label = re.search(r"\\label\{(fig:[^}]+)\}", following)
+        if label:
+            captions.setdefault(label.group(1), latex_inline_text(value))
+        cursor = end
+    return captions
+
+
 def normalize_custom_environments(source: str) -> str:
     """Lower LaTeX environments that Pandoc's reader otherwise discards."""
-
-    # Font-size environments affect only PDF layout. Pandoc may discard their
-    # complete contents, so unwrap them for HTML conversion.
-    source = re.sub(
-        r"\\begin\{(?:tiny|scriptsize|footnotesize|small|normalsize|large|Large|LARGE|huge|Huge)\}",
-        "",
-        source,
-    )
-    source = re.sub(
-        r"\\end\{(?:tiny|scriptsize|footnotesize|small|normalsize|large|Large|LARGE|huge|Huge)\}",
-        "",
-        source,
-    )
-
+    # Font-size environments affect PDF layout only. Pandoc may discard their
+    # complete contents, including longtables, so unwrap them for HTML.
+    sizes = r"tiny|scriptsize|footnotesize|small|normalsize|large|Large|LARGE|huge|Huge"
+    source = re.sub(rf"\\begin\{{(?:{sizes})\}}", "", source)
+    source = re.sub(rf"\\end\{{(?:{sizes})\}}", "", source)
     source = re.sub(r"\\begin\{wrapfigure\}\{[^}]*\}\{[^}]*\}", r"\\begin{figure}", source)
     source = source.replace(r"\end{wrapfigure}", r"\end{figure}")
     pattern = re.compile(r"\\begin\{lstfloat\}(?:\[[^]]*\])?(.*?)\\end\{lstfloat\}", re.S)
@@ -365,6 +390,24 @@ def normalize_custom_environments(source: str) -> str:
         return anchor + body.strip() + f"\n\n\\emph{{Listing: {caption_text}}}\n"
 
     return pattern.sub(listing_float, source)
+
+
+def normalize_table_columns(source: str) -> str:
+    """Normalize longtable declarations that Pandoc cannot parse directly."""
+
+    def normalize(match: re.Match[str]) -> str:
+        columns = match.group(1)
+        columns = re.sub(r"T\{[^{}]+\}", "l", columns)
+        columns = re.sub(r"L\{[^{}]+\}", "l", columns)
+        columns = re.sub(r"R\{[^{}]+\}", "r", columns)
+        columns = re.sub(r"Q\{[^{}]+\}", "c", columns)
+        return rf"\begin{{longtable}}{{{columns}}}"
+
+    return re.sub(
+        r"\\begin\{longtable\}(?:\[[^]]*\])?\s*\{([^\n]+)\}",
+        normalize,
+        source,
+    )
 
 
 def preprocess_latex(source: str, source_dir: Path, citations: dict[str, int]) -> tuple[str, list[str]]:
@@ -458,27 +501,6 @@ def split_pages(converted: str) -> list[dict[str, object]]:
     return pages
 
 
-def normalize_table_columns(source: str) -> str:
-    """Replace custom LaTeX column types with forms Pandoc understands."""
-
-    def normalize(match: re.Match[str]) -> str:
-        columns = match.group(1)
-
-        # Widths are handled responsively by the website, so only preserve
-        # the intended alignment.
-        columns = re.sub(r"T\{[^{}]+\}", "l", columns)
-        columns = re.sub(r"L\{[^{}]+\}", "l", columns)
-        columns = re.sub(r"R\{[^{}]+\}", "r", columns)
-        columns = re.sub(r"Q\{[^{}]+\}", "c", columns)
-
-        return rf"\begin{{longtable}}{{{columns}}}"
-
-    return re.sub(
-        r"\\begin\{longtable\}(?:\[[^]]*\])?\s*\{([^\n]+)\}",
-        normalize,
-        source,
-    )    
-
 def distribute_footnotes(pages: list[dict[str, object]]) -> None:
     notes: dict[str, str] = {}
     for page in pages:
@@ -499,6 +521,123 @@ def distribute_footnotes(pages: list[dict[str, object]]) -> None:
             items.append(f'<li id="fn{number}">{item}</li>')
         if items:
             page["html"] = body + '\n<aside id="footnotes" class="footnotes" role="doc-endnotes"><hr><ol>' + "".join(items) + "</ol></aside>"
+
+
+def number_floats(
+    pages: list[dict[str, object]],
+    source_captions: dict[str, str],
+) -> dict[str, str]:
+    """Number labeled figures, tables, and listings in independent series.
+
+    Pandoc keeps the LaTeX label as the HTML figure id, which lets the site
+    provide stable numbered cross-references without requiring pandoc-crossref.
+    """
+    references: dict[str, str] = {}
+    next_figure = 1
+    next_table = 1
+    next_listing = 1
+
+    for page in pages:
+        body = str(page["html"])
+
+        def add_number(match: re.Match[str]) -> str:
+            nonlocal next_figure
+            attributes = match.group(1)
+            identifier_match = re.search(r'\bid="([^"]+)"', attributes)
+            if not identifier_match:
+                return match.group(0)
+            identifier = html.unescape(identifier_match.group(1))
+            if not identifier.startswith("fig:") or not source_captions.get(identifier, "").strip():
+                return match.group(0)
+
+            number = str(next_figure)
+            next_figure += 1
+            # The LaTeX prose already supplies “Figure”/“figure” before \ref.
+            references[identifier] = number
+            return f'<figure{attributes} data-figure-number="{number}">'
+
+        body = re.sub(r"<figure([^>]*)>", add_number, body, flags=re.I)
+
+        # CSS attr() cannot read an attribute from a parent element. Put the
+        # label in the actual caption so the visible number cannot be blank.
+        def label_figure_caption(match: re.Match[str]) -> str:
+            opening, number, before_caption, caption = match.groups()
+            if 'class="caption-label"' in before_caption:
+                return match.group(0)
+            label = f'<span class="caption-label">Figure {number}. </span>'
+            return opening + before_caption + caption + label
+
+        body = re.sub(
+            r'(<figure\b[^>]*\bdata-figure-number="(\d+)"[^>]*>)(.*?)(<figcaption(?:\s[^>]*)?>)',
+            label_figure_caption,
+            body,
+            flags=re.S | re.I,
+        )
+
+        # Pandoc normally puts a LaTeX table label on a wrapper div. Keep the
+        # anchor there, but place the number on the table caption itself.
+        def label_table(match: re.Match[str]) -> str:
+            nonlocal next_table
+            opening, identifier, before_caption, caption = match.groups()
+            number = str(next_table)
+            next_table += 1
+            references[html.unescape(identifier)] = number
+            label = f'<span class="caption-label">Table {number}. </span>'
+            return (
+                opening[:-1]
+                + f' data-table-number="{number}">'
+                + before_caption
+                + caption
+                + label
+            )
+
+        body = re.sub(
+            r'(<div\b[^>]*\bid="(tab:[^"]+)"[^>]*>\s*<table\b[^>]*>)(.*?)(<caption(?:\s[^>]*)?>)',
+            label_table,
+            body,
+            flags=re.S | re.I,
+        )
+
+        # normalize_custom_environments() leaves a labeled listing as an empty
+        # anchor, followed by its code block and an emphasized caption. Turn
+        # that sequence into semantic figure-like markup before numbering it.
+        def label_listing(match: re.Match[str]) -> str:
+            nonlocal next_listing
+            identifier, code, caption = match.groups()
+            number = str(next_listing)
+            next_listing += 1
+            identifier = html.unescape(identifier)
+            references[identifier] = number
+            label = f'<span class="caption-label">Listing {number}. </span>'
+            return (
+                f'<figure class="code-listing" id="{html.escape(identifier, quote=True)}" '
+                f'data-listing-number="{number}">{code}'
+                f'<figcaption>{label}{caption}</figcaption></figure>'
+            )
+
+        code_block = r'((?:<div\b[^>]*\bclass="[^"]*sourceCode[^"]*"[^>]*>(?:(?!</div>).)*</div>)|(?:<pre\b[^>]*>(?:(?!</pre>).)*</pre>))'
+
+        # Some appendices put the input listing just before an empty lstfloat.
+        # Move only the anchor/caption ahead of that immediately preceding code
+        # block, giving every listing the same shape before numbers are assigned.
+        body = re.sub(
+            rf'{code_block}\s*<div\b[^>]*\bid="(lst:[^"]+)"[^>]*>\s*</div>\s*<p><em>Listing:\s*(.*?)</em></p>',
+            lambda match: (
+                f'<div id="{match.group(2)}"></div>'
+                f'{match.group(1)}<p><em>Listing: {match.group(3)}</em></p>'
+            ),
+            body,
+            flags=re.S | re.I,
+        )
+        body = re.sub(
+            rf'<div\b[^>]*\bid="(lst:[^"]+)"[^>]*>\s*</div>\s*{code_block}\s*<p><em>Listing:\s*(.*?)</em></p>',
+            label_listing,
+            body,
+            flags=re.S | re.I,
+        )
+        page["html"] = body
+
+    return references
 
 
 def collect_labels(pages: list[dict[str, object]]) -> tuple[dict[str, str], dict[str, str]]:
@@ -685,28 +824,25 @@ def deduplicate_page_ids(page: dict[str, object]) -> None:
 def copy_assets(source_dir: Path, output: Path) -> None:
     assets = output / "assets"
     assets.mkdir(parents=True, exist_ok=True)
-
     shutil.copy2(HERE / "assets" / "site.css", assets / "site.css")
     shutil.copy2(HERE / "assets" / "site.js", assets / "site.js")
     shutil.copy2(HERE / "assets" / "favicon.svg", assets / "favicon.svg")
-
     report_assets = assets / "report"
     for name in ("img", "schematics"):
         source = source_dir / name
         if source.is_dir():
             shutil.copytree(source, report_assets / name, dirs_exist_ok=True)
 
-    # Copy the downloadable PDF
-    pdf = source_dir / "synapse.pdf"
-    if pdf.is_file():
-        shutil.copy2(pdf, output / "synapse-191.pdf")
-        
-
 def header_html(route: str) -> str:
     nav = [
+        ("Home", "/", route == "/"),
         ("Hardware", "/synapse-191/", route.startswith("/synapse-191")),
         ("Acus", "/acus/", route.startswith("/acus")),
+        ("Reflection", "/reflection/", route.startswith("/reflection")),
+        ("References", "/references/", route.startswith("/references")),
         ("Appendix", "/appendix/", route.startswith("/appendix")),
+        ("About", "/about/", route == "/about/"),
+        ("Gallery", "/flashback/", route.startswith("/flashback")),
     ]
     links = "".join(
         f'<a href="{relative_url(route, target)}"{(" aria-current=\"page\"" if active else "")}>{label}</a>'
@@ -732,7 +868,9 @@ def footer_html(route: str) -> str:
 <footer class="site-footer">
   <div><span class="footer-mark">[&nbsp;]</span><p><strong>Synapse-191</strong><br>Building a Brainfuck Computing Environment</p></div>
   <nav aria-label="Footer navigation">
-    <a href="{relative_url(route, '/about/abstract/')}">Abstract</a>
+    <a href="{relative_url(route, '/about/')}">About &amp; contact</a>
+    <a href="{relative_url(route, '/about/')}#abstract">Abstract</a>
+    <a href="{relative_url(route, '/flashback/')}">Gallery</a>
     <a href="{relative_url(route, '/references/')}">References</a>
     <a href="https://github.com/jorenheit/bfcpu">Synapse source</a>
     <a href="https://github.com/jorenheit/acus">Acus source</a>
@@ -802,11 +940,6 @@ def arrow() -> str:
 
 
 def render_home(pages: list[dict[str, object]]) -> str:
-    groups = [(part, [p for p in pages if p["part"] == part]) for part in PART_ORDER[:4]]
-    reading_map = "".join(
-        f'<div><span>{index:02d}</span><h3>{html.escape(part)}</h3><p>{len(group)} {"chapter" if len(group) == 1 else "chapters"}</p><a href="{relative_url("/", str(group[0]["route"]))}">Open section {arrow()}</a></div>'
-        for index, (part, group) in enumerate(groups, 1) if group
-    )
     return f"""
 <main>
   <section class="home-hero">
@@ -815,37 +948,14 @@ def render_home(pages: list[dict[str, object]]) -> str:
       <h1>Synapse-191</h1>
       <h2>Building a Brainfuck<br>Computing Environment</h2>
       <p class="hero-lead">From a native Brainfuck computer to a typed compiler backend.</p>
-
-      <div class="hero-actions">
-        <a class="button button-primary"
-           href="{relative_url('/', '/synapse-191/introduction/')}">
-          Start reading {arrow()}
-        </a>
-        <a class="button button-secondary"
-           href="{relative_url('/', '/acus/')}">
-          Explore Acus {arrow()}
-        </a>
-        <a class="button button-secondary"
-           href="synapse-191.pdf"
-           download>
-          Download PDF ↓
-        </a>    
-      </div>    
-
+      <div class="hero-actions"><a class="button button-primary" href="{relative_url('/', '/synapse-191/introduction/')}">Start reading {arrow()}</a><a class="button button-secondary" href="{relative_url('/', '/acus/')}">Explore Acus {arrow()}</a></div>
       <p class="hero-meta">Joren Heit · 2025 · Web edition</p>
     </div>{hero_diagram()}
   </section>
-  <section class="metric-strip"><div><strong>08</strong><span>native BF instructions</span></div><div><strong>24</strong><span>microcode control signals</span></div><div><strong>09</strong><span>fields per Acus macro-cell</span></div><div><strong>02</strong><span>halves of one project story</span></div></section>
-  <section class="section-shell story-intro">
-    <p class="section-index">01 / The complete story</p>
-    <div class="section-heading-row"><h2>One experiment,<br>from copper to compiler.</h2><p>Synapse-191 began as a physical computer that treats Brainfuck as its native instruction set. Acus followed from the next question: what would it take to compile higher-level program structures back down to that machine?</p></div>
-    <div class="pathway-grid">
-      <a href="{relative_url('/', '/synapse-191/')}" class="pathway-card hardware-path"><span class="pathway-label">Part I · Hardware</span><h3>The Brainfuck Computer</h3><p>Architecture, microcode, breadboard implementation, supporting tools, and runtime results.</p><span class="text-link">Enter the hardware section {arrow()}</span></a>
-      <a href="{relative_url('/', '/acus/')}" class="pathway-card software-path"><span class="pathway-label">Part II · Compilation</span><h3>The Acus Backend</h3><p>Program structure, stack frames, tape abstractions, code generation, caching, and optimization.</p><span class="text-link">Enter the Acus section {arrow()}</span></a>
-    </div>
+  <section class="contents-page home-contents" aria-labelledby="contents-heading">
+    <header class="contents-hero"><p class="eyebrow">Complete overview</p><h2 id="contents-heading">Contents</h2><p>Browse the complete web edition, from the Synapse-191 hardware through the Acus compiler backend, reflection, appendices, and references.</p></header>
+    <div class="contents-body">{render_contents_sections(pages, "/")}</div>
   </section>
-  <section class="acus-feature"><div class="acus-feature-code"><span>BF Cell</span><b>→</b><span>MacroCell</span><b>→</b><span>Slot</span><b>→</b><span>Frame</span><b>→</b><span>Tape</span></div><div class="acus-feature-copy"><p class="section-index">02 / Acus spotlight</p><h2>A typed compiler backend for generating Brainfuck.</h2><p>Acus supplies the machinery a frontend needs to lower variables, arrays, structs, pointers, functions, recursion, and control flow onto Brainfuck’s bare tape model.</p><a class="text-link" href="{relative_url('/', '/acus/')}">Read the compiler chapters {arrow()}</a></div></section>
-  <section class="section-shell reading-map"><p class="section-index">03 / Reading map</p><h2>Browse the web edition</h2><div class="reading-map-grid">{reading_map}</div></section>
 </main>"""
 
 
@@ -854,6 +964,59 @@ def chapter_cards(route: str, pages: list[dict[str, object]], part: str) -> str:
     for page in [p for p in pages if p["part"] == part]:
         cards.append(f"""<a class="chapter-card" href="{relative_url(route, str(page['route']))}"><span class="chapter-card-number">{page['number']}</span><div><h3>{html.escape(str(page['title']))}</h3><p>{html.escape(str(page['description']))}</p><span class="chapter-card-meta">{page['minutes']} min read {arrow()}</span></div></a>""")
     return '<div class="chapter-grid">' + "".join(cards) + "</div>"
+
+
+def render_contents_sections(pages: list[dict[str, object]], route: str) -> str:
+    sections = []
+    for part in PART_ORDER:
+        group = [page for page in pages if page["part"] == part]
+        if not group:
+            continue
+        entries = []
+        for page in group:
+            headings = [section for section in page["sections"] if section["level"] == 2]
+            heading_links = "".join(
+                f'<a href="{relative_url(route, str(page["route"]), str(section["id"]))}">{html.escape(str(section["title"]))}</a>'
+                for section in headings
+            )
+            outline = f'<details class="contents-sections"><summary>Chapter outline</summary><nav>{heading_links}</nav></details>' if heading_links else ""
+            entries.append(
+                f'<article class="contents-entry"><span>{page["number"]}</span><div><h3><a href="{relative_url(route, str(page["route"]))}">{html.escape(str(page["title"]))}</a></h3>'
+                f'<p>{html.escape(str(page["description"]))}</p><small>{page["minutes"]} min read</small>{outline}</div></article>'
+            )
+        sections.append(
+            f'<section class="contents-part"><header><p class="section-index">{html.escape(part)}</p><h2>{html.escape(part)}</h2></header>'
+            f'<div class="contents-entries">{"".join(entries)}</div></section>'
+        )
+    return "".join(sections)
+
+
+def render_about(abstract_html: str, acknowledgement_html: str) -> str:
+    route = "/about/"
+    return f"""
+<main class="about-page" id="page-top">
+  <header class="about-intro">
+    <p class="eyebrow">About this project</p>
+    <h1>About</h1>
+    <p>Synapse-191 and Acus explore how far the deliberately minimal Brainfuck model can be taken—from a physical computer to a typed compiler backend.</p>
+  </header>
+  <article class="about-document">
+    <section class="about-section about-author" id="author">
+      <p class="section-index">The author</p><h2>Joren Heit</h2>
+      <p>I created Synapse-191 and Acus as a long-running exploration of computer architecture, compiler design, and the value of building deliberately unusual things.</p>
+      <!-- CUSTOMISE: Add biography or project history here. -->
+    </section>
+    <section class="about-section" id="abstract"><p class="section-index">The report</p><h2>Abstract</h2><div class="about-source-content">{abstract_html}</div></section>
+    <section class="about-section" id="acknowledgement"><p class="section-index">With thanks</p><h2>Acknowledgement</h2><div class="about-source-content">{acknowledgement_html}</div></section>
+    <section class="about-section about-contact" id="contact">
+      <p class="section-index">Contact</p><h2>Questions or feedback?</h2>
+      <p>Corrections, questions, and other feedback about the project are welcome.</p>
+      <a class="button button-primary" href="mailto:synapse191@gmail.com">Email me {arrow()}</a>
+      <p><a href="mailto:synapse191@gmail.com">synapse191@gmail.com</a> · <a href="https://github.com/jorenheit/bfcpu">Synapse-191 on GitHub</a> · <a href="https://github.com/jorenheit/acus">Acus on GitHub</a></p>
+      <!-- CUSTOMISE: Add other contact channels here. -->
+    </section>
+  </article>
+</main>"""
 
 
 def render_landing(route: str, pages: list[dict[str, object]]) -> str:
@@ -868,7 +1031,7 @@ def render_landing(route: str, pages: list[dict[str, object]]) -> str:
 <main class="landing-page landing-{data['key']}">
   <section class="landing-hero"><div><p class="eyebrow">{html.escape(data['eyebrow'])}</p><h1>{html.escape(data['title'])}</h1><p class="landing-lead">{html.escape(data['lead'])}</p><div class="landing-actions"><a class="button button-primary" href="{relative_url(route, first_route)}">Begin this section {arrow()}</a>{github}</div></div><div class="landing-accent" aria-hidden="true"><span>{html.escape(data['accent'])}</span></div></section>
   {compiler}
-  <section class="section-shell chapter-section"><div class="section-heading-row"><div><p class="section-index">Contents</p><h2>{html.escape(data['part'])}</h2></div><p>Each chapter is presented as a standalone, linkable page with its own local table of contents and previous/next navigation.</p></div>{chapter_cards(route, pages, data['part'])}</section>
+  <section class="section-shell chapter-section"><div class="section-heading-row"><div><p class="section-index">Contents of this part</p><h2>{html.escape(data['part'])}</h2></div><div class="part-contents-intro"><p>Each chapter is presented as a standalone, linkable page with its own local table of contents and previous/next navigation.</p><a class="text-link" href="{relative_url(route, '/', 'contents-heading')}">View complete contents {arrow()}</a></div></div>{chapter_cards(route, pages, data['part'])}</section>
 </main>"""
 
 
@@ -879,18 +1042,20 @@ def render_article(page: dict[str, object], pages: list[dict[str, object]]) -> s
         f'<a href="{relative_url(route, str(entry["route"]))}"{(" aria-current=\"page\"" if entry["route"] == route else "")}><span>{entry["number"]}</span>{html.escape(str(entry["title"]))}</a>'
         for entry in group
     )
-    landing = "/acus/" if page["part"] == "Brainfuck Compilation" else "/synapse-191/" if page["part"] == "The Brainfuck Computer" else "/appendix/" if page["part"] == "Appendix" else "/"
-    sidebar = f'<aside class="article-sidebar"><a class="sidebar-part" href="{relative_url(route, landing)}">{html.escape(str(page["part"]))}</a><nav>{sidebar_links}</nav></aside>'
+    landing = "/acus/" if page["part"] == "Brainfuck Compilation" else "/synapse-191/" if page["part"] == "The Brainfuck Computer" else "/appendix/" if page["part"] == "Appendix" else route
+    sidebar = f'<aside class="article-sidebar"><a class="sidebar-part" href="{relative_url(route, landing)}">{html.escape(str(page["part"]))}</a><nav>{sidebar_links}</nav></aside>' if len(group) > 1 else ""
     sections = [s for s in page["sections"] if s["level"] == 2 or len(page["sections"]) < 8][:14]
     toc = "".join(f'<a class="{"toc-subsection" if section["level"] == 3 else ""}" href="#{section["id"]}">{html.escape(section["title"])}</a>' for section in sections)
     toc_html = f'<aside class="article-toc"><p>On this page</p><nav>{toc}</nav></aside>' if toc else ""
+    mobile_toc_html = f'<details class="mobile-article-toc"><summary>On this page</summary><nav>{toc}</nav></details>' if toc else ""
+    mobile_part_html = f'<details class="mobile-article-toc mobile-part-toc"><summary>In this part</summary><nav>{sidebar_links}</nav></details>' if len(group) > 1 else ""
     index = pages.index(page)
     previous = pages[index - 1] if index else None
     following = pages[index + 1] if index < len(pages) - 1 else None
     previous_html = f'<a href="{relative_url(route, str(previous["route"]))}"><span>← Previous</span><strong>{html.escape(str(previous["title"]))}</strong></a>' if previous else "<span></span>"
     next_html = f'<a class="pagination-next" href="{relative_url(route, str(following["route"]))}"><span>Next →</span><strong>{html.escape(str(following["title"]))}</strong></a>' if following else "<span></span>"
     return f"""
-<main class="article-page"><div class="article-layout">{sidebar}<article class="report-article"><header class="article-header" id="{html.escape(str(page['chapterId']))}"><nav class="breadcrumbs"><a href="{relative_url(route, '/')}">Home</a><span>/</span><span>{html.escape(str(page['part']))}</span></nav><p class="article-kicker">{html.escape(str(page['part']))} · {page['number']}</p><h1>{html.escape(str(page['title']))}</h1><div class="article-meta"><span>{page['minutes']} min read</span><span>Web edition</span></div></header><div id="article-content" class="article-content">{page['html']}</div><nav class="article-pagination">{previous_html}{next_html}</nav></article>{toc_html}</div></main>"""
+<main class="article-page{' standalone-article' if len(group) == 1 else ''}" id="page-top"><div class="article-layout">{sidebar}<article class="report-article"><header class="article-header" id="{html.escape(str(page['chapterId']))}"><nav class="breadcrumbs"><a href="{relative_url(route, '/')}">Home</a><span>/</span><span>{html.escape(str(page['part']))}</span></nav><p class="article-kicker">{html.escape(str(page['part']))}</p><h1>{html.escape(str(page['title']))}</h1><div class="article-meta"><span>{page['minutes']} min read</span><span>Web edition</span></div><a class="page-jump page-jump-down" href="#page-navigation">Skip to chapter navigation <span aria-hidden="true">↓</span></a></header><div class="mobile-outline-group">{mobile_part_html}{mobile_toc_html}</div><div id="article-content" class="article-content">{page['html']}</div><div class="page-navigation" id="page-navigation"><a class="page-jump page-jump-up" href="#page-top">Back to top <span aria-hidden="true">↑</span></a><nav class="article-pagination" aria-label="Previous and next chapters">{previous_html}{next_html}</nav></div></article>{toc_html}</div></main>"""
 
 
 def write_page(output: Path, route: str, title: str, description: str, content: str, site_url: str) -> None:
@@ -960,15 +1125,18 @@ def main() -> None:
         raise SystemExit("main.tex has no document environment")
     expanded = expand_includes(document.group(1), source_dir)
     source_label_titles = collect_source_label_titles(expanded)
+    source_figure_captions = collect_source_figure_captions(expanded)
     prepared, missing_listings = preprocess_latex(expanded, source_dir, references)
     converted = run_pandoc(prepared)
     pages = split_pages(converted)
     distribute_footnotes(pages)
+    float_references = number_floats(pages, source_figure_captions)
     owners, labels = collect_labels(pages)
     for identifier, route in collect_source_label_owners(prepared).items():
         owners.setdefault(identifier, route)
         labels.setdefault(identifier, "related section")
     labels.update(source_label_titles)
+    labels.update(float_references)
     add_fallback_anchors(pages, owners)
     for page in pages:
         autolink_reference_urls(page)
@@ -976,14 +1144,41 @@ def main() -> None:
         deduplicate_page_ids(page)
         refresh_page_metadata(page)
 
+    abstract_page = next((page for page in pages if page["title"] == "Abstract"), None)
+    acknowledgement_page = next((page for page in pages if page["title"] in ("Acknowledgement", "Acknowledgements")), None)
+    abstract_html = (
+        rebase_embedded_html(str(abstract_page["html"]), str(abstract_page["route"]), "/about/")
+        if abstract_page
+        else "<p>Abstract not found in the report source.</p>"
+    )
+    acknowledgement_html = (
+        rebase_embedded_html(
+            str(acknowledgement_page["html"]),
+            str(acknowledgement_page["route"]),
+            "/about/",
+        )
+        if acknowledgement_page
+        else "<p>Acknowledgement not found in the report source.</p>"
+    )
+    consolidated_titles = {"Abstract", "Acknowledgement", "Acknowledgements"}
+    pages = [page for page in pages if page["title"] not in consolidated_titles]
+
+    # Keep the source chapter name intact while presenting its photographic
+    # content under the clearer reader-facing title “Gallery”.
+    for page in pages:
+        if page["title"] == "Flashback":
+            page["title"] = "Gallery"
+            refresh_page_metadata(page)
+
     copy_assets(source_dir, output)
     write_page(output, "/", "Synapse-191 — Building a Brainfuck Computing Environment", "A native Brainfuck computer and the Acus typed compiler backend, presented as a complete technical web edition.", render_home(pages), args.site_url)
+    write_page(output, "/about/", "About", "About Synapse-191, Acus, their author, acknowledgements, and ways to get in touch.", render_about(abstract_html, acknowledgement_html), args.site_url)
     for route, landing in LANDINGS.items():
         write_page(output, route, landing["title"], landing["lead"], render_landing(route, pages), args.site_url)
     for page in pages:
         write_page(output, str(page["route"]), str(page["title"]), str(page["description"]), render_article(page, pages), args.site_url)
     write_search_index(output, pages)
-    all_routes = ["/", *LANDINGS.keys(), *[str(page["route"]) for page in pages]]
+    all_routes = ["/", "/about/", *LANDINGS.keys(), *[str(page["route"]) for page in pages]]
     write_auxiliary_files(output, all_routes, args.site_url)
     page_count, link_count = verify_site(output)
     print(f"Built {page_count} pages and verified {link_count} internal references.")
