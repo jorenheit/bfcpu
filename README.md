@@ -9,8 +9,8 @@
 3. a ROM flash utility and Arduino firmware to flash specifically the AT28C64B EEPROM chips.
 
 For detailed design information, schematics, and background, refer to the accompanying document or website:
-**[Full Project Report (PDF)](./doc/synapse.pdf)**
-**[Web version of the report](https://jorenheit.github.io/bfcpu)**
+- **[Full Project Report (PDF)](./doc/synapse.pdf)**
+- **[Web version of the report](https://jorenheit.github.io/bfcpu)**
 
 The documentation is split in two parts: 
 1. Part 1 is about building Synapse-191, including parts of the software toolchain that made this possible or easier (like the flashing utility and microcode generator). 
