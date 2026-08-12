@@ -712,7 +712,7 @@ Therefore, the 16-bit product can be computed using three 8-bit multiplications.
   p2 = high(x) * low(y)
 
   low(z)  = low(p0)
-  high(z) = low(p1 + p2)
+  high(z) = low(p1 + p2 + high(p0))
 \end{lstlisting}
 \end{minipage}
 
@@ -898,7 +898,7 @@ To calculate the absolute value of a signed integer, its sign bit is first calcu
 
 \section{Pointer Movement}
 \label{sec:compilation:pointers}
-BF has no random access instruction; the only way to reach a cell is to move the data-pointer (simply referred to as the \emph{pointer} from now on) step by step. This makes pointer movement one of the central code-generation problems in Acus. 
+BF has no random memory access instruction; the only way to reach a cell is to move the data-pointer (simply referred to as the \emph{pointer} from now on) step by step, which requires the compiler to keep track of the pointer at all times. This poses a challenge for situations where the pointer has to move dynamically, i.e.~to tape-locations not known at compile-time. This occurs for example when dereferencing pointers or when interacting with runtime indices into arrays.
 
 \subsection{Static Pointer Movement}
 \label{sec:compilation:staticmove}
